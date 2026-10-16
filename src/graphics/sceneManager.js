@@ -75,12 +75,12 @@ export class SceneManager {
     this.scene.add(this.dirLight);
 
     // Warm Citadel & Hero Point Lights (intensify at night!)
-    this.citadelLight = new THREE.PointLight(0xf59e0b, 1.2, 28, 1.5);
-    this.citadelLight.position.set(0, 6.5, 1);
+    this.citadelLight = new THREE.PointLight(0xf59e0b, 1.5, 45, 1.2);
+    this.citadelLight.position.set(0, 7.5, 1);
     this.scene.add(this.citadelLight);
 
-    this.heroLight = new THREE.PointLight(0x38bdf8, 0.8, 16, 1.5);
-    this.heroLight.position.set(0, 3.2, 0);
+    this.heroLight = new THREE.PointLight(0x38bdf8, 1.2, 28, 1.2);
+    this.heroLight.position.set(0, 4.0, 0);
     this.scene.add(this.heroLight);
   }
 
@@ -130,33 +130,33 @@ export class SceneManager {
     const pal = this.currentPalette;
 
     const dayBg = new THREE.Color(pal.daySkyHorizon || 0x93c5fd);
-    const nightBg = new THREE.Color(pal.nightSkyTop || 0x070b19);
+    const nightBg = new THREE.Color(pal.nightSkyHorizon || 0x1e1b4b);
     const bg = dayBg.lerp(nightBg, t);
     this.scene.background.copy(bg);
     this.scene.fog.color.copy(bg);
-    this.scene.fog.density = THREE.MathUtils.lerp(0.0062, 0.0095, t);
+    this.scene.fog.density = THREE.MathUtils.lerp(0.0055, 0.0072, t);
 
     const daySun = new THREE.Color(pal.daySun || 0xfffbeb);
-    const nightMoon = new THREE.Color(pal.nightMoon || 0x818cf8);
+    const nightMoon = new THREE.Color(pal.nightMoon || 0x93c5fd);
     this.dirLight.color.copy(daySun).lerp(nightMoon, t);
-    this.dirLight.intensity = THREE.MathUtils.lerp(1.9, 0.95, t);
+    this.dirLight.intensity = THREE.MathUtils.lerp(2.0, 1.55, t);
 
     // Shift sun/moon angle subtly between day and night
     this.dirLight.position.set(
       THREE.MathUtils.lerp(28, -22, t),
-      THREE.MathUtils.lerp(48, 38, t),
-      THREE.MathUtils.lerp(24, -18, t)
+      THREE.MathUtils.lerp(48, 42, t),
+      THREE.MathUtils.lerp(24, 18, t)
     );
 
     const dayHemiSky = new THREE.Color(pal.daySkyHorizon || 0xe0f2fe);
-    const nightHemiSky = new THREE.Color(pal.nightSkyHorizon || 0x1e1b4b);
+    const nightHemiSky = new THREE.Color(0x60a5fa);
     this.hemiLight.color.copy(dayHemiSky).lerp(nightHemiSky, t);
-    this.hemiLight.groundColor.setHex(pal.groundSecondary || 0x1e293b);
-    this.hemiLight.intensity = THREE.MathUtils.lerp(0.9, 0.48, t);
+    this.hemiLight.groundColor.setHex(pal.groundPrimary || 0x334155);
+    this.hemiLight.intensity = THREE.MathUtils.lerp(1.05, 0.85, t);
 
     // Night boosts warm citadel & hero point lights for dramatic contrast
-    this.citadelLight.intensity = THREE.MathUtils.lerp(0.8, 3.2, t);
-    this.heroLight.intensity = THREE.MathUtils.lerp(0.5, 2.4, t);
+    this.citadelLight.intensity = THREE.MathUtils.lerp(1.0, 3.8, t);
+    this.heroLight.intensity = THREE.MathUtils.lerp(0.8, 2.8, t);
   }
 
   cycleCameraMode() {

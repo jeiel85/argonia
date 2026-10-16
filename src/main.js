@@ -592,7 +592,7 @@ class ArgoniaApp {
           <div class="select-card ${active ? 'selected' : ''}" data-skull-id="${sk.id}">
             <div class="select-card-top">
               <span class="select-card-title">${sk.icon} ${sk.name}</span>
-              <span class="badge-pill ${active ? 'gold-badge' : ''}">+${Math.round((sk.crownBonus || 0.25) * 100)}% 👑</span>
+              <span class="badge-pill ${active ? 'gold-badge' : ''}">+${Math.round((sk.crownBonusMult || sk.crownBonus || 0.25) * 100)}% 👑</span>
             </div>
             <div class="select-card-desc">${sk.desc}</div>
           </div>
@@ -640,12 +640,9 @@ class ArgoniaApp {
     const grid = document.getElementById('sanctum-branches-grid');
     if (!grid) return;
 
-    const branches = SANCTUM_BRANCHES || [
-      { id: 'crown_economy', name: '🪙 왕실 재정학 (번영)' },
-      { id: 'citadel_bastion', name: '🏰 불멸의 성채 (요새화)' },
-      { id: 'warlord_valor', name: '⚔️ 군주의 무력 (전투)' },
-      { id: 'astral_arcana', name: '🔮 성좌의 비전 (유물/마법)' },
-    ];
+    const branches = Array.isArray(SANCTUM_BRANCHES)
+      ? SANCTUM_BRANCHES
+      : Object.values(SANCTUM_BRANCHES || {});
 
     grid.innerHTML = branches
       .map((br) => {

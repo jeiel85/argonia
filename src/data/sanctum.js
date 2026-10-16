@@ -848,6 +848,12 @@ export function computeSkullModifiers(activeSkullIds = []) {
 
   return {
     mods,
+    enemyCountBonus: mods.enemyCountMult,
+    enemyHpBonus: mods.enemyHpMult,
+    enemySpeedBonus: mods.enemySpeedMult,
+    goldPenalty: mods.economyPenaltyMult,
+    buildingDamageTakenBonus: mods.buildingDamageTakenMult,
+    bossHpBonus: mods.bossHpMult,
     crownBonusMult,
     totalHeat,
     activeSkulls
