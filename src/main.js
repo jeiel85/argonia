@@ -213,14 +213,14 @@ class ArgoniaApp {
 
     document.getElementById('btn-cam-mode')?.addEventListener('click', (e) => {
       const mode = this.sceneManager.cycleCameraMode();
-      const labels = { tactical: '🎥 전술캠', action: '🎥 액션캠', overview: '🎥 전체조망' };
-      e.currentTarget.textContent = labels[mode] || '🎥 전술캠';
+      const labels = { tactical: '전술시점', action: '액션시점', overview: '전체조망' };
+      e.currentTarget.textContent = labels[mode] || '전술시점';
       soundEngine.playSfx('ui_click');
     });
 
     document.getElementById('btn-audio-mute')?.addEventListener('click', (e) => {
       const muted = soundEngine.toggleMute();
-      e.currentTarget.textContent = muted ? '🔇 음소거' : '🔊 사운드';
+      e.currentTarget.textContent = muted ? '음향 OFF' : '음향 ON';
     });
 
     document.getElementById('btn-rec-clip')?.addEventListener('click', () => {
@@ -866,12 +866,17 @@ class ArgoniaApp {
   syncHud(snap) {
     if (!snap) return;
 
-    document.getElementById('hud-phase-icon').textContent = snap.phase === 'night' ? '🌙' : '☀️';
+    const phaseEl = document.getElementById('hud-phase-icon');
+    if (phaseEl) {
+      phaseEl.textContent = snap.phase === 'night' ? 'NIGHT' : 'DAY';
+      phaseEl.classList.toggle('night', snap.phase === 'night');
+      phaseEl.classList.toggle('day', snap.phase !== 'night');
+    }
     document.getElementById('hud-realm-title').textContent = snap.realm.name;
     document.getElementById('hud-wave-subtitle').textContent =
       snap.phase === 'night'
-        ? `제${snap.wave}${snap.isEndless ? '(무한)' : `/${snap.totalWaves}`}야 교전 중 · 남은 적: ${snap.enemiesRemaining}`
-        : `제${snap.wave}${snap.isEndless ? '(무한)' : `/${snap.totalWaves}`}야 정비 중 (낮)`;
+        ? `제${snap.wave}${snap.isEndless ? '(무한)' : `/${snap.totalWaves}`}야 교전 중 · 잔여 적군 ${snap.enemiesRemaining}`
+        : `제${snap.wave}${snap.isEndless ? '(무한)' : `/${snap.totalWaves}`}야 주간 정비`;
 
     // Citadel HP
     const citPct = Math.max(0, Math.min(100, (snap.citadelHp / Math.max(1, snap.citadelMaxHp)) * 100));
@@ -891,10 +896,10 @@ class ArgoniaApp {
       const stateEl = document.getElementById('hud-hero-state');
       if (snap.hero.isDead) {
         stateEl.textContent = `부활 대기 (${snap.hero.reviveTimer.toFixed(1)}s)`;
-        stateEl.style.color = '#f43f5e';
+        stateEl.style.color = '#ef5350';
       } else {
-        stateEl.textContent = '전장 지휘 중';
-        stateEl.style.color = '#34d399';
+        stateEl.textContent = '전장 지휘';
+        stateEl.style.color = '#52cc8a';
       }
       const hPct = Math.max(0, Math.min(100, (snap.hero.hp / Math.max(1, snap.hero.maxHp)) * 100));
       document.getElementById('hud-hero-hp-fill').style.width = `${hPct}%`;
@@ -929,19 +934,19 @@ class ArgoniaApp {
       if (snap.phase === 'night') {
         callBtn.classList.add('night-active');
         callBtn.innerHTML = `
-          <span class="bell-icon">⚔️</span>
+          <span class="bell-icon">⚔</span>
           <div class="call-night-text">
-            <strong>야간 공성 방어 중!</strong>
-            <small>남은 적군: ${snap.enemiesRemaining}기 · 콤보: ${snap.killCombo}x</small>
+            <strong>야간 공성 방어전</strong>
+            <small>잔여 적군 ${snap.enemiesRemaining}기 · 콤보 ${snap.killCombo}x</small>
           </div>
         `;
       } else {
         callBtn.classList.remove('night-active');
         callBtn.innerHTML = `
-          <span class="bell-icon">🔔</span>
+          <span class="bell-icon">◆</span>
           <div class="call-night-text">
-            <strong>전투 개시 (밤 맞이하기)</strong>
-            <small>단축키 [Enter] · 제${snap.wave}야 시작</small>
+            <strong>전투 개시 · 밤 맞이하기</strong>
+            <small>단축키 [Enter] · 제${snap.wave}야 출정</small>
           </div>
         `;
       }
@@ -953,7 +958,7 @@ class ArgoniaApp {
     if (bossBar) {
       if (activeBoss) {
         bossBar.classList.remove('hidden');
-        document.getElementById('boss-banner-name').textContent = `${activeBoss.spec.icon} ${activeBoss.spec.name}`;
+        document.getElementById('boss-banner-name').textContent = `${activeBoss.spec.name}`;
         document.getElementById('boss-banner-hp').textContent = `${Math.round(activeBoss.hp)} / ${activeBoss.maxHp}`;
         const pct = Math.max(0, Math.min(100, (activeBoss.hp / activeBoss.maxHp) * 100));
         document.getElementById('boss-banner-fill').style.width = `${pct}%`;
@@ -962,7 +967,11 @@ class ArgoniaApp {
       }
     }
 
-    // Left Dock: Threat Forecast
+    // Left Dock: Threat Forecast (auto-hide during Night combat to keep viewport clean)
+    const threatCard = document.getElementById('threat-forecast-card');
+    if (threatCard) {
+      threatCard.classList.toggle('hidden', snap.phase === 'night');
+    }
     const waveBadge = document.getElementById('threat-wave-badge');
     if (waveBadge) waveBadge.textContent = `WAVE ${snap.wave}`;
     const portalListEl = document.getElementById('threat-portal-list');
@@ -972,12 +981,12 @@ class ArgoniaApp {
           const chips = Object.entries(ps.enemies)
             .map(([eId, cnt]) => {
               const eSpec = getEnemySpec(eId);
-              return `<span class="threat-chip">${eSpec.icon} ${eSpec.name} ×${cnt}</span>`;
+              return `<span class="threat-chip">${eSpec.name} ×${cnt}</span>`;
             })
             .join('');
           return `
             <div class="threat-portal-row">
-              <div class="threat-portal-title">📍 ${ps.portalName}</div>
+              <div class="threat-portal-title">${ps.portalName}</div>
               <div class="threat-enemy-chips">${chips}</div>
             </div>
           `;
@@ -986,20 +995,20 @@ class ArgoniaApp {
     }
     const hazardEl = document.getElementById('realm-hazard-note');
     if (hazardEl && snap.realm.hazard) {
-      hazardEl.textContent = `⚡ ${snap.realm.hazard.name}: ${snap.realm.hazard.desc}`;
+      hazardEl.textContent = `${snap.realm.hazard.name} — ${snap.realm.hazard.desc}`;
     }
 
-    // Left Dock: Synergy Sets & Relics
-    document.getElementById('hud-relic-count').textContent = `${snap.ownedRelics.length}개`;
+    // Left Dock: Synergy Sets & Relics (Only show card once player has at least 1 relic!)
+    const relicCard = document.getElementById('relic-sidebar-card');
+    if (relicCard) {
+      relicCard.classList.toggle('hidden', snap.ownedRelics.length === 0);
+    }
+    document.getElementById('hud-relic-count').textContent = `${snap.ownedRelics.length}`;
     const synListEl = document.getElementById('hud-synergy-list');
     if (synListEl) {
-      if (snap.activeSets.length === 0) {
-        synListEl.innerHTML = `<span style="font-size:11px;color:#64748b;">여명 승리 시 유물 및 세트 시너지를 획득합니다.</span>`;
-      } else {
-        synListEl.innerHTML = snap.activeSets
-          .map((s) => `<span class="synergy-chip" title="${s.activeTierLabel || ''}">${s.icon} ${s.name} (${s.count})</span>`)
-          .join('');
-      }
+      synListEl.innerHTML = snap.activeSets
+        .map((s) => `<span class="synergy-chip" title="${s.activeTierLabel || ''}">${s.name} (${s.count})</span>`)
+        .join('');
     }
     const relicGridEl = document.getElementById('hud-relic-grid');
     if (relicGridEl) {
@@ -1018,80 +1027,38 @@ class ArgoniaApp {
     const sock = this.engine.sockets.find((s) => s.id === selId);
 
     if (!sock) {
-      title.textContent = '🏗️ 왕국 건설 감독관';
-      // Show quick list of affordable sockets!
-      const quickHtml = this.engine.sockets
-        .slice(0, 8)
-        .map((s) => {
-          const b = s.building;
-          if (!b) {
-            const defType = s.defaultType || s.allowed[0];
-            const bSpec = getBuildingSpec(defType);
-            const cost = this.engine.getActionCost(defType, 1, null);
-            return `
-              <div class="arch-option-card" data-jump-sock="${s.id}">
-                <div class="arch-opt-top">
-                  <span class="arch-opt-name">📍 ${s.label} (빈 부지)</span>
-                  <span class="arch-opt-cost">${cost.gold}🪙 ${cost.argon > 0 ? `${cost.argon}💎` : ''}</span>
-                </div>
-                <div class="arch-opt-desc">추천: ${bSpec.icon} ${bSpec.name} 건설</div>
-              </div>
-            `;
-          }
-          if (!b.evolutionId && b.tier < 3) {
-            const cost = this.engine.getActionCost(b.typeId, b.tier + 1, null);
-            return `
-              <div class="arch-option-card" data-jump-sock="${s.id}">
-                <div class="arch-opt-top">
-                  <span class="arch-opt-name">${b.baseDef.icon} ${b.baseDef.name} (Lv.${b.tier})</span>
-                  <span class="arch-opt-cost">▲ ${cost.gold}🪙 ${cost.argon > 0 ? `${cost.argon}💎` : ''}</span>
-                </div>
-                <div class="arch-opt-desc">${s.label} · 클릭하여 강화</div>
-              </div>
-            `;
-          }
-          return '';
-        })
-        .join('');
-
+      title.textContent = 'ARCHITECT · 건설 감독';
       body.innerHTML = `
-        <div style="font-size:11px;color:#94a3b8;margin-bottom:4px;">
-          3D 지도의 건설 부지를 클릭하거나 아래 목록을 눌러 건물을 건설·진화시키세요.
+        <div class="arch-idle-hint">
+          지도의 건설 부지를 좌클릭하여 건물을 설계하거나, <kbd>B</kbd> 키로 최적 건물을 자동 증축하십시오.
         </div>
-        ${quickHtml}
       `;
-
-      body.querySelectorAll('[data-jump-sock]').forEach((el) => {
-        el.addEventListener('click', () => {
-          soundEngine.playSfx('ui_click');
-          this.engine.selectedSocketId = el.dataset.jumpSock;
-          this.renderArchitectPanel();
-        });
-      });
       return;
     }
 
-    title.textContent = `📍 ${sock.label}`;
+    title.textContent = `부지 설계 · ${sock.label}`;
     const b = sock.building;
 
     if (!b) {
       // Empty socket: show all allowed building types!
-      body.innerHTML = sock.allowed
-        .map((typeId) => {
-          const bDef = getBuildingSpec(typeId);
-          const t1 = getBuildingTierSpec(typeId, 1, null);
-          const cost = this.engine.getActionCost(typeId, 1, null);
-          return `
-            <div class="arch-option-card" data-build-type="${typeId}">
-              <div class="arch-opt-top">
-                <span class="arch-opt-name">${bDef.icon} ${bDef.name} 건설</span>
-                <span class="arch-opt-cost">${cost.gold}🪙 ${cost.argon > 0 ? `${cost.argon}💎` : ''}</span>
+      body.innerHTML =
+        sock.allowed
+          .map((typeId) => {
+            const bDef = getBuildingSpec(typeId);
+            const t1 = getBuildingTierSpec(typeId, 1, null);
+            const cost = this.engine.getActionCost(typeId, 1, null);
+            return `
+              <div class="arch-option-card" data-build-type="${typeId}">
+                <div class="arch-opt-top">
+                  <span class="arch-opt-name">${bDef.name} 건설</span>
+                  <span class="arch-opt-cost">${cost.gold}G ${cost.argon > 0 ? `· ${cost.argon}A` : ''}</span>
+                </div>
+                <div class="arch-opt-desc">${t1.desc}</div>
               </div>
-              <div class="arch-opt-desc">${t1.desc}</div>
-            </div>
-          `;
-        })
-        .join('');
+            `;
+          })
+          .join('') +
+        `<button id="btn-arch-back" class="btn-mini" style="margin-top:2px;">✕ 부지 선택 해제</button>`;
 
       body.querySelectorAll('[data-build-type]').forEach((card) => {
         card.addEventListener('click', () => {
@@ -1099,6 +1066,10 @@ class ArgoniaApp {
           if (!res.ok) this.showToast(res.reason, 'danger');
           this.renderArchitectPanel();
         });
+      });
+      document.getElementById('btn-arch-back')?.addEventListener('click', () => {
+        this.engine.selectedSocketId = null;
+        this.renderArchitectPanel();
       });
       return;
     }
@@ -1109,7 +1080,7 @@ class ArgoniaApp {
       actionsHtml = `
         <div class="arch-option-card evolution-card">
           <div class="arch-opt-top">
-            <span class="arch-opt-name">★ 최종 진화 완료: ${b.spec.icon || b.baseDef.icon} ${b.spec.name}</span>
+            <span class="arch-opt-name">★ 궁극 진화: ${b.spec.name}</span>
           </div>
           <div class="arch-opt-desc">${b.spec.desc}</div>
         </div>
@@ -1120,8 +1091,8 @@ class ArgoniaApp {
       actionsHtml = `
         <div class="arch-option-card" id="btn-arch-upgrade">
           <div class="arch-opt-top">
-            <span class="arch-opt-name">▲ ${nextSpec.name} 강화 [F]</span>
-            <span class="arch-opt-cost">${cost.gold}🪙 ${cost.argon > 0 ? `${cost.argon}💎` : ''}</span>
+            <span class="arch-opt-name">▲ ${nextSpec.name} 승급 [F]</span>
+            <span class="arch-opt-cost">${cost.gold}G ${cost.argon > 0 ? `· ${cost.argon}A` : ''}</span>
           </div>
           <div class="arch-opt-desc">${nextSpec.desc}</div>
         </div>
@@ -1134,8 +1105,8 @@ class ArgoniaApp {
           return `
             <div class="arch-option-card evolution-card" data-evo-id="${evo.id}">
               <div class="arch-opt-top">
-                <span class="arch-opt-name">★ ${evo.icon} ${evo.name}</span>
-                <span class="arch-opt-cost">${cost.gold}🪙 ${cost.argon}💎</span>
+                <span class="arch-opt-name">★ ${evo.name}</span>
+                <span class="arch-opt-cost">${cost.gold}G · ${cost.argon}A</span>
               </div>
               <div class="arch-opt-desc">${evo.desc}</div>
             </div>
@@ -1146,17 +1117,17 @@ class ArgoniaApp {
 
     const demolishBtn =
       b.typeId !== 'citadel' && this.engine.phase === 'day'
-        ? `<button id="btn-arch-demolish" class="btn-mini" style="margin-top:6px;color:#fda4af;border-color:#f43f5e;">🗑️ 건물 철거 및 부지 재설계 (70% 환급)</button>`
+        ? `<button id="btn-arch-demolish" class="btn-mini" style="margin-top:4px;color:#f5b5b5;border-color:rgba(201,59,59,0.5);">건물 철거 및 재설계 (70% 환급)</button>`
         : '';
 
     body.innerHTML = `
-      <div style="background:rgba(15,23,42,0.65);padding:8px 10px;border-radius:8px;font-size:12px;">
-        <strong>${b.baseDef.icon} ${b.spec.name}</strong>
-        <div style="font-size:11px;color:#94a3b8;margin-top:2px;">내구도: ${Math.round(b.hp)} / ${b.maxHp} HP</div>
+      <div style="background:rgba(0,0,0,0.42);border-left:2px solid var(--brass-bright);padding:7px 10px;font-size:12px;">
+        <strong>${b.spec.name}</strong>
+        <div class="tabular-nums" style="font-size:10.5px;color:var(--text-parchment);margin-top:2px;">내구도 ${Math.round(b.hp)} / ${b.maxHp} HP</div>
       </div>
       ${actionsHtml}
       ${demolishBtn}
-      <button id="btn-arch-back" class="btn-mini" style="margin-top:4px;">← 전체 부지 목록 보기</button>
+      <button id="btn-arch-back" class="btn-mini" style="margin-top:2px;">✕ 선택 해제</button>
     `;
 
     document.getElementById('btn-arch-upgrade')?.addEventListener('click', () => {
@@ -1220,18 +1191,31 @@ class ArgoniaApp {
     const h = this.sceneManager.height;
     const tempV = new THREE.Vector3();
 
+    const shortNames = {
+      citadel: '성채',
+      gold_mine: '금광',
+      windmill: '풍차농장',
+      argon_refinery: '정제소',
+      archer_tower: '감시탑',
+      arcane_obelisk: '방첨탑',
+      flame_mortar: '박격포',
+      frost_spire: '서리탑',
+      barracks: '기사병영',
+      stone_wall: '성벽',
+    };
+
     for (const sock of this.engine.sockets) {
       const el = this.socketBadgeElements.get(sock.id);
       if (!el) continue;
 
-      // Hide socket build badges during Night unless damaged or selected
+      // Hide socket build badges during Night unless selected
       const b = sock.building;
       if (this.engine.phase === 'night' && this.engine.selectedSocketId !== sock.id) {
         el.style.display = 'none';
         continue;
       }
 
-      tempV.set(sock.x, b ? 3.2 : 1.3, sock.z).project(cam);
+      tempV.set(sock.x, b ? 3.2 : 1.15, sock.z).project(cam);
       if (tempV.z > 1) {
         el.style.display = 'none';
         continue;
@@ -1240,26 +1224,29 @@ class ArgoniaApp {
       const sx = (tempV.x * 0.5 + 0.5) * w;
       const sy = (-tempV.y * 0.5 + 0.5) * h;
 
-      // Update label & affordability highlight
+      // Update label & affordability highlight without cut-off strings or emoji clutter
       let labelHtml = '';
       let canAfford = false;
       if (!b) {
         const defType = sock.defaultType || sock.allowed[0];
-        const bSpec = getBuildingSpec(defType);
         const cost = this.engine.getActionCost(defType, 1, null);
         canAfford = this.engine.gold >= cost.gold && this.engine.argon >= cost.argon;
-        labelHtml = `${bSpec.icon} ${sock.slotType === 'tactical' ? '거점' : bSpec.name.slice(0, 4)} <span class="cost-tag">${cost.gold}G</span>`;
+        const shortLabel = sock.slotType === 'tactical' ? '전술거점' : shortNames[defType] || '부지';
+        labelHtml = `${shortLabel}<span class="cost-tag">${cost.gold}G</span>`;
       } else if (!b.evolutionId && b.tier < 3) {
         const cost = this.engine.getActionCost(b.typeId, b.tier + 1, null);
         canAfford = this.engine.gold >= cost.gold && this.engine.argon >= cost.argon;
-        labelHtml = `${b.baseDef.icon} Lv.${b.tier} <span class="cost-tag">▲${cost.gold}G</span>`;
+        const shortLabel = shortNames[b.typeId] || b.baseDef.name;
+        labelHtml = `${shortLabel} Lv.${b.tier}<span class="cost-tag">▲${cost.gold}G</span>`;
       } else if (!b.evolutionId && b.tier === 3) {
         const evo = b.baseDef.evolutions?.[0];
         const cost = this.engine.getActionCost(b.typeId, 3, evo?.id);
         canAfford = this.engine.gold >= cost.gold && this.engine.argon >= cost.argon;
-        labelHtml = `${b.baseDef.icon} Lv.3 <span class="cost-tag">★진화</span>`;
+        const shortLabel = shortNames[b.typeId] || b.baseDef.name;
+        labelHtml = `${shortLabel} Lv.3<span class="cost-tag">★진화</span>`;
       } else {
-        labelHtml = `★ ${b.spec.icon || b.baseDef.icon} MAX`;
+        const shortLabel = shortNames[b.typeId] || b.baseDef.name;
+        labelHtml = `★ ${shortLabel} MAX`;
       }
 
       el.innerHTML = labelHtml;

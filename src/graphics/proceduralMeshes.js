@@ -797,81 +797,85 @@ export function animateBuildingMesh(group, elapsedTime = 0, isNight = false) {
  * @returns {THREE.Group}
  */
 export function createSocketPadMesh(socketDef = {}) {
-  const socketType = socketDef.type || 'tactical';
+  const socketType = socketDef.slotType || socketDef.type || 'tactical';
   const group = new THREE.Group();
   group.name = `SocketPad_${socketDef.id || socketType}`;
 
   const colorMap = {
-    citadel: 0xfbbf24,
-    gold_vein: 0xf59e0b,
+    citadel: 0xd4a349,
+    gold_vein: 0xeab308,
     argon_vein: 0x38bdf8,
-    fertile_land: 0x84cc16,
-    wall: 0x94a3b8,
-    tactical: 0xa78bfa,
+    fertile_land: 0xa3e635,
+    wall: 0x9ca3af,
+    tactical: 0xc8a45d,
   };
-  const accentColor = colorMap[socketType] || 0xa78bfa;
+  const accentColor = colorMap[socketType] || 0xc8a45d;
 
-  // Stone Plinth Pad
-  const plinthMat = getStdMat(0x475569, 0.8, 0.15);
-  const padRadius = socketType === 'citadel' ? 2.2 : 1.35;
-  group.add(makeMesh(COMMON_GEOS.cyl8(), plinthMat, 0, 0.08, 0, 0, 0, 0, padRadius, 0.16, padRadius, false, true));
+  // Natural Carved Stone Foundation Plinth
+  const plinthMat = getStdMat(0x57534e, 0.82, 0.12);
+  const innerStoneMat = getStdMat(0x44403c, 0.86, 0.08);
+  const padRadius = socketType === 'citadel' ? 2.1 : 1.18;
+  group.add(makeMesh(COMMON_GEOS.cyl8(), plinthMat, 0, 0.05, 0, 0, 0, 0, padRadius, 0.10, padRadius, false, true));
+  group.add(makeMesh(COMMON_GEOS.cyl8(), innerStoneMat, 0, 0.08, 0, 0, 0, 0, padRadius * 0.82, 0.06, padRadius * 0.82, false, true));
 
-  // Glowing Selection/Hover Ring stored in userData.ringMesh
+  // Subtle Engraved Brass/Rune Ring stored in userData.ringMesh
   const ringMat = new THREE.MeshStandardMaterial({
     color: new THREE.Color(accentColor),
     emissive: new THREE.Color(accentColor),
-    emissiveIntensity: 0.65,
-    roughness: 0.3,
-    metalness: 0.4,
+    emissiveIntensity: 0.22,
+    roughness: 0.45,
+    metalness: 0.65,
+    transparent: true,
+    opacity: 0.72,
     side: THREE.DoubleSide,
   });
   const ringMesh = new THREE.Mesh(COMMON_GEOS.ringFlat(), ringMat);
   ringMesh.rotation.x = -Math.PI / 2;
-  ringMesh.position.y = 0.18;
-  ringMesh.scale.setScalar(padRadius * 1.05);
+  ringMesh.position.y = 0.12;
+  ringMesh.scale.setScalar(padRadius * 0.96);
   group.add(ringMesh);
 
-  // Resource-specific 3D surface markers
+  // Resource-specific 3D surface markers (Gold Vein, Argon Crystal Vein, Fertile Soil, Wall Foundation, Tactical Cairn)
   if (socketType === 'gold_vein') {
-    const goldMat = getStdMat(0xfbbf24, 0.25, 0.85, 0xd97706, 0.45);
-    const rockMat = getStdMat(0x64748b, 0.8, 0.1);
-    group.add(makeMesh(COMMON_GEOS.dodeca(), rockMat, -0.25, 0.28, -0.15, 0, 0, 0, 0.45, 0.35, 0.45));
-    group.add(makeMesh(COMMON_GEOS.octa(), goldMat, 0.22, 0.34, 0.15, 0.3, 0.5, 0, 0.32, 0.38, 0.32));
-    group.add(makeMesh(COMMON_GEOS.octa(), goldMat, -0.1, 0.42, -0.1, 0.1, 0.2, 0, 0.24, 0.28, 0.24));
+    const goldMat = getStdMat(0xfbbf24, 0.22, 0.88, 0xd97706, 0.35);
+    const rockMat = getStdMat(0x57534e, 0.78, 0.12);
+    group.add(makeMesh(COMMON_GEOS.dodeca(), rockMat, -0.22, 0.24, -0.12, 0, 0, 0, 0.42, 0.32, 0.42));
+    group.add(makeMesh(COMMON_GEOS.octa(), goldMat, 0.20, 0.28, 0.14, 0.3, 0.5, 0, 0.28, 0.34, 0.28));
+    group.add(makeMesh(COMMON_GEOS.octa(), goldMat, -0.08, 0.36, -0.08, 0.1, 0.2, 0, 0.20, 0.24, 0.20));
   } else if (socketType === 'argon_vein') {
-    const argonMat = getStdMat(0x38bdf8, 0.15, 0.35, 0x0284c7, 1.1);
-    group.add(makeMesh(COMMON_GEOS.octa(), argonMat, 0, 0.48, 0, 0.1, 0.2, 0, 0.28, 0.65, 0.28));
-    group.add(makeMesh(COMMON_GEOS.octa(), argonMat, -0.32, 0.35, 0.18, -0.25, 0, 0.25, 0.2, 0.45, 0.2));
-    group.add(makeMesh(COMMON_GEOS.octa(), argonMat, 0.32, 0.35, -0.15, 0.22, 0, -0.25, 0.2, 0.45, 0.2));
+    const argonMat = getStdMat(0x38bdf8, 0.15, 0.35, 0x0284c7, 0.85);
+    group.add(makeMesh(COMMON_GEOS.cone4(), argonMat, 0, 0.42, 0, 0.08, 0.2, 0, 0.22, 0.62, 0.22));
+    group.add(makeMesh(COMMON_GEOS.cone4(), argonMat, -0.26, 0.30, 0.16, -0.25, 0, 0.25, 0.16, 0.42, 0.16));
+    group.add(makeMesh(COMMON_GEOS.cone4(), argonMat, 0.26, 0.30, -0.14, 0.22, 0, -0.25, 0.16, 0.42, 0.16));
   } else if (socketType === 'fertile_land') {
-    const soilMat = getStdMat(0x713f12, 0.9, 0.05);
-    const wheatMat = getStdMat(0xfacc15, 0.55, 0.1, 0xca8a04, 0.2);
-    group.add(makeMesh(COMMON_GEOS.cyl8(), soilMat, 0, 0.17, 0, 0, 0, 0, 0.95, 0.08, 0.95));
-    for (let i = -0.35; i <= 0.36; i += 0.35) {
-      group.add(makeMesh(COMMON_GEOS.cone4(), wheatMat, i, 0.34, -0.2, 0, 0, 0, 0.14, 0.34, 0.14));
-      group.add(makeMesh(COMMON_GEOS.cone4(), wheatMat, i, 0.34, 0.2, 0, 0, 0, 0.14, 0.34, 0.14));
+    const soilMat = getStdMat(0x5c4033, 0.88, 0.05);
+    const wheatMat = getStdMat(0xeab308, 0.55, 0.1, 0xca8a04, 0.15);
+    group.add(makeMesh(COMMON_GEOS.cyl8(), soilMat, 0, 0.12, 0, 0, 0, 0, 0.85, 0.06, 0.85));
+    for (let i = -0.28; i <= 0.29; i += 0.28) {
+      group.add(makeMesh(COMMON_GEOS.cone4(), wheatMat, i, 0.26, -0.16, 0, 0, 0, 0.11, 0.28, 0.11));
+      group.add(makeMesh(COMMON_GEOS.cone4(), wheatMat, i, 0.26, 0.16, 0, 0, 0, 0.11, 0.28, 0.11));
     }
   } else if (socketType === 'wall') {
-    const stoneMat = getStdMat(0x94a3b8, 0.75, 0.15);
-    group.add(makeMesh(COMMON_GEOS.box(), stoneMat, -0.45, 0.25, 0, 0, 0, 0, 0.38, 0.24, 0.48));
-    group.add(makeMesh(COMMON_GEOS.box(), stoneMat, 0.45, 0.25, 0, 0, 0, 0, 0.38, 0.24, 0.48));
+    const stoneMat = getStdMat(0x78716c, 0.78, 0.12);
+    group.add(makeMesh(COMMON_GEOS.box(), stoneMat, -0.38, 0.18, 0, 0, 0, 0, 0.32, 0.18, 0.40));
+    group.add(makeMesh(COMMON_GEOS.box(), stoneMat, 0.38, 0.18, 0, 0, 0, 0, 0.32, 0.18, 0.40));
   } else {
-    // Tactical Runic Stone Circle
-    const runeMat = getStdMat(0xc4b5fd, 0.3, 0.4, 0x7c3aed, 0.5);
+    // Subtle Carved Stone Corner Cairns
+    const cairnMat = getStdMat(0x78716c, 0.72, 0.18);
     for (let i = 0; i < 4; i++) {
       const ang = (i * Math.PI) / 2 + Math.PI / 4;
       group.add(makeMesh(
         COMMON_GEOS.box(),
-        runeMat,
-        Math.cos(ang) * 0.78,
-        0.24,
-        Math.sin(ang) * 0.78,
+        cairnMat,
+        Math.cos(ang) * 0.72,
+        0.16,
+        Math.sin(ang) * 0.72,
         0,
         -ang,
         0,
-        0.18,
-        0.22,
-        0.18
+        0.15,
+        0.16,
+        0.15
       ));
     }
   }
