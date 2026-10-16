@@ -217,7 +217,11 @@ export class SceneManager {
       );
     } else if (this.cameraMode === 'action') {
       // Close dynamic 3rd-person action view
-      desiredTarget.set(focus.x, 1.8, focus.z - 3.5);
+      desiredTarget.set(
+        focus.x - Math.sin(this.cameraYaw) * 2.2,
+        1.8,
+        focus.z - Math.cos(this.cameraYaw) * 2.2
+      );
       const dist = 16.5 * this.cameraZoom;
       desiredPos.set(
         focus.x + Math.sin(this.cameraYaw) * dist,
@@ -238,7 +242,7 @@ export class SceneManager {
       );
     }
 
-    const smooth = 1 - Math.exp(-8.5 * dt);
+    const smooth = 1 - Math.exp(-10.5 * dt);
     this.cameraTarget.lerp(desiredTarget, smooth);
     this.cameraPos.lerp(desiredPos, smooth);
 

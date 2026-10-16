@@ -223,6 +223,8 @@ export class GameEngine {
       def,
       x: 0,
       z: 7.5,
+      vx: 0,
+      vz: 0,
       targetX: null,
       targetZ: null,
       rotationY: 0,
@@ -991,6 +993,12 @@ export class GameEngine {
     }
   }
 
+  lerpAngle(current, target, alpha) {
+    let diff = ((target - current + Math.PI) % (Math.PI * 2)) - Math.PI;
+    if (diff < -Math.PI) diff += Math.PI * 2;
+    return current + diff * Math.min(1, alpha);
+  }
+
   updateHero(dt, inputState) {
     const h = this.hero;
     if (!h) return;
@@ -1013,6 +1021,8 @@ export class GameEngine {
         h.hp = h.maxHp;
         h.x = 0;
         h.z = 6.5;
+        h.vx = 0;
+        h.vz = 0;
         if (h.mesh) h.mesh.visible = true;
         this.vfxManager?.spawnShockwave(h.x, h.z, 5.0, 0xfde047, 0.6);
         this.vfxManager?.spawnFloatingText(h.x, 3.2, h.z, '👑 군주 부활!', '#fde047', true);
@@ -1029,6 +1039,7 @@ export class GameEngine {
     // Movement via WASD or Click-to-Move target
     let moveX = inputState.moveX || 0;
     let moveZ = inputState.moveZ || 0;
+    let arrivalSlowdown = 1.0;
     if (Math.hypot(moveX, moveZ) > 0.05) {
       h.targetX = null;
       h.targetZ = null;
@@ -1036,9 +1047,10 @@ export class GameEngine {
       const dx = h.targetX - h.x;
       const dz = h.targetZ - h.z;
       const dist = Math.hypot(dx, dz);
-      if (dist > 0.4) {
+      if (dist > 0.25) {
         moveX = dx / dist;
         moveZ = dz / dist;
+        arrivalSlowdown = Math.min(1.0, Math.max(0.35, dist / 2.2));
       } else {
         h.targetX = null;
         h.targetZ = null;
@@ -1046,20 +1058,33 @@ export class GameEngine {
     }
 
     const moveLen = Math.hypot(moveX, moveZ);
-    const isMoving = moveLen > 0.05;
-    if (isMoving) {
-      const normX = moveX / moveLen;
-      const normZ = moveZ / moveLen;
-      let speed =
-        h.def.stats.moveSpeed *
-        (1 +
-          (this.sanctumStats.heroMoveSpeedMult || 0) +
-          (this.relicState.mods.heroMoveSpeedMult || 0) +
-          (h.hasteBuffTimer > 0 ? 0.40 : 0));
+    const hasInput = moveLen > 0.05;
+    const maxSpeed =
+      h.def.stats.moveSpeed *
+      (1 +
+        (this.sanctumStats.heroMoveSpeedMult || 0) +
+        (this.relicState.mods.heroMoveSpeedMult || 0) +
+        (h.hasteBuffTimer > 0 ? 0.40 : 0)) *
+      arrivalSlowdown;
 
-      h.x = Math.max(-40, Math.min(40, h.x + normX * speed * dt));
-      h.z = Math.max(-40, Math.min(40, h.z + normZ * speed * dt));
-      h.rotationY = Math.atan2(normX, normZ);
+    const desiredVx = hasInput ? (moveX / moveLen) * maxSpeed : 0;
+    const desiredVz = hasInput ? (moveZ / moveLen) * maxSpeed : 0;
+
+    // Smooth acceleration & deceleration damping
+    const accelAlpha = Math.min(1, dt * (hasInput ? 16.0 : 14.0));
+    h.vx = (h.vx || 0) + (desiredVx - (h.vx || 0)) * accelAlpha;
+    h.vz = (h.vz || 0) + (desiredVz - (h.vz || 0)) * accelAlpha;
+
+    const currentSpeed = Math.hypot(h.vx, h.vz);
+    const isMoving = currentSpeed > 0.35;
+
+    if (currentSpeed > 0.02) {
+      h.x = Math.max(-40, Math.min(40, h.x + h.vx * dt));
+      h.z = Math.max(-40, Math.min(40, h.z + h.vz * dt));
+      if (hasInput) {
+        const targetRot = Math.atan2(moveX, moveZ);
+        h.rotationY = this.lerpAngle(h.rotationY, targetRot, dt * 14.0);
+      }
     }
 
     // Hero Auto-Attack against nearest enemy in range
@@ -1076,7 +1101,8 @@ export class GameEngine {
       }
 
       if (nearest) {
-        h.rotationY = Math.atan2(nearest.x - h.x, nearest.z - h.z);
+        const faceTargetRot = Math.atan2(nearest.x - h.x, nearest.z - h.z);
+        h.rotationY = this.lerpAngle(h.rotationY, faceTargetRot, isMoving ? 0.45 : 0.85);
         const speedMult =
           1 +
           (this.relicState.mods.heroAttackSpeedMult || 0) +
@@ -1560,7 +1586,9 @@ export class GameEngine {
           const dz = target.z - t.z;
           t.x += (dx / bestDist) * t.speed * dt;
           t.z += (dz / bestDist) * t.speed * dt;
-          if (t.mesh) t.mesh.rotation.y = Math.atan2(dx, dz);
+          if (t.mesh) {
+            t.mesh.rotation.y = this.lerpAngle(t.mesh.rotation.y, Math.atan2(dx, dz), dt * 12.0);
+          }
         } else if (t.attackCooldown <= 0) {
           t.attackCooldown = 0.85;
           let dmg = t.damage;
@@ -1590,7 +1618,9 @@ export class GameEngine {
           isMoving = true;
           t.x += (dx / distHome) * t.speed * dt;
           t.z += (dz / distHome) * t.speed * dt;
-          if (t.mesh) t.mesh.rotation.y = Math.atan2(dx, dz);
+          if (t.mesh) {
+            t.mesh.rotation.y = this.lerpAngle(t.mesh.rotation.y, Math.atan2(dx, dz), dt * 12.0);
+          }
         }
       }
 
@@ -1671,7 +1701,7 @@ export class GameEngine {
         e.z += (dz / dist) * curSpeed * dt;
         if (e.mesh) {
           e.mesh.position.set(e.x, 0, e.z);
-          e.mesh.rotation.y = Math.atan2(dx, dz);
+          e.mesh.rotation.y = this.lerpAngle(e.mesh.rotation.y, Math.atan2(dx, dz), dt * 10.0);
           this.meshFactory?.animateUnitMesh(e.mesh, { isMoving: true, hitFlash: e.hitFlash }, this.elapsedTime);
         }
       } else if (e.attackCooldown <= 0) {

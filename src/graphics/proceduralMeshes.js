@@ -13,7 +13,7 @@ function getGeo(key, factory) {
   return GEO_CACHE.get(key);
 }
 
-function getStdMat(color, roughness = 0.65, metalness = 0.15, emissive = 0x000000, emissiveIntensity = 0, flatShading = true, opacity = 1.0) {
+function getStdMat(color, roughness = 0.48, metalness = 0.18, emissive = 0x000000, emissiveIntensity = 0, flatShading = false, opacity = 1.0) {
   const key = `${color}_${roughness}_${metalness}_${emissive}_${emissiveIntensity}_${flatShading}_${opacity}`;
   if (!MAT_CACHE.has(key)) {
     const mat = new THREE.MeshStandardMaterial({
@@ -57,20 +57,79 @@ function makeMesh(geo, mat, x = 0, y = 0, z = 0, rx = 0, ry = 0, rz = 0, sx = 1,
   return m;
 }
 
-// Common reusable primitive geometries
+/**
+ * Generates a crease-free, smoothly filleted Rounded Box Geometry with analytic vertex normals.
+ */
+function createRoundedBoxGeometry(width = 1, height = 1, depth = 1, radius = 0.16, smoothness = 5) {
+  const segs = smoothness * 2;
+  const geo = new THREE.BoxGeometry(width, height, depth, segs, segs, segs);
+  const pos = geo.attributes.position;
+  const norm = geo.attributes.normal;
+
+  const hx = Math.max(0.01, width * 0.5 - radius);
+  const hy = Math.max(0.01, height * 0.5 - radius);
+  const hz = Math.max(0.01, depth * 0.5 - radius);
+  const v = new THREE.Vector3();
+  const c = new THREE.Vector3();
+  const n = new THREE.Vector3();
+
+  for (let i = 0; i < pos.count; i++) {
+    v.fromBufferAttribute(pos, i);
+    c.set(
+      Math.max(-hx, Math.min(hx, v.x)),
+      Math.max(-hy, Math.min(hy, v.y)),
+      Math.max(-hz, Math.min(hz, v.z))
+    );
+    n.subVectors(v, c);
+    if (n.lengthSq() > 1e-6) {
+      n.normalize();
+    } else {
+      n.fromBufferAttribute(norm, i).normalize();
+    }
+    pos.setXYZ(i, c.x + n.x * radius, c.y + n.y * radius, c.z + n.z * radius);
+    norm.setXYZ(i, n.x, n.y, n.z);
+  }
+  pos.needsUpdate = true;
+  norm.needsUpdate = true;
+  return geo;
+}
+
+/**
+ * Generates a smooth, organically sculpted pebble/boulder geometry with soft shared vertex normals.
+ */
+function createSmoothBoulderGeometry(radius = 1) {
+  const geo = new THREE.SphereGeometry(radius, 32, 24);
+  const pos = geo.attributes.position;
+  const v = new THREE.Vector3();
+  for (let i = 0; i < pos.count; i++) {
+    v.fromBufferAttribute(pos, i);
+    const wave =
+      1.0 +
+      0.07 * Math.sin(v.x * 2.6 + v.y * 1.9) +
+      0.05 * Math.cos(v.z * 2.9 - v.x * 1.7);
+    v.multiplyScalar(wave);
+    // Slightly flatten bottom for natural resting look
+    if (v.y < 0) v.y *= 0.84;
+    pos.setXYZ(i, v.x, v.y, v.z);
+  }
+  geo.computeVertexNormals();
+  return geo;
+}
+
+// Smooth, high-segment reusable primitive geometries
 const COMMON_GEOS = {
-  box: () => getGeo('box_1', () => new THREE.BoxGeometry(1, 1, 1)),
-  cyl8: () => getGeo('cyl_8', () => new THREE.CylinderGeometry(1, 1, 1, 8)),
-  cyl6: () => getGeo('cyl_6', () => new THREE.CylinderGeometry(1, 1, 1, 6)),
-  cone6: () => getGeo('cone_6', () => new THREE.ConeGeometry(1, 1, 6)),
-  cone4: () => getGeo('cone_4', () => new THREE.ConeGeometry(1, 1, 4)),
-  octa: () => getGeo('octa_0', () => new THREE.OctahedronGeometry(1, 0)),
-  dodeca: () => getGeo('dodeca_0', () => new THREE.DodecahedronGeometry(1, 0)),
-  icosa: () => getGeo('icosa_0', () => new THREE.IcosahedronGeometry(1, 0)),
-  sphereLow: () => getGeo('sphere_8_6', () => new THREE.SphereGeometry(1, 8, 6)),
-  torusLow: () => getGeo('torus_1_012', () => new THREE.TorusGeometry(1, 0.12, 6, 18)),
-  ringFlat: () => getGeo('ring_075_1', () => new THREE.RingGeometry(0.75, 1.0, 28)),
-  discFlat: () => getGeo('disc_16', () => new THREE.CircleGeometry(1, 16)),
+  box: () => getGeo('smooth_rbox_1', () => createRoundedBoxGeometry(1, 1, 1, 0.16, 5)),
+  cyl8: () => getGeo('smooth_cyl_32', () => new THREE.CylinderGeometry(1, 1, 1, 32)),
+  cyl6: () => getGeo('smooth_cyl_24', () => new THREE.CylinderGeometry(1, 1, 1, 24)),
+  cone6: () => getGeo('smooth_cone_32', () => new THREE.ConeGeometry(1, 1, 32)),
+  cone4: () => getGeo('smooth_cone_20', () => new THREE.ConeGeometry(1, 1, 20)),
+  octa: () => getGeo('smooth_gem', () => new THREE.SphereGeometry(1, 16, 12)),
+  dodeca: () => getGeo('smooth_boulder', () => createSmoothBoulderGeometry(1)),
+  icosa: () => getGeo('smooth_icosa', () => new THREE.SphereGeometry(1, 24, 18)),
+  sphereLow: () => getGeo('smooth_sphere_32', () => new THREE.SphereGeometry(1, 32, 24)),
+  torusLow: () => getGeo('smooth_torus_48', () => new THREE.TorusGeometry(1, 0.12, 20, 48)),
+  ringFlat: () => getGeo('smooth_ring_56', () => new THREE.RingGeometry(0.76, 1.0, 56)),
+  discFlat: () => getGeo('smooth_disc_48', () => new THREE.CircleGeometry(1, 48)),
 };
 
 // ============================================================================
@@ -856,19 +915,19 @@ export function createEnemyMesh(enemyDef = {}) {
   // Clone material per enemy so hitFlash can tint individual units cleanly
   const primaryMat = new THREE.MeshStandardMaterial({
     color: new THREE.Color(primaryHex),
-    roughness: 0.55,
+    roughness: 0.44,
     metalness: 0.25,
-    flatShading: true,
+    flatShading: false,
   });
   const accentMat = new THREE.MeshStandardMaterial({
     color: new THREE.Color(accentHex),
     emissive: new THREE.Color(accentHex),
     emissiveIntensity: isBoss ? 0.85 : 0.45,
-    roughness: 0.3,
+    roughness: 0.28,
     metalness: 0.4,
-    flatShading: true,
+    flatShading: false,
   });
-  const darkArmorMat = getStdMat(0x1e293b, 0.5, 0.7);
+  const darkArmorMat = getStdMat(0x1e293b, 0.45, 0.7);
   hitMeshes.push(primaryMat, accentMat);
 
   // Ground indicator: Boss Menace Ring or Flying Ground Shadow Disc
@@ -1015,8 +1074,8 @@ export function animateUnitMesh(group, animState = {}, elapsedTime = 0) {
       bodyGroup.rotation.z = Math.cos(elapsedTime * 2.6) * 0.06;
     } else {
       const walkPhase = elapsedTime * 10.5;
-      bodyGroup.position.y = Math.abs(Math.sin(walkPhase)) * 0.12;
-      bodyGroup.rotation.z = Math.sin(walkPhase) * 0.05;
+      bodyGroup.position.y = Math.abs(Math.sin(walkPhase)) * 0.10;
+      bodyGroup.rotation.z = Math.sin(walkPhase) * 0.04;
     }
   }
 
@@ -1055,15 +1114,15 @@ export function createTroopMesh(unitType = 'swordsman') {
 
   const armorMat = new THREE.MeshStandardMaterial({
     color: new THREE.Color(isPaladin || isValkyrie ? 0xfef08a : 0xe2e8f0),
-    roughness: 0.3,
-    metalness: 0.8,
-    flatShading: true,
+    roughness: 0.28,
+    metalness: 0.78,
+    flatShading: false,
   });
   const tabardMat = new THREE.MeshStandardMaterial({
     color: new THREE.Color(isValkyrie ? 0x38bdf8 : isPaladin ? 0xf59e0b : 0x2563eb),
-    roughness: 0.55,
+    roughness: 0.48,
     metalness: 0.2,
-    flatShading: true,
+    flatShading: false,
   });
   const goldMat = getStdMat(0xf59e0b, 0.25, 0.85, 0xd97706, 0.35);
 
@@ -1110,7 +1169,7 @@ export function createTroopMesh(unitType = 'swordsman') {
 // ============================================================================
 
 /**
- * Creates an Abyssal Rift Spawn Portal with jagged obsidian pillars and rotating vortex rings.
+ * Creates an Abyssal Rift Spawn Portal with sculpted obsidian pillars and rotating vortex rings.
  * @param {Object} portalDef
  * @returns {THREE.Group}
  */
@@ -1118,14 +1177,14 @@ export function createPortalMesh(portalDef = {}) {
   const group = new THREE.Group();
   group.name = `Portal_${portalDef.id || 'rift'}`;
 
-  const obsidianMat = getStdMat(0x1e1b4b, 0.45, 0.5);
+  const obsidianMat = getStdMat(0x1e1b4b, 0.38, 0.55);
   const riftGlow = getStdMat(0xe879f9, 0.15, 0.3, 0xa21caf, 1.35);
   const crimsonGlow = getStdMat(0xf43f5e, 0.2, 0.3, 0xbe123c, 1.15);
 
-  // Dark Runic Platform
-  group.add(makeMesh(COMMON_GEOS.cyl8(), obsidianMat, 0, 0.16, 0, 0, 0, 0, 2.2, 0.32, 2.2));
+  // Smooth Runic Platform
+  group.add(makeMesh(COMMON_GEOS.cyl8(), obsidianMat, 0, 0.16, 0, 0, 0, 0, 2.35, 0.32, 2.35));
 
-  // Twin Jagged Obsidian Arch Pillars
+  // Twin Sculpted Obsidian Arch Pillars
   group.add(makeMesh(COMMON_GEOS.cone4(), obsidianMat, -1.45, 1.65, 0, 0, 0, -0.16, 0.48, 3.2, 0.48));
   group.add(makeMesh(COMMON_GEOS.cone4(), obsidianMat, 1.45, 1.65, 0, 0, 0, 0.16, 0.48, 3.2, 0.48));
 
@@ -1156,10 +1215,9 @@ export function createPortalMesh(portalDef = {}) {
 // ============================================================================
 
 /**
- * Builds the complete 3D island diorama for a Realm: multi-tiered terrain plateau,
- * cobble roads connecting spawn portals to the Citadel, moat/river accents,
- * perimeter rocky cliffs, and 75+ procedural trees/pines/cacti/obsidian spires
- * while keeping build sockets and paths clear.
+ * Builds the complete 3D island diorama for a Realm: smooth multi-tiered terrain plateau,
+ * Royal Citadel Courtyard Plaza, continuous paved highways connecting spawn portals to the Citadel,
+ * moat/river accents, and 80+ smooth organic biome trees/pines/crystals/boulders.
  * @param {Object} realmDef
  * @returns {THREE.Group}
  */
@@ -1168,31 +1226,44 @@ export function createEnvironmentDiorama(realmDef = {}) {
   group.name = `Environment_${realmDef.id || 'realm'}`;
 
   const palette = realmDef.palette || {};
-  const groundColor = palette.groundColor || 0x3f6212;
+  const groundColor = palette.groundPrimary || palette.groundColor || 0x2d5a27;
+  const subGroundColor = palette.groundSecondary || 0x1e3f20;
   const cliffColor = palette.cliffColor || 0x475569;
-  const roadColor = palette.roadColor || 0xa8a29e;
+  const roadColor = palette.pathColor || palette.roadColor || 0x9ca3af;
   const waterColor = palette.waterColor || 0x0284c7;
-  const foliageColor = palette.foliageColor || 0x15803d;
-  const crystalColor = palette.crystalColor || 0x38bdf8;
+  const foliageColor = palette.foliageColor || 0x16a34a;
+  const foliageAltColor = palette.foliageAltColor || 0x22c55e;
+  const crystalColor = palette.crystalColor || palette.accentGlow || 0x38bdf8;
 
-  const groundMat = getStdMat(groundColor, 0.88, 0.05);
-  const cliffMat = getStdMat(cliffColor, 0.85, 0.12);
-  const roadMat = getStdMat(roadColor, 0.9, 0.05);
-  const waterMat = getStdMat(waterColor, 0.2, 0.35, waterColor, 0.25, true, 0.88);
-  const foliageMat = getStdMat(foliageColor, 0.75, 0.08);
-  const trunkMat = getStdMat(0x5c4033, 0.85, 0.05);
-  const crystalMat = getStdMat(crystalColor, 0.2, 0.4, crystalColor, 0.85);
+  const groundMat = getStdMat(groundColor, 0.72, 0.06);
+  const subGroundMat = getStdMat(subGroundColor, 0.78, 0.05);
+  const cliffMat = getStdMat(cliffColor, 0.75, 0.14);
+  const roadMat = getStdMat(roadColor, 0.62, 0.08);
+  const roadBorderMat = getStdMat(0x64748b, 0.58, 0.18);
+  const waterMat = getStdMat(waterColor, 0.16, 0.38, waterColor, 0.25, true, 0.88);
+  const foliageMat = getStdMat(foliageColor, 0.62, 0.06);
+  const foliageAltMat = getStdMat(foliageAltColor, 0.58, 0.06);
+  const trunkMat = getStdMat(0x5c4033, 0.78, 0.05);
+  const crystalMat = getStdMat(crystalColor, 0.18, 0.45, crystalColor, 0.85);
 
-  // 1. Main Island Plateau & Lower Cliff Pedestal
+  // 1. Main Smooth Island Plateau (64 radial segments for silky circular silhouette)
   const mainPlateau = makeMesh(
-    getGeo('island_top', () => new THREE.CylinderGeometry(46, 48, 2.4, 24)),
+    getGeo('island_top_smooth', () => new THREE.CylinderGeometry(46.5, 48.2, 2.4, 64)),
     groundMat,
     0, -1.2, 0, 0, 0, 0, 1, 1, 1, false, true
   );
   group.add(mainPlateau);
 
+  // Soft Beveled Upper Turf Rim
+  const turfRim = makeMesh(
+    getGeo('island_turf_rim', () => new THREE.TorusGeometry(46.2, 0.65, 16, 64)),
+    subGroundMat,
+    0, -0.35, 0, Math.PI / 2, 0, 0, 1, 1, 0.6, false, true
+  );
+  group.add(turfRim);
+
   const deepPedestal = makeMesh(
-    getGeo('island_cliff', () => new THREE.CylinderGeometry(48, 36, 12, 20)),
+    getGeo('island_cliff_smooth', () => new THREE.CylinderGeometry(48.2, 36, 12, 48)),
     cliffMat,
     0, -8.2, 0, 0, 0, 0, 1, 1, 1, false, true
   );
@@ -1200,14 +1271,35 @@ export function createEnvironmentDiorama(realmDef = {}) {
 
   // Subtle decorative moat/water ring outside the island
   const outerWater = new THREE.Mesh(
-    getGeo('water_ring', () => new THREE.RingGeometry(47, 88, 32)),
+    getGeo('water_ring_smooth', () => new THREE.RingGeometry(47, 92, 64)),
     waterMat
   );
   outerWater.rotation.x = -Math.PI / 2;
   outerWater.position.y = -1.6;
   group.add(outerWater);
 
-  // 2. Road Paths from Spawn Portals toward the Citadel (0, 0)
+  // 2. Royal Citadel Central Courtyard Plaza
+  const plazaDisc = makeMesh(
+    COMMON_GEOS.cyl8(),
+    roadMat,
+    0, 0.025, 0,
+    0, 0, 0,
+    7.8, 0.05, 7.8,
+    false, true
+  );
+  group.add(plazaDisc);
+
+  const plazaRim = makeMesh(
+    COMMON_GEOS.torusLow(),
+    roadBorderMat,
+    0, 0.04, 0,
+    Math.PI / 2, 0, 0,
+    7.85, 7.85, 0.35,
+    false, true
+  );
+  group.add(plazaRim);
+
+  // 3. Smooth Continuous Paved Highways from Spawn Portals toward the Citadel (0, 0)
   const portals = realmDef.spawnPortals || [
     { x: 0, z: -32 },
     { x: -28, z: 16 },
@@ -1219,6 +1311,20 @@ export function createEnvironmentDiorama(realmDef = {}) {
     const px = p.x || 0;
     const pz = p.z || -30;
     const dist = Math.hypot(px, pz);
+    const angleY = Math.atan2(px, pz);
+
+    // Continuous smooth road ribbon from portal to central plaza
+    const roadRibbon = makeMesh(
+      COMMON_GEOS.box(),
+      roadMat,
+      px * 0.5, 0.018, pz * 0.5,
+      0, angleY, 0,
+      3.1, 0.045, dist,
+      false, true
+    );
+    group.add(roadRibbon);
+
+    // Subtle stone curbing strips along the highway edges
     const steps = Math.max(6, Math.floor(dist / 2.6));
     for (let s = 1; s < steps; s++) {
       const t = s / steps;
@@ -1226,36 +1332,39 @@ export function createEnvironmentDiorama(realmDef = {}) {
       const rz = pz * (1 - t);
       roadWaypoints.push({ x: rx, z: rz });
 
-      const cobble = makeMesh(
-        COMMON_GEOS.cyl8(),
-        roadMat,
-        rx, 0.02, rz,
-        0, (s * 0.7), 0,
-        1.75, 0.05, 1.45,
-        false, true
-      );
-      group.add(cobble);
+      // Smooth inlaid medallion stone along road center
+      if (s % 2 === 0) {
+        const paver = makeMesh(
+          COMMON_GEOS.cyl8(),
+          roadBorderMat,
+          rx, 0.028, rz,
+          0, angleY, 0,
+          1.15, 0.04, 1.15,
+          false, true
+        );
+        group.add(paver);
+      }
     }
   });
 
   // Collect keep-out zones (sockets, portals, citadel center, and road tiles)
   const sockets = realmDef.sockets || [];
   function isClearOfGameplay(x, z) {
-    if (Math.hypot(x, z) < 7.5) return false; // Keep Citadel plaza clear
+    if (Math.hypot(x, z) < 8.4) return false; // Keep Citadel plaza clear
     for (let i = 0; i < sockets.length; i++) {
-      if (Math.hypot(x - sockets[i].x, z - sockets[i].z) < 4.2) return false;
+      if (Math.hypot(x - sockets[i].x, z - sockets[i].z) < 4.4) return false;
     }
     for (let i = 0; i < portals.length; i++) {
-      if (Math.hypot(x - portals[i].x, z - portals[i].z) < 5.0) return false;
+      if (Math.hypot(x - portals[i].x, z - portals[i].z) < 5.2) return false;
     }
     for (let i = 0; i < roadWaypoints.length; i++) {
-      if (Math.hypot(x - roadWaypoints[i].x, z - roadWaypoints[i].z) < 2.9) return false;
+      if (Math.hypot(x - roadWaypoints[i].x, z - roadWaypoints[i].z) < 3.1) return false;
     }
     return true;
   }
 
   // Deterministic pseudo-random helper seeded by realm ID
-  const realmIdStr = String(realmDef.id || 'verdant_crown');
+  const realmIdStr = String(realmDef.id || 'solaria_meadows');
   let seed = 1337;
   for (let i = 0; i < realmIdStr.length; i++) {
     seed = (seed * 31 + realmIdStr.charCodeAt(i)) % 100000;
@@ -1265,16 +1374,16 @@ export function createEnvironmentDiorama(realmDef = {}) {
     return (seed - 1) / 2147483646;
   };
 
-  // 3. Perimeter Cliffs & 80+ Biome-Specific Props (Trees, Pines, Cacti, Obsidian Spires, Crystals)
+  // 4. Perimeter Cliffs & 82+ Smooth Organic Biome Props
   const isFrost = realmIdStr.includes('frost') || realmIdStr.includes('glacier') || realmIdStr.includes('boreal');
   const isDesert = realmIdStr.includes('sun') || realmIdStr.includes('sand') || realmIdStr.includes('desert');
-  const isVolcanic = realmIdStr.includes('cinder') || realmIdStr.includes('magma') || realmIdStr.includes('rift') || realmIdStr.includes('void');
+  const isVolcanic = realmIdStr.includes('cinder') || realmIdStr.includes('magma') || realmIdStr.includes('rift') || realmIdStr.includes('void') || realmIdStr.includes('caldera');
 
   let placedProps = 0;
   let attempts = 0;
-  while (placedProps < 82 && attempts < 360) {
+  while (placedProps < 84 && attempts < 380) {
     attempts++;
-    const radius = 14 + nextRand() * 29;
+    const radius = 14 + nextRand() * 29.5;
     const angle = nextRand() * Math.PI * 2;
     const x = Math.cos(angle) * radius;
     const z = Math.sin(angle) * radius;
@@ -1282,33 +1391,47 @@ export function createEnvironmentDiorama(realmDef = {}) {
     if (!isClearOfGameplay(x, z)) continue;
     placedProps++;
 
-    const propScale = 0.8 + nextRand() * 0.65;
+    const propScale = 0.82 + nextRand() * 0.65;
     const propRoll = nextRand();
 
     if (propRoll < 0.18) {
-      // Jagged Rock / Crystal Outcrop
-      group.add(makeMesh(COMMON_GEOS.dodeca(), cliffMat, x, 0.45 * propScale, z, 0, angle, 0, 1.1 * propScale, 0.9 * propScale, 1.0 * propScale));
-      if (propRoll < 0.08) {
-        group.add(makeMesh(COMMON_GEOS.octa(), crystalMat, x + 0.3, 0.85 * propScale, z, 0.2, angle, 0, 0.32 * propScale, 0.85 * propScale, 0.32 * propScale));
+      // Smooth River Boulder & Crystal Cluster
+      group.add(makeMesh(COMMON_GEOS.dodeca(), cliffMat, x, 0.42 * propScale, z, 0, angle, 0, 1.15 * propScale, 0.78 * propScale, 1.05 * propScale));
+      group.add(makeMesh(COMMON_GEOS.dodeca(), cliffMat, x - 0.45 * propScale, 0.28 * propScale, z + 0.35 * propScale, 0, -angle, 0, 0.68 * propScale, 0.52 * propScale, 0.65 * propScale));
+      if (propRoll < 0.09) {
+        group.add(makeMesh(COMMON_GEOS.octa(), crystalMat, x + 0.25 * propScale, 0.88 * propScale, z, 0.18, angle, 0, 0.32 * propScale, 0.92 * propScale, 0.32 * propScale));
       }
     } else if (isDesert) {
-      // Saguaro Cactus / Sandstone Pillar
-      group.add(makeMesh(COMMON_GEOS.cyl6(), foliageMat, x, 0.85 * propScale, z, 0, 0, 0, 0.22 * propScale, 1.7 * propScale, 0.22 * propScale));
-      group.add(makeMesh(COMMON_GEOS.box(), foliageMat, x + 0.28 * propScale, 1.05 * propScale, z, 0, 0, 0.3, 0.38 * propScale, 0.16 * propScale, 0.16 * propScale));
+      // Smooth Rounded Saguaro Cactus / Oasis Palm
+      group.add(makeMesh(COMMON_GEOS.cyl6(), foliageMat, x, 0.85 * propScale, z, 0, 0, 0, 0.24 * propScale, 1.7 * propScale, 0.24 * propScale));
+      group.add(makeMesh(COMMON_GEOS.sphereLow(), foliageMat, x, 1.7 * propScale, z, 0, 0, 0, 0.24 * propScale, 0.24 * propScale, 0.24 * propScale));
+      group.add(makeMesh(COMMON_GEOS.box(), foliageMat, x + 0.32 * propScale, 1.05 * propScale, z, 0, 0, 0.25, 0.42 * propScale, 0.2 * propScale, 0.2 * propScale));
     } else if (isVolcanic) {
-      // Obsidian Spire
-      group.add(makeMesh(COMMON_GEOS.cone6(), cliffMat, x, 1.1 * propScale, z, 0, angle, 0, 0.55 * propScale, 2.2 * propScale, 0.55 * propScale));
+      // Sculpted Obsidian Monolith & Glowing Magma Vent
+      group.add(makeMesh(COMMON_GEOS.cone6(), cliffMat, x, 1.15 * propScale, z, 0, angle, 0, 0.58 * propScale, 2.3 * propScale, 0.58 * propScale));
+      if (propRoll > 0.65) {
+        group.add(makeMesh(COMMON_GEOS.octa(), crystalMat, x + 0.35 * propScale, 0.65 * propScale, z, 0, 0, -0.2, 0.28 * propScale, 0.75 * propScale, 0.28 * propScale));
+      }
+    } else if (propRoll < 0.56 && !isFrost) {
+      // Lush Multi-Sphere Broadleaf Canopy Tree (Thronefall / Toy Diorama style)
+      const leafMat = propRoll < 0.36 ? foliageMat : foliageAltMat;
+      group.add(makeMesh(COMMON_GEOS.cyl6(), trunkMat, x, 0.55 * propScale, z, 0, 0, 0, 0.20 * propScale, 1.1 * propScale, 0.20 * propScale));
+      group.add(makeMesh(COMMON_GEOS.sphereLow(), leafMat, x, 1.42 * propScale, z, 0, 0, 0, 0.86 * propScale, 0.78 * propScale, 0.86 * propScale));
+      group.add(makeMesh(COMMON_GEOS.sphereLow(), leafMat, x + 0.42 * propScale, 1.22 * propScale, z + 0.25 * propScale, 0, 0, 0, 0.58 * propScale, 0.54 * propScale, 0.58 * propScale));
+      group.add(makeMesh(COMMON_GEOS.sphereLow(), leafMat, x - 0.38 * propScale, 1.26 * propScale, z - 0.28 * propScale, 0, 0, 0, 0.62 * propScale, 0.56 * propScale, 0.62 * propScale));
+      group.add(makeMesh(COMMON_GEOS.sphereLow(), foliageAltMat, x, 1.88 * propScale, z, 0, 0, 0, 0.55 * propScale, 0.50 * propScale, 0.55 * propScale));
     } else {
-      // Stylized Layered Pine / Broadleaf Tree
+      // Smooth Conical Alpine Pine Tree
       group.add(makeMesh(COMMON_GEOS.cyl6(), trunkMat, x, 0.45 * propScale, z, 0, 0, 0, 0.18 * propScale, 0.9 * propScale, 0.18 * propScale));
-      group.add(makeMesh(COMMON_GEOS.cone6(), foliageMat, x, 1.25 * propScale, z, 0, angle, 0, 0.82 * propScale, 1.25 * propScale, 0.82 * propScale));
-      group.add(makeMesh(COMMON_GEOS.cone6(), foliageMat, x, 1.85 * propScale, z, 0, -angle, 0, 0.62 * propScale, 1.05 * propScale, 0.62 * propScale));
+      group.add(makeMesh(COMMON_GEOS.cone6(), foliageMat, x, 1.22 * propScale, z, 0, angle, 0, 0.88 * propScale, 1.25 * propScale, 0.88 * propScale));
+      group.add(makeMesh(COMMON_GEOS.cone6(), foliageAltMat, x, 1.82 * propScale, z, 0, -angle, 0, 0.68 * propScale, 1.08 * propScale, 0.68 * propScale));
       if (isFrost) {
-        const snowCapMat = getStdMat(0xf8fafc, 0.6, 0.1);
-        group.add(makeMesh(COMMON_GEOS.cone6(), snowCapMat, x, 2.15 * propScale, z, 0, 0, 0, 0.42 * propScale, 0.55 * propScale, 0.42 * propScale));
+        const snowCapMat = getStdMat(0xf8fafc, 0.5, 0.08);
+        group.add(makeMesh(COMMON_GEOS.cone6(), snowCapMat, x, 2.18 * propScale, z, 0, 0, 0, 0.46 * propScale, 0.58 * propScale, 0.46 * propScale));
       }
     }
   }
 
   return group;
 }
+

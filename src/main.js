@@ -325,33 +325,37 @@ class ArgoniaApp {
     });
 
     // 3D Canvas Mouse & Wheel Controls
+    // - Left-Click (button 0): Select build socket OR move Hero (supports hold-and-drag to glide!)
+    // - Right-Click / Middle-Click Drag (button 2 or 1): Exclusively orbit 3D camera viewpoint (no hero movement overlap!)
     this.canvas.addEventListener('pointermove', (e) => {
-      this.sceneManager.updateMouseRay(e.clientX, e.clientY);
+      const worldPt = this.sceneManager.updateMouseRay(e.clientX, e.clientY);
       if (this.isRightDragging) {
         const dx = e.clientX - this.lastDragX;
         this.lastDragX = e.clientX;
-        this.sceneManager.cameraYaw -= dx * 0.007;
+        this.sceneManager.cameraYaw -= dx * 0.0075;
+        return;
+      }
+      if (this.isLeftMoving && this.engine.hero && !this.engine.hero.isDead) {
+        this.engine.hero.targetX = Math.max(-39, Math.min(39, worldPt.x));
+        this.engine.hero.targetZ = Math.max(-39, Math.min(39, worldPt.z));
       }
     });
 
     this.canvas.addEventListener('pointerdown', (e) => {
       const worldPt = this.sceneManager.updateMouseRay(e.clientX, e.clientY);
-      if (e.button === 2) {
+
+      // Right-Click (button 2) or Middle-Click (button 1): Camera Orbit ONLY
+      if (e.button === 2 || e.button === 1) {
         this.isRightDragging = true;
         this.lastDragX = e.clientX;
-        // Right click also moves hero to clicked location if not dragging
-        if (this.engine.hero && !this.engine.hero.isDead) {
-          this.engine.hero.targetX = Math.max(-39, Math.min(39, worldPt.x));
-          this.engine.hero.targetZ = Math.max(-39, Math.min(39, worldPt.z));
-          this.vfxManager.spawnShockwave(worldPt.x, worldPt.z, 1.2, 0x38bdf8, 0.25);
-        }
+        this.canvas.style.cursor = 'grabbing';
         return;
       }
 
+      // Left-Click (button 0): Select Socket or Move Hero
       if (e.button === 0) {
-        // Check if player clicked near a socket node
         let closestSock = null;
-        let bestDist = 3.8;
+        let bestDist = 3.5;
         for (const s of this.engine.sockets) {
           const d = Math.hypot(s.x - worldPt.x, s.z - worldPt.z);
           if (d < bestDist) {
@@ -364,7 +368,8 @@ class ArgoniaApp {
           this.engine.selectedSocketId = closestSock.id;
           this.renderArchitectPanel();
         } else if (this.engine.hero && !this.engine.hero.isDead) {
-          // Move hero toward clicked ground coordinate
+          // Move hero toward clicked ground coordinate (and allow holding left-button to steer)
+          this.isLeftMoving = true;
           this.engine.hero.targetX = Math.max(-39, Math.min(39, worldPt.x));
           this.engine.hero.targetZ = Math.max(-39, Math.min(39, worldPt.z));
           this.vfxManager.spawnShockwave(worldPt.x, worldPt.z, 1.1, 0xfde047, 0.22);
@@ -372,8 +377,14 @@ class ArgoniaApp {
       }
     });
 
-    window.addEventListener('pointerup', () => {
-      this.isRightDragging = false;
+    window.addEventListener('pointerup', (e) => {
+      if (e.button === 2 || e.button === 1) {
+        this.isRightDragging = false;
+        if (this.canvas) this.canvas.style.cursor = '';
+      }
+      if (e.button === 0) {
+        this.isLeftMoving = false;
+      }
     });
 
     this.canvas.addEventListener('contextmenu', (e) => e.preventDefault());
@@ -887,7 +898,7 @@ class ArgoniaApp {
       }
       const hPct = Math.max(0, Math.min(100, (snap.hero.hp / Math.max(1, snap.hero.maxHp)) * 100));
       document.getElementById('hud-hero-hp-fill').style.width = `${hPct}%`;
-      document.getElementById('hud-hero-hp-text').textContent = `${snap.hero.hp} / ${snap.hero.maxHp} HP · 이동: WASD / 클릭`;
+      document.getElementById('hud-hero-hp-text').textContent = `${snap.hero.hp} / ${snap.hero.maxHp} HP · 이동: WASD/좌클릭 · 시점: 우클릭 드래그`;
 
       // Skills Icons & Cooldowns
       for (const k of ['q', 'e', 'r']) {
@@ -1376,6 +1387,8 @@ class ArgoniaApp {
       // Gently orbit camera when Command Hub is open for a gorgeous live 3D title screen!
       this.sceneManager.cameraYaw += dt * 0.12;
     } else {
+      if (this.keysDown.has('KeyZ')) this.sceneManager.cameraYaw -= dt * 1.65;
+      if (this.keysDown.has('KeyC')) this.sceneManager.cameraYaw += dt * 1.65;
       this.engine.update(dt, { moveX, moveZ });
     }
 
