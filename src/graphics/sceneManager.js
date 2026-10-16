@@ -75,10 +75,10 @@ export class SceneManager {
       );
       this.composer.addPass(this.bloomPass);
 
-      // Vignette effect to draw focus to central diorama
+      // Vignette effect: gentle, non-intrusive edge soft focus
       this.vignettePass = new ShaderPass(VignetteShader);
-      this.vignettePass.uniforms['offset'].value = 1.05;
-      this.vignettePass.uniforms['darkness'].value = 1.15;
+      this.vignettePass.uniforms['offset'].value = 1.25;
+      this.vignettePass.uniforms['darkness'].value = 0.55;
       this.composer.addPass(this.vignettePass);
     } catch (e) {
       console.warn('PostProcessing initialization failed, fallback to standard WebGL render:', e);
@@ -87,11 +87,11 @@ export class SceneManager {
   }
 
   setupLights() {
-    this.hemiLight = new THREE.HemisphereLight(0xe0f2fe, 0x3b6e38, 0.85);
+    this.hemiLight = new THREE.HemisphereLight(0xe0f2fe, 0x3b6e38, 1.0);
     this.hemiLight.position.set(0, 50, 0);
     this.scene.add(this.hemiLight);
 
-    this.dirLight = new THREE.DirectionalLight(0xfffbeb, 1.85);
+    this.dirLight = new THREE.DirectionalLight(0xfffbeb, 2.0);
     this.dirLight.position.set(28, 46, 24);
     this.dirLight.castShadow = true;
     this.dirLight.shadow.mapSize.width = 2048;
@@ -106,12 +106,12 @@ export class SceneManager {
     this.dirLight.shadow.bias = -0.0005;
     this.scene.add(this.dirLight);
 
-    // Warm Citadel & Hero Point Lights (intensify at night!)
-    this.citadelLight = new THREE.PointLight(0xf59e0b, 1.5, 45, 1.2);
+    // Warm Citadel & Hero Point Lights (illuminate broad battlefield base at night)
+    this.citadelLight = new THREE.PointLight(0xf59e0b, 1.8, 65, 1.0);
     this.citadelLight.position.set(0, 7.5, 1);
     this.scene.add(this.citadelLight);
 
-    this.heroLight = new THREE.PointLight(0x38bdf8, 1.2, 28, 1.2);
+    this.heroLight = new THREE.PointLight(0x38bdf8, 1.5, 36, 1.0);
     this.heroLight.position.set(0, 4.0, 0);
     this.scene.add(this.heroLight);
 
@@ -166,37 +166,47 @@ export class SceneManager {
     const t = this.nightBlend;
     const pal = this.currentPalette;
 
+    // Luminous twilight sky (no pitch-black void)
     const dayBg = new THREE.Color(pal.daySkyHorizon || 0x93c5fd);
-    const nightBg = new THREE.Color(pal.nightSkyHorizon || 0x1e1b4b);
+    const nightBg = new THREE.Color(pal.nightSkyHorizon || 0x243058);
+    // Lift night background luminance so horizon stays airy and visible
+    nightBg.offsetHSL(0, -0.05, 0.14);
     const bg = dayBg.lerp(nightBg, t);
     this.scene.background.copy(bg);
     this.scene.fog.color.copy(bg);
-    this.scene.fog.density = THREE.MathUtils.lerp(0.0055, 0.0072, t);
+    // Softer fog at night so the battlefield and enemy portals remain crystal clear
+    this.scene.fog.density = THREE.MathUtils.lerp(0.0050, 0.0035, t);
 
+    // Directional Light: Crisp silver moonlight with high visibility
     const daySun = new THREE.Color(pal.daySun || 0xfffbeb);
-    const nightMoon = new THREE.Color(pal.nightMoon || 0x93c5fd);
+    const nightMoon = new THREE.Color(0xdbeafe);
     this.dirLight.color.copy(daySun).lerp(nightMoon, t);
-    this.dirLight.intensity = THREE.MathUtils.lerp(2.0, 1.55, t);
+    // Moonlight intensity remains bright (2.25) so units and shadows pop
+    this.dirLight.intensity = THREE.MathUtils.lerp(2.0, 2.25, t);
 
     // Shift sun/moon angle subtly between day and night
     this.dirLight.position.set(
       THREE.MathUtils.lerp(28, -22, t),
-      THREE.MathUtils.lerp(48, 42, t),
+      THREE.MathUtils.lerp(48, 44, t),
       THREE.MathUtils.lerp(24, 18, t)
     );
 
+    // Ambient Hemisphere: High ambient fill at night so ground and units are always bright
     const dayHemiSky = new THREE.Color(pal.daySkyHorizon || 0xe0f2fe);
-    const nightHemiSky = new THREE.Color(0x60a5fa);
+    const nightHemiSky = new THREE.Color(0xa5b4fc); // soft celestial indigo
     this.hemiLight.color.copy(dayHemiSky).lerp(nightHemiSky, t);
-    this.hemiLight.groundColor.setHex(pal.groundPrimary || 0x334155);
-    this.hemiLight.intensity = THREE.MathUtils.lerp(1.05, 0.85, t);
 
-    // Night boosts warm citadel & hero point lights for dramatic contrast
-    this.citadelLight.intensity = THREE.MathUtils.lerp(1.0, 3.8, t);
-    this.heroLight.intensity = THREE.MathUtils.lerp(0.8, 2.8, t);
+    const dayGround = new THREE.Color(pal.groundPrimary || 0x3b6e38);
+    const nightGround = new THREE.Color(0x384c68); // soft slate ambient bounce
+    this.hemiLight.groundColor.copy(dayGround).lerp(nightGround, t);
+    this.hemiLight.intensity = THREE.MathUtils.lerp(1.1, 1.45, t);
+
+    // Citadel and hero lights illuminate the base warmly
+    this.citadelLight.intensity = THREE.MathUtils.lerp(1.2, 5.0, t);
+    this.heroLight.intensity = THREE.MathUtils.lerp(1.0, 3.5, t);
     if (this.rimLight) {
-      this.rimLight.color.setHex(t > 0.5 ? 0x818cf8 : 0xfef08a);
-      this.rimLight.intensity = THREE.MathUtils.lerp(0.85, 1.45, t);
+      this.rimLight.color.setHex(t > 0.5 ? 0x93c5fd : 0xfef08a);
+      this.rimLight.intensity = THREE.MathUtils.lerp(0.85, 1.55, t);
     }
   }
 
