@@ -4,6 +4,11 @@
  */
 
 import * as THREE from 'three';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { VignetteShader } from 'three/addons/shaders/VignetteShader.js';
 
 export class SceneManager {
   constructor(canvas) {
@@ -22,7 +27,7 @@ export class SceneManager {
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.12;
+    this.renderer.toneMappingExposure = 1.15;
 
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0x1e293b);
@@ -49,9 +54,36 @@ export class SceneManager {
 
     this.setupLights();
     this.setupAtmosphericParticles();
+    this.setupPostProcessing();
 
     this.handleResize = this.onResize.bind(this);
     window.addEventListener('resize', this.handleResize);
+  }
+
+  setupPostProcessing() {
+    try {
+      this.composer = new EffectComposer(this.renderer);
+      const renderPass = new RenderPass(this.scene, this.camera);
+      this.composer.addPass(renderPass);
+
+      // Cinematic UnrealBloom for glowing spells, neon crystals, and molten impacts
+      this.bloomPass = new UnrealBloomPass(
+        new THREE.Vector2(this.width, this.height),
+        0.55, // strength: lush & ethereal, not blinding
+        0.45, // radius
+        0.72  // threshold: only high-luminance emissive elements glow
+      );
+      this.composer.addPass(this.bloomPass);
+
+      // Vignette effect to draw focus to central diorama
+      this.vignettePass = new ShaderPass(VignetteShader);
+      this.vignettePass.uniforms['offset'].value = 1.05;
+      this.vignettePass.uniforms['darkness'].value = 1.15;
+      this.composer.addPass(this.vignettePass);
+    } catch (e) {
+      console.warn('PostProcessing initialization failed, fallback to standard WebGL render:', e);
+      this.composer = null;
+    }
   }
 
   setupLights() {
@@ -82,6 +114,11 @@ export class SceneManager {
     this.heroLight = new THREE.PointLight(0x38bdf8, 1.2, 28, 1.2);
     this.heroLight.position.set(0, 4.0, 0);
     this.scene.add(this.heroLight);
+
+    // Stylized rim light for crisp edge definition on 3D geometry
+    this.rimLight = new THREE.DirectionalLight(0x93c5fd, 0.95);
+    this.rimLight.position.set(-24, 30, -20);
+    this.scene.add(this.rimLight);
   }
 
   setupAtmosphericParticles() {
@@ -157,6 +194,10 @@ export class SceneManager {
     // Night boosts warm citadel & hero point lights for dramatic contrast
     this.citadelLight.intensity = THREE.MathUtils.lerp(1.0, 3.8, t);
     this.heroLight.intensity = THREE.MathUtils.lerp(0.8, 2.8, t);
+    if (this.rimLight) {
+      this.rimLight.color.setHex(t > 0.5 ? 0x818cf8 : 0xfef08a);
+      this.rimLight.intensity = THREE.MathUtils.lerp(0.85, 1.45, t);
+    }
   }
 
   cycleCameraMode() {
@@ -255,12 +296,20 @@ export class SceneManager {
       this.shakeAmount = Math.max(0, this.shakeAmount - dt * 4.2);
     }
 
+    if (this.ambientSpores) {
+      this.ambientSpores.rotation.y += dt * 0.025;
+    }
+
     this.camera.position.copy(finalPos);
     this.camera.lookAt(this.cameraTarget);
   }
 
   render() {
-    this.renderer.render(this.scene, this.camera);
+    if (this.composer) {
+      this.composer.render();
+    } else {
+      this.renderer.render(this.scene, this.camera);
+    }
   }
 
   onResize() {
@@ -269,5 +318,11 @@ export class SceneManager {
     this.camera.aspect = this.width / this.height;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(this.width, this.height);
+    if (this.composer) {
+      this.composer.setSize(this.width, this.height);
+    }
+    if (this.bloomPass) {
+      this.bloomPass.resolution.set(this.width, this.height);
+    }
   }
 }
