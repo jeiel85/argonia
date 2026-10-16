@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>ARGONIA: Crown of the Spire — 3D 왕국 디펜스 & 유물 시너지 로그라이트</title>
+  <meta name="description" content="Three.js와 절차적 WebAudio 오케스트라로 구현한 3D 주간 왕국 건설 · 야간 공성 액션 · 48종 유물 시너지 전략 로그라이트 웹게임" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👑</text></svg>" />
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <!-- 3D WebGL Viewport -->
+  <canvas id="game-canvas" aria-label="Argonia 3D Battlefield"></canvas>
+
+  <!-- 3D-to-2D Projected World Markers (Socket Build Badges & Boss/Citadel Bars) -->
+  <div id="world-markers-layer" class="world-overlay-layer"></div>
+
+  <!-- Floating Combat Numbers Layer -->
+  <div id="floating-text-layer" class="world-overlay-layer"></div>
+
+  <!-- Toast Banner Notifications -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- ===================================================================== -->
+  <!-- IN-GAME TACTICAL HUD                                                  -->
+  <!-- ===================================================================== -->
+  <div id="ingame-hud" class="ingame-hud hidden">
+    <!-- TOP TELEMETRY & COMMAND BAR -->
+    <header class="hud-top-bar glass-panel">
+      <div class="hud-brand-cluster">
+        <button id="btn-open-hub" class="hud-icon-btn" title="왕국 사령부 / 메뉴 (ESC)">
+          <span>👑</span> <span class="hide-sm">사령부</span>
+        </button>
+        <div class="realm-wave-pill">
+          <span id="hud-phase-icon" class="phase-icon">☀️</span>
+          <div>
+            <div id="hud-realm-title" class="hud-realm-title">제1왕국: 솔라리아 평원</div>
+            <div id="hud-wave-subtitle" class="hud-wave-subtitle">제1야 정비 중 (낮)</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Citadel Core HP & Resources -->
+      <div class="hud-resource-cluster">
+        <div class="citadel-hp-box" title="왕실 성채 내구도 (0이 되면 패배)">
+          <div class="citadel-hp-label">
+            <span>🏰 성채 본진</span>
+            <span id="hud-citadel-hp-text">1800 / 1800</span>
+          </div>
+          <div class="hp-track">
+            <div id="hud-citadel-hp-fill" class="hp-fill citadel-fill" style="width: 100%"></div>
+          </div>
+        </div>
+
+        <div class="res-pill gold-pill" title="금화 (건설 및 강화 비용)">
+          <span class="res-icon">🪙</span>
+          <div>
+            <span class="res-label">GOLD</span>
+            <strong id="hud-gold-val">135</strong>
+          </div>
+        </div>
+
+        <div class="res-pill argon-pill" title="아르곤 결정 (고급 타워 및 3단계 특화 진화 비용)">
+          <span class="res-icon">💎</span>
+          <div>
+            <span class="res-label">ARGON</span>
+            <strong id="hud-argon-val">4</strong>
+          </div>
+        </div>
+
+        <div class="res-pill troop-pill hide-md" title="현재 전장에 배치된 아군 병사 수">
+          <span class="res-icon">⚔️</span>
+          <div>
+            <span class="res-label">ARMY</span>
+            <strong id="hud-troop-val">0</strong>
+          </div>
+        </div>
+
+        <div class="res-pill score-pill hide-md" title="원정 점수 및 처치 수">
+          <span class="res-icon">🏆</span>
+          <div>
+            <span class="res-label">SCORE</span>
+            <strong id="hud-score-val">0</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Utility Controls -->
+      <div class="hud-utility-cluster">
+        <button id="btn-speed-toggle" class="hud-util-btn" title="배속 전환 (1x / 1.5x / 2x)">1.0x</button>
+        <button id="btn-cam-mode" class="hud-util-btn" title="카메라 시점 전환 (V): 전술 디오라마 / 3인칭 액션 / 전체 조망">🎥 전술캠</button>
+        <button id="btn-audio-mute" class="hud-util-btn" title="배경음악 및 효과음 음소거 전환 (M)">🔊 사운드</button>
+        <button id="btn-rec-clip" class="hud-util-btn" title="60fps WebM 전투 영상 녹화 (최대 15초)">⏺ REC</button>
+        <button id="btn-snap-poster" class="hud-util-btn" title="왕국 연대기 4K 포스터 캡처 & 공유 (P)">📸 포스터</button>
+        <button id="btn-zen-mode" class="hud-util-btn" title="HUD 숨기기 / 시네마틱 감상 모드 (H)">👁️</button>
+      </div>
+    </header>
+
+    <!-- BOSS HEALTH BAR (Appears during Boss Waves) -->
+    <div id="boss-banner-bar" class="boss-banner-bar glass-panel hidden">
+      <div class="boss-banner-header">
+        <span id="boss-banner-name">💀 강철 공성거신 크라가샤</span>
+        <span id="boss-banner-hp">4800 / 4800</span>
+      </div>
+      <div class="hp-track boss-hp-track">
+        <div id="boss-banner-fill" class="hp-fill boss-fill" style="width: 100%"></div>
+      </div>
+    </div>
+
+    <!-- LEFT DOCK: TONIGHT'S THREAT FORECAST & ACTIVE RELIC SYNERGIES -->
+    <aside class="hud-left-dock">
+      <!-- Threat Forecast Card (Day Phase) -->
+      <div id="threat-forecast-card" class="glass-panel side-card">
+        <div class="side-card-header">
+          <span>⚠️ 오늘 밤 침공 경보</span>
+          <span id="threat-wave-badge" class="badge-pill">WAVE 1</span>
+        </div>
+        <div id="threat-portal-list" class="threat-portal-list"></div>
+        <div id="realm-hazard-note" class="realm-hazard-note"></div>
+      </div>
+
+      <!-- Active Synergy Sets & Owned Relics -->
+      <div class="glass-panel side-card">
+        <div class="side-card-header">
+          <span>📜 왕실 유물 & 시너지</span>
+          <span id="hud-relic-count" class="badge-pill">0개</span>
+        </div>
+        <div id="hud-synergy-list" class="synergy-badges-wrap"></div>
+        <div id="hud-relic-grid" class="relic-mini-grid"></div>
+      </div>
+    </aside>
+
+    <!-- RIGHT DOCK: TACTICAL ARCHITECT & BUILDING UPGRADE INSPECTOR -->
+    <aside class="hud-right-dock">
+      <div id="architect-panel" class="glass-panel side-card architect-card">
+        <div class="side-card-header">
+          <span id="arch-title">🏗️ 왕국 건설 감독관</span>
+          <button id="btn-smart-build" class="smart-build-btn" title="보유 자원으로 가장 효율적인 건물을 즉시 건설하거나 강화합니다 (단축키 B)">
+            ⚡ 스마트 자동건설 [B]
+          </button>
+        </div>
+        <div id="arch-body" class="arch-body">
+          <!-- Populated dynamically when a socket is selected or shows quick overview -->
+        </div>
+      </div>
+    </aside>
+
+    <!-- BOTTOM ACTION BAR: MONARCH HERO SKILLS & PHASE TRIGGER -->
+    <footer class="hud-bottom-bar">
+      <!-- Hero Status & Passive -->
+      <div class="hero-status-card glass-panel">
+        <div class="hero-avatar-box" id="hud-hero-icon">👑</div>
+        <div class="hero-status-info">
+          <div class="hero-name-row">
+            <strong id="hud-hero-name">성군 아르투리아</strong>
+            <span id="hud-hero-state" class="hero-alive-tag">전투 중</span>
+          </div>
+          <div class="hp-track hero-hp-track">
+            <div id="hud-hero-hp-fill" class="hp-fill hero-fill" style="width: 100%"></div>
+          </div>
+          <div id="hud-hero-hp-text" class="hero-hp-sub">620 / 620 HP · 이동: WASD / 우클릭</div>
+        </div>
+      </div>
+
+      <!-- Active Skill Buttons (Q, E, R, Space Dash, T Rally) -->
+      <div class="skill-bar glass-panel">
+        <button id="btn-skill-q" class="skill-btn" data-slot="q">
+          <span class="skill-key">Q</span>
+          <span id="skill-q-icon" class="skill-icon">⚔️</span>
+          <span id="skill-q-name" class="skill-label">태양심판</span>
+          <div id="skill-q-cd" class="skill-cd-overlay hidden"></div>
+        </button>
+
+        <button id="btn-skill-e" class="skill-btn" data-slot="e">
+          <span class="skill-key">E</span>
+          <span id="skill-e-icon" class="skill-icon">🚩</span>
+          <span id="skill-e-name" class="skill-label">황금군기</span>
+          <div id="skill-e-cd" class="skill-cd-overlay hidden"></div>
+        </button>
+
+        <button id="btn-skill-r" class="skill-btn skill-ult" data-slot="r">
+          <span class="skill-key">R</span>
+          <span id="skill-r-icon" class="skill-icon">☀️</span>
+          <span id="skill-r-name" class="skill-label">천공낙하</span>
+          <div id="skill-r-cd" class="skill-cd-overlay hidden"></div>
+        </button>
+
+        <button id="btn-skill-dash" class="skill-btn" title="전술 도약 대시 (Space)">
+          <span class="skill-key">Space</span>
+          <span class="skill-icon">💨</span>
+          <span class="skill-label">돌격 대시</span>
+          <div id="skill-dash-cd" class="skill-cd-overlay hidden"></div>
+        </button>
+
+        <button id="btn-skill-rally" class="skill-btn" title="모든 아군 병사를 영웅 위치로 집결시킵니다 (단축키 T)">
+          <span class="skill-key">T</span>
+          <span class="skill-icon">📯</span>
+          <span class="skill-label">전군 집결</span>
+        </button>
+      </div>
+
+      <!-- Call Night / Wave Status CTA -->
+      <div class="phase-cta-wrap">
+        <button id="btn-call-night" class="call-night-btn">
+          <span class="bell-icon">🔔</span>
+          <div class="call-night-text">
+            <strong>전투 개시 (밤 맞이하기)</strong>
+            <small>단축키 [Enter] · 건설 후 클릭</small>
+          </div>
+        </button>
+      </div>
+    </footer>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- PRE-EXPEDITION ROYAL COMMAND HUB MODAL (Title / Realms / Sanctum / Codex) -->
+  <!-- ===================================================================== -->
+  <div id="command-hub-modal" class="modal-backdrop">
+    <div class="hub-container glass-panel">
+      <!-- Hub Header -->
+      <div class="hub-header">
+        <div class="hub-brand">
+          <span class="hub-crown-logo">👑</span>
+          <div>
+            <h1 class="hub-title">ARGONIA <span class="hub-title-sub">CROWN OF THE SPIRE</span></h1>
+            <p class="hub-tagline">3D 왕국 전술 디펜스 · 군주 액션 · 48종 유물 시너지 로그라이트</p>
+          </div>
+        </div>
+
+        <div class="hub-nav-tabs" role="tablist">
+          <button class="hub-tab active" data-tab="tab-expedition">🗺️ 원정 출정</button>
+          <button class="hub-tab" data-tab="tab-sanctum">🏛️ 왕실 성소 (특성)</button>
+          <button class="hub-tab" data-tab="tab-codex">📖 왕국 도감 (백과)</button>
+          <button class="hub-tab" data-tab="tab-chronicle">🏆 업적 & 연대기</button>
+        </div>
+
+        <div class="hub-treasury-box">
+          <div class="crown-currency" title="영구 메타 성장 화폐: 별빛 왕관">
+            <span>👑 별빛 왕관</span>
+            <strong id="hub-crowns-val">120</strong>
+          </div>
+          <button id="btn-close-hub-resume" class="hub-resume-btn hidden">⚔️ 전투 복귀 [ESC]</button>
+        </div>
+      </div>
+
+      <!-- TAB 1: EXPEDITION WAR-MAP (REALM, HERO & SKULL SELECT) -->
+      <section id="tab-expedition" class="hub-tab-panel active">
+        <div class="expedition-grid">
+          <!-- Left: 5 Realms Selection -->
+          <div class="exp-column">
+            <div class="section-heading">
+              <h2>1. 출정 왕국 선택 (5대 전장)</h2>
+              <label class="endless-toggle-label">
+                <input type="checkbox" id="chk-endless-mode" />
+                <span>♾️ 무한의 심연 모드</span>
+              </label>
+            </div>
+            <div id="hub-realm-list" class="realm-cards-list"></div>
+          </div>
+
+          <!-- Center: 4 Monarch Heroes Selection -->
+          <div class="exp-column">
+            <div class="section-heading">
+              <h2>2. 수호 군주(영웅) 선택</h2>
+              <span class="section-sub">직접 전장을 누비며 스킬과 오라를 발동합니다</span>
+            </div>
+            <div id="hub-hero-list" class="hero-cards-list"></div>
+          </div>
+
+          <!-- Right: Mutator Skulls & Launch Summary -->
+          <div class="exp-column">
+            <div class="section-heading">
+              <h2>3. 시련의 해골 (난이도 & 보상 배율)</h2>
+              <span id="skull-bonus-badge" class="badge-pill gold-badge">왕관 보상 +0%</span>
+            </div>
+            <div id="hub-skull-list" class="skull-cards-list"></div>
+
+            <div class="launch-summary-box">
+              <div id="checkpoint-resume-banner" class="checkpoint-banner hidden">
+                <div>
+                  <strong>💾 진행 중인 원정 데이터가 있습니다</strong>
+                  <div id="checkpoint-desc" class="checkpoint-desc">솔라리아 평원 · 제4야</div>
+                </div>
+                <button id="btn-resume-checkpoint" class="btn-secondary">이어하기</button>
+              </div>
+
+              <button id="btn-start-expedition" class="btn-launch-expedition">
+                <span>⚔️ 왕국 원정 출정하기</span>
+                <small id="launch-sub-label">제1왕국: 솔라리아 여명 평원 · 성군 아르투리아</small>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: ROYAL SANCTUM PERMANENT TECH TREE (24 UPGRADES) -->
+      <section id="tab-sanctum" class="hub-tab-panel">
+        <div class="sanctum-top-bar">
+          <div>
+            <h2>🏛️ 왕실 성소 영구 특성 트리 (24종 성좌 축복)</h2>
+            <p class="section-sub">원정에서 획득한 <strong>별빛 왕관(👑)</strong>으로 모든 원정에 영구 적용되는 왕국 특성을 강화하세요.</p>
+          </div>
+          <button id="btn-refund-sanctum" class="btn-secondary">🔄 특성 전체 초기화 (100% 환급)</button>
+        </div>
+        <div id="sanctum-branches-grid" class="sanctum-branches-grid"></div>
+      </section>
+
+      <!-- TAB 3: INTERACTIVE CODEX (BUILDINGS, EVOLUTIONS, ENEMIES, RELICS) -->
+      <section id="tab-codex" class="hub-tab-panel">
+        <div class="codex-filter-bar">
+          <button class="codex-cat-btn active" data-cat="buildings">🏰 건물 & 20종 궁극진화</button>
+          <button class="codex-cat-btn" data-cat="enemies">👹 적군 & 5대 보스</button>
+          <button class="codex-cat-btn" data-cat="relics">📜 48종 유물 & 6대 시너지</button>
+          <button class="codex-cat-btn" data-cat="controls">🎮 조작법 & 전술 가이드</button>
+        </div>
+        <div id="codex-content-grid" class="codex-content-grid"></div>
+      </section>
+
+      <!-- TAB 4: ACHIEVEMENTS (30) & RUN CHRONICLE HISTORY -->
+      <section id="tab-chronicle" class="hub-tab-panel">
+        <div class="chronicle-split-grid">
+          <div>
+            <div class="section-heading">
+              <h2>🏆 왕실 업적 (30종)</h2>
+              <span id="ach-progress-badge" class="badge-pill">0 / 30 달성</span>
+            </div>
+            <div id="achievements-list" class="achievements-list"></div>
+          </div>
+
+          <div>
+            <div class="section-heading">
+              <h2>📜 역대 원정 연대기 & 세이브 백업</h2>
+              <div class="save-io-btns">
+                <button id="btn-export-save" class="btn-mini">📤 세이브 내보내기</button>
+                <button id="btn-import-save" class="btn-mini">📥 불러오기</button>
+              </div>
+            </div>
+            <div id="lifetime-stats-box" class="lifetime-stats-box"></div>
+            <div id="run-history-list" class="run-history-list"></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- DAWN ROYAL RELIC & DECREE DRAFT MODAL                                 -->
+  <!-- ===================================================================== -->
+  <div id="relic-draft-modal" class="modal-backdrop hidden">
+    <div class="relic-modal-card glass-panel">
+      <div class="relic-modal-header">
+        <span class="relic-crown-badge">☀️ 여명의 왕실 칙령 & 유물 하사</span>
+        <h2>왕국의 운명을 바꿀 유물 하나를 선택하세요</h2>
+        <p>같은 성좌 표식을 모으면 <strong>2 / 4 / 6 세트 시너지</strong>가 폭발적으로 각성합니다.</p>
+      </div>
+      <div id="relic-draft-cards" class="relic-draft-cards"></div>
+      <div class="relic-modal-footer">
+        <button id="btn-reroll-relics" class="btn-secondary">🎲 선택지 재추첨 (남은 횟수: 1)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- RUN END / VICTORY & VIRAL CHRONICLE SHARE MODAL                       -->
+  <!-- ===================================================================== -->
+  <div id="run-end-modal" class="modal-backdrop hidden">
+    <div class="run-end-card glass-panel">
+      <div id="run-end-header" class="run-end-header"></div>
+      <div id="run-end-stats" class="run-end-stats"></div>
+
+      <!-- Live Preview of Generated 1920x1080 Chronicle Poster -->
+      <div class="poster-preview-wrap">
+        <img id="chronicle-poster-img" alt="Royal Chronicle Poster Preview" />
+      </div>
+
+      <div class="run-end-actions">
+        <button id="btn-endless-continue" class="btn-launch-expedition hidden">♾️ 무한의 심연 계속 진행하기</button>
+        <button id="btn-download-poster" class="btn-primary">📸 4K 연대기 포스터 PNG 저장</button>
+        <button id="btn-copy-threads" class="btn-secondary">🧵 Threads / X 공유 문구 복사</button>
+        <button id="btn-return-hub" class="btn-secondary">🏛️ 왕실 사령부로 귀환</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
