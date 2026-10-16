@@ -26,7 +26,70 @@
   <div id="toast-container" class="toast-container"></div>
 
   <!-- ===================================================================== -->
-  <!-- IN-GAME TACTICAL HUD (DIEGETIC OBISIDIAN & BURNISHED BRASS)           -->
+  <!-- TITLE SCREEN & IMMERSIVE QUICK-PLAY (ZERO SLOP ENTRANCE)              -->
+  <!-- ===================================================================== -->
+  <div id="title-overlay" class="title-overlay">
+    <div class="title-brand-card">
+      <div class="title-crest-box">
+        <svg viewBox="0 0 48 48" class="title-crest-svg" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polygon points="24,4 44,14 44,34 24,44 4,34 4,14" stroke="var(--brass-bright)"/>
+          <polygon points="24,12 36,18 36,30 24,36 12,30 12,18" fill="rgba(243, 204, 104, 0.25)" stroke="var(--gold-vivid)"/>
+          <circle cx="24" cy="24" r="3" fill="var(--gold-vivid)"/>
+        </svg>
+      </div>
+      <h1 class="title-main-h1">ARGONIA</h1>
+      <p class="title-sub-p">TACTICAL KINGDOM DEFENSE</p>
+
+      <div class="title-actions-wrap">
+        <button id="btn-quick-play" class="btn-title-play" title="방어전 즉시 시작 [Space / Enter]">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+            <polygon points="6,4 20,12 6,20"/>
+          </svg>
+          <span>START DEFENSE</span>
+          <kbd>SPACE</kbd>
+        </button>
+
+        <div class="title-options-row">
+          <button id="btn-title-expedition" class="btn-title-sub">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14.5 17.5L3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4"/>
+            </svg>
+            <span>영토 &amp; 영웅 설정</span>
+          </button>
+          <button id="btn-title-codex" class="btn-title-sub">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+            </svg>
+            <span>왕실 성소 &amp; 도감</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="title-badge-strip">
+        <span>3D TACTICAL DEFENSE</span>
+        <span>·</span>
+        <span>HERO ROGUELITE</span>
+        <span>·</span>
+        <span>KINGDOM BUILDER</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- In-Game Tactical Guide Banner (Shows on Day 1 start, then fades away) -->
+  <div id="tactical-guide-banner" class="tactical-guide-banner hidden">
+    <div class="guide-banner-inner">
+      <span class="guide-bullet">◆</span>
+      <span><strong>WASD / 좌클릭</strong> 영웅 이동</span>
+      <span class="guide-pipe">|</span>
+      <span><strong>소켓 클릭</strong> 건물 건설 &amp; 강화</span>
+      <span class="guide-pipe">|</span>
+      <span><strong>ENTER</strong> 밤 전투 개시</span>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- IN-GAME TACTICAL HUD (CLEAN, DIEGETIC & ELEGANT)                      -->
   <!-- ===================================================================== -->
   <div id="ingame-hud" class="ingame-hud hidden">
     <!-- TOP BAR: SPLIT INTO 3 COMPACT ARCHITECTURAL CLUSTERS -->
@@ -34,7 +97,11 @@
       <!-- Top-Left: Command Hub Button + Realm Crest + Citadel Integrity -->
       <div class="hud-top-left royal-plaque">
         <button id="btn-open-hub" class="hud-crest-btn" title="왕실 사령부 열기 [ESC]">
-          <span class="crest-diamond">◆</span>
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
           <span>사령부</span>
           <kbd>ESC</kbd>
         </button>
@@ -65,7 +132,10 @@
       <!-- Top-Center: Compact Treasury Ledger -->
       <div class="hud-resource-cluster royal-plaque">
         <div class="res-pill gold-pill" title="금화 (건설 및 강화 비용)">
-          <span class="res-emblem gold-emblem">◆</span>
+          <svg viewBox="0 0 24 24" class="res-svg gold-svg" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="9"/>
+            <circle cx="12" cy="12" r="5" stroke-dasharray="2 2"/>
+          </svg>
           <div class="res-meta">
             <span class="res-label">GOLD</span>
             <strong id="hud-gold-val" class="tabular-nums">135</strong>
@@ -75,7 +145,10 @@
         <div class="hud-divider-v"></div>
 
         <div class="res-pill argon-pill" title="아르곤 결정 (고급 타워 및 3단계 특화 진화 비용)">
-          <span class="res-emblem argon-emblem">◇</span>
+          <svg viewBox="0 0 24 24" class="res-svg argon-svg" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="12,2 22,8.5 12,22 2,8.5"/>
+            <line x1="2" y1="8.5" x2="22" y2="8.5"/>
+          </svg>
           <div class="res-meta">
             <span class="res-label">ARGON</span>
             <strong id="hud-argon-val" class="tabular-nums">4</strong>
@@ -85,7 +158,9 @@
         <div class="hud-divider-v hide-md"></div>
 
         <div class="res-pill troop-pill hide-md" title="현재 전장에 배치된 아군 병력">
-          <span class="res-emblem army-emblem">▲</span>
+          <svg viewBox="0 0 24 24" class="res-svg army-svg" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
           <div class="res-meta">
             <span class="res-label">GARRISON</span>
             <strong id="hud-troop-val" class="tabular-nums">0</strong>
@@ -95,7 +170,9 @@
         <div class="hud-divider-v hide-md"></div>
 
         <div class="res-pill score-pill hide-md" title="원정 전과 점수">
-          <span class="res-emblem score-emblem">★</span>
+          <svg viewBox="0 0 24 24" class="res-svg score-svg" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
+          </svg>
           <div class="res-meta">
             <span class="res-label">RENOWN</span>
             <strong id="hud-score-val" class="tabular-nums">0</strong>
@@ -105,12 +182,21 @@
 
       <!-- Top-Right: Crisp Tactical Utility Strip -->
       <div class="hud-utility-cluster royal-plaque">
+        <button id="btn-audio-mute" class="hud-util-btn" title="사운드 음소거 전환 [M]">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+          </svg>
+          <span>음향</span>
+        </button>
+        <button id="btn-cam-mode" class="hud-util-btn" title="카메라 시점 전환 [V]">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+          <span id="cam-mode-label">전술시점</span>
+        </button>
         <button id="btn-speed-toggle" class="hud-util-btn tabular-nums" title="게임 배속 전환 (1.0x / 1.5x / 2.0x)">1.0x</button>
-        <button id="btn-cam-mode" class="hud-util-btn" title="카메라 시점 전환 [V]: 전술 디오라마 / 3인칭 액션 / 전체 조망">전술시점</button>
-        <button id="btn-audio-mute" class="hud-util-btn" title="사운드 음소거 전환 [M]">음향 ON</button>
-        <button id="btn-rec-clip" class="hud-util-btn" title="60fps WebM 전투 영상 녹화">REC</button>
-        <button id="btn-snap-poster" class="hud-util-btn" title="연대기 포스터 갈무리 [P]">포스터</button>
-        <button id="btn-zen-mode" class="hud-util-btn" title="HUD 숨기기 [H]">HUD</button>
       </div>
     </header>
 
@@ -169,16 +255,20 @@
       <div class="monarch-command-dock royal-plaque">
         <!-- Hero Status & Integrity -->
         <div class="hero-status-card">
-          <div class="hero-avatar-box" id="hud-hero-icon">👑</div>
+          <div class="hero-avatar-box" id="hud-hero-icon">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="12,2 15,9 22,9 17,14 19,21 12,17 5,21 7,14 2,9 9,9" stroke="var(--gold-vivid)"/>
+            </svg>
+          </div>
           <div class="hero-status-info">
             <div class="hero-name-row">
-              <strong id="hud-hero-name">성군 아르투리아</strong>
-              <span id="hud-hero-state" class="hero-alive-tag">전장 지휘</span>
+              <strong id="hud-hero-name">아르투리아</strong>
+              <span id="hud-hero-state" class="hero-alive-tag">지휘 중</span>
             </div>
             <div class="hp-track hero-hp-track">
               <div id="hud-hero-hp-fill" class="hp-fill hero-fill" style="width: 100%"></div>
             </div>
-            <div id="hud-hero-hp-text" class="hero-hp-sub tabular-nums">620 / 620 HP · 이동: WASD/좌클릭 · 시점: 우클릭 드래그</div>
+            <div id="hud-hero-hp-text" class="hero-hp-sub tabular-nums">620 / 620 HP</div>
           </div>
         </div>
 
@@ -188,36 +278,61 @@
         <div class="skill-bar">
           <button id="btn-skill-q" class="skill-btn" data-slot="q">
             <span class="skill-key">Q</span>
-            <span id="skill-q-icon" class="skill-icon">⚔️</span>
+            <span id="skill-q-icon" class="skill-icon">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14.5 17.5L3 6V3h3l11.5 11.5"/>
+                <path d="M13 19l6-6"/>
+                <path d="M16 16l4 4"/>
+              </svg>
+            </span>
             <span id="skill-q-name" class="skill-label">태양심판</span>
             <div id="skill-q-cd" class="skill-cd-overlay hidden"></div>
           </button>
 
           <button id="btn-skill-e" class="skill-btn" data-slot="e">
             <span class="skill-key">E</span>
-            <span id="skill-e-icon" class="skill-icon">🚩</span>
+            <span id="skill-e-icon" class="skill-icon">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/>
+                <line x1="4" y1="22" x2="4" y2="15"/>
+              </svg>
+            </span>
             <span id="skill-e-name" class="skill-label">황금군기</span>
             <div id="skill-e-cd" class="skill-cd-overlay hidden"></div>
           </button>
 
           <button id="btn-skill-r" class="skill-btn skill-ult" data-slot="r">
             <span class="skill-key">R</span>
-            <span id="skill-r-icon" class="skill-icon">☀️</span>
+            <span id="skill-r-icon" class="skill-icon">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="4"/>
+                <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+              </svg>
+            </span>
             <span id="skill-r-name" class="skill-label">천공낙하</span>
             <div id="skill-r-cd" class="skill-cd-overlay hidden"></div>
           </button>
 
           <button id="btn-skill-dash" class="skill-btn" title="전술 도약 대시 [Space]">
             <span class="skill-key">SPC</span>
-            <span class="skill-icon">💨</span>
-            <span class="skill-label">도약 대시</span>
+            <span class="skill-icon">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M13 3l-7 11h6l-2 7 9-12h-6l3-6z"/>
+              </svg>
+            </span>
+            <span class="skill-label">도약</span>
             <div id="skill-dash-cd" class="skill-cd-overlay hidden"></div>
           </button>
 
           <button id="btn-skill-rally" class="skill-btn" title="모든 아군 병사를 군주 위치로 집결시킵니다 [T]">
             <span class="skill-key">T</span>
-            <span class="skill-icon">📯</span>
-            <span class="skill-label">전군 집결</span>
+            <span class="skill-icon">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 11l15-7v16L3 13v-2z"/>
+                <path d="M21 9v6"/>
+              </svg>
+            </span>
+            <span class="skill-label">집결</span>
           </button>
         </div>
       </div>
@@ -225,7 +340,9 @@
       <!-- Bottom-Right War-Horn Trigger -->
       <div class="phase-cta-wrap">
         <button id="btn-call-night" class="call-night-btn">
-          <span class="bell-icon">⚔</span>
+          <svg viewBox="0 0 24 24" class="bell-svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+          </svg>
           <div class="call-night-text">
             <strong>전투 개시 · 밤 맞이하기</strong>
             <small>단축키 [Enter] · 제1야 출정</small>
@@ -238,7 +355,7 @@
   <!-- ===================================================================== -->
   <!-- PRE-EXPEDITION ROYAL COMMAND HUB MODAL (Title / Realms / Sanctum / Codex) -->
   <!-- ===================================================================== -->
-  <div id="command-hub-modal" class="modal-backdrop">
+  <div id="command-hub-modal" class="modal-backdrop hidden">
     <div class="hub-container royal-plaque">
       <!-- Hub Header -->
       <div class="hub-header">

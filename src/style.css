@@ -163,17 +163,27 @@ kbd {
   position: absolute;
   top: 0;
   left: 0;
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 13px;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.95);
+  font-family: var(--font-sans);
+  font-weight: 900;
+  font-size: 14px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95), 0 0 6px rgba(0, 0, 0, 0.7);
   pointer-events: none;
   white-space: nowrap;
+  letter-spacing: -0.02em;
+  will-change: transform, opacity;
 }
 
 .float-combat-text.float-big {
-  font-size: 17px;
+  font-size: 18px;
   letter-spacing: 0.02em;
+  text-shadow: 0 0 10px rgba(251, 191, 36, 0.65), 0 2px 6px rgba(0, 0, 0, 0.95);
+  animation: critBounce 0.22s ease-out;
+}
+
+@keyframes critBounce {
+  0% { transform: scale(1.4); }
+  50% { transform: scale(0.95); }
+  100% { transform: scale(1.0); }
 }
 
 /* =========================================================================
@@ -831,9 +841,34 @@ kbd {
 }
 
 .skill-icon {
-  font-size: 17px;
-  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  color: var(--brass-bright);
 }
+
+.skill-icon svg {
+  width: 100%;
+  height: 100%;
+  transition: transform 0.12s;
+}
+
+.skill-btn:hover .skill-icon svg {
+  transform: scale(1.12);
+}
+
+.res-svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.gold-svg { color: var(--gold-vivid); }
+.argon-svg { color: var(--argon-crystal); }
+.army-svg { color: #cbd5e1; }
+.score-svg { color: var(--brass-bright); }
 
 .skill-label {
   font-size: 9.5px;
@@ -1493,6 +1528,198 @@ kbd {
   flex-wrap: wrap;
   justify-content: center;
   gap: 8px;
+}
+
+/* =========================================================================
+   IMMERSIVE TITLE SCREEN (ZERO SLOP ENTRANCE)
+   ========================================================================= */
+.title-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at center, rgba(13, 12, 10, 0.45) 0%, rgba(8, 7, 6, 0.88) 85%);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+  pointer-events: auto;
+}
+
+.title-overlay.fade-out {
+  opacity: 0;
+  transform: scale(1.05);
+  pointer-events: none;
+}
+
+.title-brand-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 38px 46px;
+  background: linear-gradient(180deg, rgba(24, 21, 18, 0.92) 0%, rgba(14, 12, 10, 0.95) 100%);
+  border: 1px solid rgba(204, 164, 92, 0.38);
+  border-top-color: var(--brass-bright);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 236, 190, 0.12);
+  border-radius: 6px;
+  max-width: 480px;
+  width: 90vw;
+}
+
+.title-crest-box {
+  margin-bottom: 12px;
+}
+
+.title-crest-svg {
+  width: 44px;
+  height: 44px;
+  filter: drop-shadow(0 0 12px rgba(243, 204, 104, 0.35));
+}
+
+.title-main-h1 {
+  font-family: var(--font-display);
+  font-size: 40px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  color: var(--text-ivory);
+  line-height: 1;
+  margin-bottom: 6px;
+  text-shadow: 0 4px 16px rgba(0, 0, 0, 0.9);
+}
+
+.title-sub-p {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  color: var(--brass-bright);
+  margin-bottom: 26px;
+  opacity: 0.88;
+}
+
+.title-actions-wrap {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.btn-title-play {
+  width: 100%;
+  padding: 15px 24px;
+  background: linear-gradient(180deg, #d4a853 0%, #aa8032 100%);
+  border: 1px solid #fde047;
+  color: #12100d;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-shadow: 0 8px 24px rgba(212, 168, 83, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  transition: all 0.14s ease-out;
+}
+
+.btn-title-play:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.1);
+  box-shadow: 0 12px 32px rgba(212, 168, 83, 0.45);
+}
+
+.btn-title-play:active {
+  transform: translateY(1px);
+}
+
+.title-options-row {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.btn-title-sub {
+  flex: 1;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(204, 164, 92, 0.26);
+  color: var(--text-parchment);
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 3px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.14s;
+}
+
+.btn-title-sub:hover {
+  background: rgba(204, 164, 92, 0.14);
+  border-color: var(--brass-bright);
+  color: var(--text-ivory);
+}
+
+.title-badge-strip {
+  margin-top: 22px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 9.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* =========================================================================
+   TACTICAL GUIDE BANNER
+   ========================================================================= */
+.tactical-guide-banner {
+  position: fixed;
+  top: 68px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 35;
+  pointer-events: none;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.tactical-guide-banner.fade-out {
+  opacity: 0;
+  transform: translate(-50%, -10px);
+}
+
+.guide-banner-inner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 16px;
+  background: rgba(18, 16, 14, 0.88);
+  border: 1px solid rgba(204, 164, 92, 0.35);
+  border-radius: 4px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  font-size: 11.5px;
+  color: var(--text-parchment);
+}
+
+.guide-bullet {
+  color: var(--gold-vivid);
+  font-size: 10px;
+}
+
+.guide-pipe {
+  color: rgba(204, 164, 92, 0.3);
+}
+
+.guide-banner-inner strong {
+  color: var(--text-ivory);
 }
 
 @media (max-width: 1024px) {

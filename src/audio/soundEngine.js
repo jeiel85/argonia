@@ -743,9 +743,10 @@ export class SoundEngine {
           break;
 
         case 'hero_slash':
-          // Metallic blade swoosh
-          this._sfxNoise(0.11, 2100 * pitch, 1.9, 0.26 * vol, 'bandpass', pan);
-          this._sfxTone(540 * pitch, 170 * pitch, 0.1, 0.2 * vol, 'sawtooth', pan, 1800);
+          // Metallic blade swoosh + deep physical impact thud
+          this._sfxNoise(0.12, 2400 * pitch, 2.2, 0.32 * vol, 'bandpass', pan);
+          this._sfxTone(160 * pitch, 45 * pitch, 0.12, 0.38 * vol, 'sine', pan);
+          this._sfxTone(580 * pitch, 180 * pitch, 0.08, 0.24 * vol, 'sawtooth', pan, 2400);
           break;
 
         case 'hero_skill_q':

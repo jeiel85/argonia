@@ -451,46 +451,20 @@ export function downloadChroniclePoster(runData = {}, sourceCanvas = null) {
 export function buildShareText(runData = {}) {
   const data = normalizeRunData(runData);
 
-  const headerLine = data.isEndless
-    ? `♾️ [ARGONIA: ENDLESS ABYSS RECORD — WAVE ${data.wave}]`
+  const headline = data.isEndless
+    ? `[ARGONIA] 무한의 심연 Wave ${data.wave} 기록 달성`
     : data.victory
-      ? `👑 [ARGONIA: REALM CONQUERED — VICTORY!]`
-      : `⚔️ [ARGONIA: VALIANT STAND AT WAVE ${data.wave}]`;
-
-  const krSubtitle = data.isEndless
-    ? `무한의 심연 웨이브 ${data.wave} 돌파! 나의 왕국 연대기를 확인하라!`
-    : data.victory
-      ? `아르고니아 왕국 방어전 완벽 승리! 첨탑의 왕관을 사수했습니다!`
-      : `웨이브 ${data.wave}에서 장렬히 전사… 다음 원정엔 반드시 왕좌를 되찾는다!`;
-
-  const skullBadge = data.mutatorSkulls > 0 ? `💀x${data.mutatorSkulls}` : '🛡️Normal';
-
-  const synergyNames = data.synergies
-    .slice(0, 3)
-    .map((s) => (typeof s === 'string' ? s : `${s.icon || '✨'}${s.name || s.id}`))
-    .join(', ');
-
-  const relicIcons = data.relics
-    .slice(0, 6)
-    .map((r) => (typeof r === 'string' ? '💎' : (r.icon || '💎')))
-    .join(' ');
+      ? `[ARGONIA] 왕국 방어전 클리어! (Wave ${data.wave})`
+      : `[ARGONIA] Wave ${data.wave} 방어전 기록`;
 
   const lines = [
-    headerLine,
-    krSubtitle,
+    headline,
+    `스코어: ${data.score.toLocaleString()}점 | 토벌: ${data.enemiesSlain}기 | 보스: ${data.bossesDefeated}체`,
+    `지휘: ${data.heroName} (${data.realmName})`,
+    `시드: ${data.seed}`,
     '',
-    `🏰 Realm: ${data.realmName}`,
-    `${data.heroIcon} Monarch: ${data.heroName} (${skullBadge})`,
-    `🌊 Wave: ${data.wave} | 🏆 Score: ${data.score.toLocaleString()}`,
-    `⚔️ Slain: ${data.enemiesSlain.toLocaleString()} | 🪙 Gold: ${data.goldMined.toLocaleString()} | 🐉 Bosses: ${data.bossesDefeated}`,
-    synergyNames ? `✨ Synergies: ${synergyNames}` : null,
-    relicIcons ? `🏺 Relics: ${relicIcons}` : null,
-    `🧬 Seed Code: ${data.seed} (같은 시드로 도전하세요!)`,
-    '',
-    `👉 Play Free in Browser (무설치 웹 플레이):`,
-    DEMO_URL,
-    '#Argonia #ThreeJS #WebGL #IndieGame #Roguelite #TowerDefense #인디게임'
-  ].filter((line) => line !== null);
+    `웹에서 바로 플레이: ${DEMO_URL}`
+  ];
 
   return lines.join('\n');
 }

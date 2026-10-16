@@ -94,6 +94,7 @@ export class GameEngine {
     this.nightElapsed = 0;
     this.hazardTimer = 0;
     this.passiveGoldAccumulator = 0;
+    this.hitStopDuration = 0;
   }
 
   clear3DWorld() {
@@ -964,7 +965,14 @@ export class GameEngine {
     if (!this.isRunning || this.isPaused) return;
     if (this.phase === 'relic_draft' || this.phase === 'gameover' || this.phase === 'victory') return;
 
-    const dt = Math.min(0.1, rawDt) * this.gameSpeed;
+    // Hit-stop micro-freeze: slows time on high-impact attacks for tangible game feel
+    let timeScale = 1.0;
+    if (this.hitStopDuration > 0) {
+      this.hitStopDuration -= rawDt;
+      timeScale = 0.08;
+    }
+
+    const dt = Math.min(0.1, rawDt) * this.gameSpeed * timeScale;
     this.elapsedTime += dt;
 
     if (this.killComboTimer > 0) {
@@ -1025,7 +1033,7 @@ export class GameEngine {
         h.vz = 0;
         if (h.mesh) h.mesh.visible = true;
         this.vfxManager?.spawnShockwave(h.x, h.z, 5.0, 0xfde047, 0.6);
-        this.vfxManager?.spawnFloatingText(h.x, 3.2, h.z, '👑 군주 부활!', '#fde047', true);
+        this.vfxManager?.spawnFloatingText(h.x, 3.2, h.z, 'HERO REVIVED', '#fde047', true);
       }
       return;
     }
@@ -1934,6 +1942,25 @@ export class GameEngine {
     e.hp -= finalDmg;
     e.hitFlash = 1.0;
 
+    // Hero attack juice: Hit-stop micro-pause & physical recoil
+    if (sourceType.startsWith('hero')) {
+      const isUlt = sourceType === 'hero_ult';
+      const isSkill = sourceType === 'hero_skill';
+      this.hitStopDuration = isCrit ? 0.055 : (isUlt ? 0.075 : (isSkill ? 0.040 : 0.025));
+
+      // Knockback recoil impulse on non-boss enemies
+      if (!e.spec.isBoss && this.hero) {
+        const dx = e.x - this.hero.x;
+        const dz = e.z - this.hero.z;
+        const dist = Math.hypot(dx, dz) || 1;
+        const pushForce = isCrit ? 0.8 : (isUlt ? 1.4 : 0.38);
+        e.x = Math.max(-39, Math.min(39, e.x + (dx / dist) * pushForce));
+        e.z = Math.max(-39, Math.min(39, e.z + (dz / dist) * pushForce));
+      }
+
+      this.sceneManager?.addScreenShake(isCrit ? 0.45 : (isUlt ? 0.95 : 0.18));
+    }
+
     // Hero lifesteal
     if (sourceType.startsWith('hero') && this.hero && !this.hero.isDead) {
       const ls = (this.hero.def.stats.lifesteal || 0) + (this.relicState.mods.heroLifesteal || 0);
@@ -1947,8 +1974,8 @@ export class GameEngine {
         e.x,
         e.spec.isBoss ? 3.5 : 2.1,
         e.z,
-        isCrit ? `💥${finalDmg}!` : `${finalDmg}`,
-        isCrit ? '#fde047' : sourceType.startsWith('hero') ? '#38bdf8' : '#f8fafc',
+        isCrit ? `CRIT ${finalDmg}` : `${finalDmg}`,
+        isCrit ? '#fbbf24' : sourceType.startsWith('hero') ? '#38bdf8' : '#f8fafc',
         isCrit
       );
     }
@@ -1991,7 +2018,7 @@ export class GameEngine {
       this.bossesDefeated += 1;
       this.sceneManager?.addScreenShake(1.4);
       this.vfxManager?.spawnSkyBeam(e.x, e.z, 4.5, 0xfde047, 1.1);
-      this.vfxManager?.spawnFloatingText(e.x, 4.2, e.z, `👑 보스 토벌! +${goldDrop}G`, '#fde047', true);
+      this.vfxManager?.spawnFloatingText(e.x, 4.2, e.z, `BOSS SLAIN +${goldDrop}G`, '#fde047', true);
     }
 
     // Splitter Golem spawns 2 mini magma hounds on death
@@ -2021,7 +2048,7 @@ export class GameEngine {
       const bonus = 18;
       this.gold += bonus;
       this.goldMinedTotal += bonus;
-      this.vfxManager?.spawnFloatingText(e.x, 3.0, e.z, `🪙 피의 세금 +${bonus}G!`, '#fbbf24', true);
+      this.vfxManager?.spawnFloatingText(e.x, 3.0, e.z, `+${bonus} GOLD`, '#fbbf24', true);
     }
   }
 

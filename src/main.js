@@ -89,11 +89,43 @@ class ArgoniaApp {
     });
     this.rebuildSocketBadges();
 
-    // Start in Command Hub so player can inspect Realms/Heroes/Sanctum or jump straight in
-    this.openCommandHub(true);
+    // Start with 3D background behind Title Overlay (Zero-slop onboarding)
+    this.engine.isPaused = true;
+    document.getElementById('ingame-hud')?.classList.add('hidden');
+    this.worldMarkersLayer?.classList.add('hidden');
+    document.getElementById('command-hub-modal')?.classList.add('hidden');
+    document.getElementById('title-overlay')?.classList.remove('hidden');
 
     this.lastFrameTime = performance.now();
     requestAnimationFrame((now) => this.loop(now));
+  }
+
+  startGameFromTitle() {
+    const titleOverlay = document.getElementById('title-overlay');
+    if (titleOverlay) {
+      titleOverlay.classList.add('fade-out');
+      setTimeout(() => {
+        titleOverlay.classList.add('hidden');
+        titleOverlay.classList.remove('fade-out');
+      }, 400);
+    }
+    document.getElementById('ingame-hud')?.classList.remove('hidden');
+    this.worldMarkersLayer?.classList.remove('hidden');
+    this.engine.isPaused = false;
+    soundEngine.unlock();
+    soundEngine.playSfx('ui_click');
+
+    const guide = document.getElementById('tactical-guide-banner');
+    if (guide) {
+      guide.classList.remove('hidden');
+      setTimeout(() => {
+        guide.classList.add('fade-out');
+        setTimeout(() => guide.classList.add('hidden'), 450);
+      }, 4500);
+    }
+
+    this.syncHud(this.engine.getHudSnapshot());
+    this.renderArchitectPanel();
   }
 
   showToast(message, tone = 'gold') {
@@ -202,6 +234,25 @@ class ArgoniaApp {
       }
     });
 
+    // Title Screen Quick Actions
+    document.getElementById('btn-quick-play')?.addEventListener('click', () => {
+      this.startGameFromTitle();
+    });
+
+    document.getElementById('btn-title-expedition')?.addEventListener('click', () => {
+      soundEngine.playSfx('ui_click');
+      document.getElementById('title-overlay')?.classList.add('hidden');
+      this.openCommandHub(false);
+      document.querySelector('[data-tab="tab-expedition"]')?.click();
+    });
+
+    document.getElementById('btn-title-codex')?.addEventListener('click', () => {
+      soundEngine.playSfx('ui_click');
+      document.getElementById('title-overlay')?.classList.add('hidden');
+      this.openCommandHub(false);
+      document.querySelector('[data-tab="tab-codex"]')?.click();
+    });
+
     // In-Game Top Utility Buttons
     document.getElementById('btn-speed-toggle')?.addEventListener('click', (e) => {
       const speeds = [1.0, 1.5, 2.0];
@@ -211,16 +262,18 @@ class ArgoniaApp {
       soundEngine.playSfx('ui_click');
     });
 
-    document.getElementById('btn-cam-mode')?.addEventListener('click', (e) => {
+    document.getElementById('btn-cam-mode')?.addEventListener('click', () => {
       const mode = this.sceneManager.cycleCameraMode();
       const labels = { tactical: '전술시점', action: '액션시점', overview: '전체조망' };
-      e.currentTarget.textContent = labels[mode] || '전술시점';
+      const labelEl = document.getElementById('cam-mode-label');
+      if (labelEl) labelEl.textContent = labels[mode] || '전술시점';
       soundEngine.playSfx('ui_click');
     });
 
     document.getElementById('btn-audio-mute')?.addEventListener('click', (e) => {
       const muted = soundEngine.toggleMute();
-      e.currentTarget.textContent = muted ? '음향 OFF' : '음향 ON';
+      const textSpan = e.currentTarget.querySelector('span');
+      if (textSpan) textSpan.textContent = muted ? '음향 OFF' : '음향 ON';
     });
 
     document.getElementById('btn-rec-clip')?.addEventListener('click', () => {
@@ -405,6 +458,15 @@ class ArgoniaApp {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
       const code = e.code;
       this.keysDown.add(code);
+
+      const titleOverlay = document.getElementById('title-overlay');
+      if (titleOverlay && !titleOverlay.classList.contains('hidden')) {
+        if (code === 'Space' || code === 'Enter') {
+          e.preventDefault();
+          this.startGameFromTitle();
+          return;
+        }
+      }
 
       if (code === 'Escape') {
         const hub = document.getElementById('command-hub-modal');
@@ -891,25 +953,24 @@ class ArgoniaApp {
 
     // Hero Bar
     if (snap.hero) {
-      document.getElementById('hud-hero-icon').textContent = snap.hero.icon;
-      document.getElementById('hud-hero-name').textContent = snap.hero.name;
+      document.getElementById('hud-hero-name').textContent = snap.hero.name.replace('성군 ', '');
       const stateEl = document.getElementById('hud-hero-state');
       if (snap.hero.isDead) {
-        stateEl.textContent = `부활 대기 (${snap.hero.reviveTimer.toFixed(1)}s)`;
+        stateEl.textContent = `부활 (${snap.hero.reviveTimer.toFixed(1)}s)`;
         stateEl.style.color = '#ef5350';
       } else {
-        stateEl.textContent = '전장 지휘';
+        stateEl.textContent = '지휘 중';
         stateEl.style.color = '#52cc8a';
       }
       const hPct = Math.max(0, Math.min(100, (snap.hero.hp / Math.max(1, snap.hero.maxHp)) * 100));
       document.getElementById('hud-hero-hp-fill').style.width = `${hPct}%`;
-      document.getElementById('hud-hero-hp-text').textContent = `${snap.hero.hp} / ${snap.hero.maxHp} HP · 이동: WASD/좌클릭 · 시점: 우클릭 드래그`;
+      document.getElementById('hud-hero-hp-text').textContent = `${snap.hero.hp} / ${snap.hero.maxHp} HP`;
 
-      // Skills Icons & Cooldowns
+      // Skills Names & Cooldowns (Keep vector SVG icons!)
       for (const k of ['q', 'e', 'r']) {
         const sk = snap.hero.skills[k];
-        document.getElementById(`skill-${k}-icon`).textContent = sk.icon;
-        document.getElementById(`skill-${k}-name`).textContent = sk.name.slice(0, 5);
+        const nameEl = document.getElementById(`skill-${k}-name`);
+        if (nameEl) nameEl.textContent = sk.name.slice(0, 5);
         const cdEl = document.getElementById(`skill-${k}-cd`);
         const cdVal = snap.hero.skillCooldowns[k] || 0;
         if (cdVal > 0.05) {
@@ -934,7 +995,9 @@ class ArgoniaApp {
       if (snap.phase === 'night') {
         callBtn.classList.add('night-active');
         callBtn.innerHTML = `
-          <span class="bell-icon">⚔</span>
+          <svg viewBox="0 0 24 24" class="bell-svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+          </svg>
           <div class="call-night-text">
             <strong>야간 공성 방어전</strong>
             <small>잔여 적군 ${snap.enemiesRemaining}기 · 콤보 ${snap.killCombo}x</small>
@@ -943,7 +1006,9 @@ class ArgoniaApp {
       } else {
         callBtn.classList.remove('night-active');
         callBtn.innerHTML = `
-          <span class="bell-icon">◆</span>
+          <svg viewBox="0 0 24 24" class="bell-svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="12,2 22,8.5 12,22 2,8.5"/>
+          </svg>
           <div class="call-night-text">
             <strong>전투 개시 · 밤 맞이하기</strong>
             <small>단축키 [Enter] · 제${snap.wave}야 출정</small>
