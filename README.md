@@ -4,12 +4,13 @@
 ### **아르고니아: 첨탑의 왕관 — 3D Tactical Kingdom Defense, Hero Action & Relic Synergy Roguelite**
 
 [![Live Demo](https://img.shields.io/badge/🎮_PLAY_LIVE_DEMO-jeiel85.github.io%2Fargonia-f59e0b?style=for-the-badge&labelColor=070b18)](https://jeiel85.github.io/argonia/)
-[![Three.js](https://img.shields.io/badge/3D_Engine-Three.js_WebGL_r186-38bdf8?style=for-the-badge&labelColor=070b18)](https://threejs.org/)
+[![3D Engine](https://img.shields.io/badge/3D_Engine-Three.js_WebGL_r186-38bdf8?style=for-the-badge&labelColor=070b18)](https://threejs.org/)
+[![3D Modeling](https://img.shields.io/badge/3D_Modeling-Blender_5.2_LTS-ea7600?style=for-the-badge&labelColor=070b18)](https://blender.org/)
 [![Audio](https://img.shields.io/badge/Audio-Procedural_WebAudio_Orchestra-a855f7?style=for-the-badge&labelColor=070b18)](https://github.com/jeiel85/argonia)
 [![License: MIT](https://img.shields.io/badge/License-MIT-10b981?style=for-the-badge&labelColor=070b18)](./LICENSE)
 
 <p align="center">
-  <b>100% Procedural 3D Meshes, Shaders & Adaptive WebAudio Orchestra — Zero External Media Assets.</b><br/>
+  <b>Blender 5.2 LTS Stylized 3D Models + Three.js Procedural Meshes & Adaptive WebAudio Orchestra.</b><br/>
   Build a thriving 3D citadel by day, ride into battle alongside your garrison legions by night, evolve <b>10 building types into 20 specialized Tier-3 forms</b>, and chain <b>48 Royal Relics across 6 Synergy Sets</b> across 5 handcrafted realms + Endless Abyss mode.
 </p>
 
@@ -139,9 +140,11 @@ npm run build
 argonia/
 ├── index.html                    # 인게임 전술 HUD, 출정 사령부, 성소 트리, 백과사전, 유물 드래프트 모달
 ├── vite.config.js                # Vite 8 프로덕션 번들링 및 Three.js 청크 분리 설정
+├── public/
+│   └── models/                   # Blender 5.2 LTS에서 추출한 4대 군주 및 5대 보스 로우폴리 GLB 에셋
 ├── src/
 │   ├── main.js                   # 애플리케이션 컨트롤러, 입력 매핑, 3D-2D 투영 배지 & 60fps 루프
-│   ├── style.css                 # Royal-Arcane 글래스모피즘 UI 디자인 시스템
+│   ├── style.css                 # Obsidian & Burnished Brass 전술 HUD 테마 시스템
 │   ├── data/
 │   │   ├── heroes.js             # 4인의 군주 영웅 스탯, 패시브 오라, Q/E/R/Dash 스킬 명세
 │   │   ├── buildings.js          # 10종 건물 × 3티어 및 20종 분기형 궁극 진화 데이터
@@ -150,8 +153,9 @@ argonia/
 │   │   ├── relics.js             # 48종 왕실 유물 및 6대 성좌 시너지 세트 계산 엔진
 │   │   └── sanctum.js            # 24종 성소 영구 업그레이드, 6종 시련 해골, 30종 왕실 업적
 │   ├── graphics/
+│   │   ├── assetLoader.js        # Blender 5.2 GLB 모델 비동기 프리로더, 캐시 및 핫스왑 매니저
 │   │   ├── sceneManager.js       # Three.js WebGL 렌더러, 주야간 대기 조명 보간, 3모드 카메라 리그
-│   │   ├── proceduralMeshes.js   # 외부 에셋 없이 100% 코드로 조립한 영웅·건물·적·보스·지형 3D 모델
+│   │   ├── proceduralMeshes.js   # 하이브리드 3D 렌더링 (Blender GLB + 고품질 라운디드 지오메트리 & 소켓)
 │   │   └── vfxManager.js         # 3D 파티클, 충격파, 천공 광선, 연쇄 번개, 2D 투영 데미지 텍스트
 │   ├── audio/
 │   │   └── soundEngine.js        # WebAudio 실시간 스텝 시퀀서(주간/야간/보스 테마) 및 28종 효과음 합성기
@@ -161,9 +165,11 @@ argonia/
 │   └── share/
 │       └── viralExporter.js      # 1920x1080 연대기 포스터 캔버스 합성기, WebM 레코더, Threads 공유기
 ├── scripts/
+│   ├── blender_export_assets.py  # Blender 5.2 LTS 무인 헤드리스 3D 에셋 자동 생성 및 GLB 추출 스튜디오
 │   └── balance-sim.mjs           # 헤드리스 전 왕국 캠페인 밸런스 시뮬레이터
 └── tests/
-    └── engine.test.js            # 데이터 무결성, 유물 시너지, 코어 엔진 자동화 테스트
+    ├── engine.test.js            # 데이터 무결성, 유물 시너지, 코어 엔진 자동화 테스트
+    └── models.test.js            # Blender GLB 3D 에셋 무결성, 애니메이션 훅, 피격 플래시 검증 테스트
 ```
 
 ---

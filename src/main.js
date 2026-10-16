@@ -96,6 +96,10 @@ class ArgoniaApp {
     document.getElementById('command-hub-modal')?.classList.add('hidden');
     document.getElementById('title-overlay')?.classList.remove('hidden');
 
+    if (new URLSearchParams(window.location.search).get('autostart') === '1') {
+      this.startGameFromTitle();
+    }
+
     this.lastFrameTime = performance.now();
     requestAnimationFrame((now) => this.loop(now));
   }

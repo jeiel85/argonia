@@ -1,6 +1,11 @@
 import * as THREE from 'three';
+import { assetLoader, MODEL_SPECS } from './assetLoader.js';
 
-// ============================================================================
+// Preload Blender 5.2 GLB models automatically in browser environment
+if (typeof window !== 'undefined') {
+  assetLoader.preloadAll();
+}
+
 // SHARED GEOMETRY & MATERIAL CACHE
 // ============================================================================
 const GEO_CACHE = new Map();
@@ -179,6 +184,24 @@ export function createHeroMesh(heroDef) {
   innerDisc.scale.setScalar(1.1);
   group.add(innerDisc);
 
+  const modelKey = `hero_${heroId}`;
+  const blenderInst = assetLoader.instantiate(modelKey);
+  if (blenderInst) {
+    bodyGroup.add(blenderInst.wrapper);
+    group.add(bodyGroup);
+    group.userData = {
+      heroId,
+      bodyGroup,
+      weaponGroup,
+      auraRing,
+      innerDisc,
+      rotators,
+      baseY: 0,
+      isBlenderModel: true,
+    };
+    return group;
+  }
+
   if (heroId === 'arthuria') {
     // ------------------------------------------------------------------------
     // KING ARTHURIA — Armored Barded Warhorse + Solar Greatsword + Royal Cape
@@ -337,6 +360,22 @@ export function createHeroMesh(heroDef) {
     rotators,
     baseY: 0,
   };
+
+  // Seamless hot-swap callback once Blender model finishes loading in background
+  if (MODEL_SPECS[modelKey]) {
+    assetLoader.onReady(modelKey, () => {
+      if (group.parent) {
+        while (bodyGroup.children.length > 0) {
+          bodyGroup.remove(bodyGroup.children[0]);
+        }
+        const newInst = assetLoader.instantiate(modelKey);
+        if (newInst) {
+          bodyGroup.add(newInst.wrapper);
+          group.userData.isBlenderModel = true;
+        }
+      }
+    });
+  }
 
   return group;
 }
@@ -966,6 +1005,32 @@ export function createEnemyMesh(enemyDef = {}) {
     group.add(menaceRing);
   }
 
+  // If this is a colossal Act Boss and Blender model is loaded
+  if (isBoss && MODEL_SPECS[id]) {
+    const blenderInst = assetLoader.instantiate(id);
+    if (blenderInst) {
+      bodyGroup.add(blenderInst.wrapper);
+      if (blenderInst.hitMeshes?.length > 0) {
+        hitMeshes.push(...blenderInst.hitMeshes);
+      }
+      bodyGroup.scale.setScalar(baseScale);
+      group.add(bodyGroup);
+
+      group.userData = {
+        enemyId: id,
+        isFlying,
+        isBoss,
+        baseY: isFlying ? 2.6 : 0,
+        bodyGroup,
+        wings,
+        hitMeshes,
+        originalColors: hitMeshes.map((m) => m.color.getHex()),
+        isBlenderModel: true,
+      };
+      return group;
+    }
+  }
+
   // Build silhouette by specific enemy ID or archetype
   if (isBoss) {
     // ------------------------------------------------------------------------
@@ -1057,6 +1122,27 @@ export function createEnemyMesh(enemyDef = {}) {
     hitMeshes,
     originalColors: hitMeshes.map((m) => m.color.getHex()),
   };
+
+  // Seamless hot-swap callback once Blender boss model finishes loading in background
+  if (isBoss && MODEL_SPECS[id]) {
+    assetLoader.onReady(id, () => {
+      if (group.parent) {
+        while (bodyGroup.children.length > 0) {
+          bodyGroup.remove(bodyGroup.children[0]);
+        }
+        const newInst = assetLoader.instantiate(id);
+        if (newInst) {
+          bodyGroup.add(newInst.wrapper);
+          hitMeshes.length = 0;
+          if (newInst.hitMeshes?.length > 0) {
+            hitMeshes.push(...newInst.hitMeshes);
+          }
+          group.userData.originalColors = hitMeshes.map((m) => m.color.getHex());
+          group.userData.isBlenderModel = true;
+        }
+      }
+    });
+  }
 
   return group;
 }
