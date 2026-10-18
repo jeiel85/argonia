@@ -146,9 +146,166 @@ kbd {
   z-index: 10;
 }
 
+.world-socket-badge.near {
+  background: var(--gold-vivid);
+  border-color: #fde047;
+  color: #14120f;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  box-shadow: 0 0 0 3px rgba(243, 204, 104, 0.18), 0 4px 14px rgba(0, 0, 0, 0.6);
+  z-index: 11;
+}
+
+/* =========================================================================
+   건설 메뉴 (부지 앞에서 Space)
+   ========================================================================= */
+.build-menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 40;
+  width: 292px;
+  padding: 8px;
+  background: linear-gradient(180deg, rgba(26, 23, 19, 0.97) 0%, rgba(15, 13, 11, 0.98) 100%);
+  border: 1px solid var(--brass-border);
+  border-radius: 4px;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 236, 190, 0.08);
+  pointer-events: auto;
+  will-change: transform;
+}
+
+.build-menu-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 2px 4px 7px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid rgba(204, 164, 92, 0.18);
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--brass-bright);
+}
+
+.build-menu-esc {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--text-muted);
+  border: 1px solid rgba(184, 146, 78, 0.3);
+  border-radius: 2px;
+  padding: 1px 5px;
+}
+
+.build-menu-options {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.build-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 8px;
+  text-align: left;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(184, 146, 78, 0.22);
+  border-radius: 3px;
+  color: var(--text-ivory);
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.build-option:hover {
+  background: rgba(204, 164, 92, 0.16);
+  border-color: var(--gold-vivid);
+}
+
+.build-option.unaffordable {
+  opacity: 0.42;
+}
+
+.build-option-key {
+  flex: none;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--brass-bright);
+  border: 1px solid var(--brass-dim);
+  border-radius: 2px;
+  padding: 1px 4px;
+}
+
+.build-option-icon {
+  flex: none;
+  font-size: 15px;
+  line-height: 1;
+}
+
+.build-option-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+}
+
+.build-option-name {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.build-option-desc {
+  font-size: 10px;
+  line-height: 1.35;
+  color: var(--text-muted);
+}
+
+.build-option-cost {
+  flex: none;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--gold-vivid);
+  white-space: nowrap;
+}
+
+.build-menu-note {
+  padding: 4px;
+  font-size: 10.5px;
+  line-height: 1.45;
+  color: var(--text-parchment);
+}
+
 .world-socket-badge.affordable {
   border-color: rgba(229, 193, 112, 0.65);
   color: var(--text-ivory);
+}
+
+/* 근처 부지 배지는 금색 바탕이라 글자를 다시 어둡게 되돌립니다. */
+.world-socket-badge.near.affordable {
+  background: var(--gold-vivid);
+  border-color: #fde047;
+  color: #14120f;
+}
+
+.build-menu-demolish {
+  margin-top: 2px;
+  padding: 5px 8px;
+  width: 100%;
+  text-align: center;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #e8a4a4;
+  background: rgba(201, 59, 59, 0.08);
+  border: 1px solid rgba(201, 59, 59, 0.28);
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.build-menu-demolish:hover {
+  background: rgba(201, 59, 59, 0.18);
+  border-color: rgba(239, 83, 80, 0.6);
+  color: #f8d7d7;
 }
 
 .world-socket-badge .cost-tag {
@@ -249,7 +406,6 @@ kbd {
 }
 
 .ingame-hud.zen-hidden .hud-left-dock,
-.ingame-hud.zen-hidden .hud-right-dock,
 .ingame-hud.zen-hidden .hud-bottom-bar {
   opacity: 0;
   pointer-events: none;
@@ -517,14 +673,6 @@ kbd {
   pointer-events: auto;
 }
 
-.hud-right-dock {
-  position: absolute;
-  top: 66px;
-  right: 14px;
-  width: 288px;
-  pointer-events: auto;
-}
-
 .side-card {
   padding: 10px 12px;
   display: flex;
@@ -639,92 +787,6 @@ kbd {
   justify-content: center;
   font-size: 15px;
   cursor: help;
-}
-
-/* RIGHT ARCHITECT INSPECTOR */
-.smart-build-btn {
-  background: rgba(243, 204, 104, 0.14);
-  border: 1px solid var(--brass-border);
-  color: var(--gold-vivid);
-  font-weight: 700;
-  font-size: 10.5px;
-  padding: 3px 8px;
-  border-radius: 2px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  transition: all 0.14s;
-}
-
-.smart-build-btn:hover {
-  background: rgba(243, 204, 104, 0.26);
-  border-color: var(--gold-vivid);
-  color: #fff;
-}
-
-.arch-body {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  max-height: calc(100vh - 240px);
-  overflow-y: auto;
-}
-
-.arch-idle-hint {
-  font-size: 11px;
-  color: var(--text-parchment);
-  line-height: 1.45;
-  padding: 2px 0;
-}
-
-.arch-option-card {
-  background: rgba(0, 0, 0, 0.38);
-  border: 1px solid rgba(184, 146, 78, 0.24);
-  border-radius: 2px;
-  padding: 8px 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  cursor: pointer;
-  transition: all 0.14s;
-}
-
-.arch-option-card:hover {
-  border-color: var(--gold-vivid);
-  background: rgba(204, 164, 92, 0.12);
-}
-
-.arch-option-card.evolution-card {
-  border-color: rgba(229, 193, 112, 0.55);
-  background: linear-gradient(135deg, rgba(64, 46, 18, 0.48), rgba(18, 16, 14, 0.92));
-}
-
-.arch-opt-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 6px;
-}
-
-.arch-opt-name {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--text-ivory);
-}
-
-.arch-opt-cost {
-  font-family: var(--font-display);
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--gold-vivid);
-  white-space: nowrap;
-}
-
-.arch-opt-desc {
-  font-size: 10.5px;
-  color: var(--text-parchment);
-  line-height: 1.38;
 }
 
 /* =========================================================================
@@ -1712,7 +1774,7 @@ kbd {
    ========================================================================= */
 .tactical-guide-banner {
   position: fixed;
-  top: 68px;
+  top: 104px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 35;

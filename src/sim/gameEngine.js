@@ -1067,12 +1067,15 @@ export class GameEngine {
 
     const moveLen = Math.hypot(moveX, moveZ);
     const hasInput = moveLen > 0.05;
+    // 쓰론폴처럼 체력이 가득일 때만 달릴 수 있습니다.
+    const canSprint = Boolean(inputState.sprint) && h.hp >= h.maxHp - 0.5;
     const maxSpeed =
       h.def.stats.moveSpeed *
       (1 +
         (this.sanctumStats.heroMoveSpeedMult || 0) +
         (this.relicState.mods.heroMoveSpeedMult || 0) +
-        (h.hasteBuffTimer > 0 ? 0.40 : 0)) *
+        (h.hasteBuffTimer > 0 ? 0.40 : 0) +
+        (canSprint ? 0.35 : 0)) *
       arrivalSlowdown;
 
     const desiredVx = hasInput ? (moveX / moveLen) * maxSpeed : 0;

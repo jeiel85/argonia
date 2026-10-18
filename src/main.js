@@ -52,9 +52,16 @@ class ArgoniaApp {
     this.lastRunSummary = null;
 
     this.keysDown = new Set();
-    this.isRightDragging = false;
-    this.lastDragX = 0;
+    this.isLeftMoving = false;
     this.socketBadgeElements = new Map();
+
+    // 쓰론폴식 건설: 군주가 부지 앞에 서야 지을 수 있습니다.
+    this.nearSocketId = null;
+    this.buildMenuSocketId = null;
+    this.pendingSocketId = null;
+    this.isAltDown = false;
+    this.buildMenuSize = null;
+    this.isTitleScreen = true;
 
     this.clipRecorder = new BattleClipRecorder((isRecording, sec) => {
       const btn = document.getElementById('btn-rec-clip');
@@ -133,7 +140,9 @@ class ArgoniaApp {
     }
 
     this.syncHud(this.engine.getHudSnapshot());
-    this.renderArchitectPanel();
+    // 타이틀 화면에서 돌던 카메라를 정면으로 되돌립니다.
+    this.isTitleScreen = false;
+    this.sceneManager.cameraYaw = 0;
   }
 
   showToast(message, tone = 'gold') {
@@ -262,22 +271,6 @@ class ArgoniaApp {
     });
 
     // In-Game Top Utility Buttons
-    document.getElementById('btn-speed-toggle')?.addEventListener('click', (e) => {
-      const speeds = [1.0, 1.5, 2.0];
-      const next = speeds[(speeds.indexOf(this.engine.gameSpeed) + 1) % speeds.length];
-      this.engine.gameSpeed = next;
-      e.currentTarget.textContent = `${next.toFixed(1)}x`;
-      soundEngine.playSfx('ui_click');
-    });
-
-    document.getElementById('btn-cam-mode')?.addEventListener('click', () => {
-      const mode = this.sceneManager.cycleCameraMode();
-      const labels = { tactical: '전술 시점', action: '추적 시점', overview: '조감 시점' };
-      const labelEl = document.getElementById('cam-mode-label');
-      if (labelEl) labelEl.textContent = labels[mode] || '전술 시점';
-      soundEngine.playSfx('ui_click');
-    });
-
     document.getElementById('btn-audio-mute')?.addEventListener('click', (e) => {
       const muted = soundEngine.toggleMute();
       const textSpan = e.currentTarget.querySelector('span');
@@ -321,12 +314,6 @@ class ArgoniaApp {
     document.getElementById('btn-zen-mode')?.addEventListener('click', () => {
       document.getElementById('ingame-hud')?.classList.toggle('zen-hidden');
       this.worldMarkersLayer?.classList.toggle('hidden');
-    });
-
-    // Smart Auto-Architect Button
-    document.getElementById('btn-smart-build')?.addEventListener('click', () => {
-      this.engine.autoBuildSmart();
-      this.renderArchitectPanel();
     });
 
     // Skill Buttons
@@ -385,85 +372,67 @@ class ArgoniaApp {
       this.openCommandHub(false);
     });
 
-    // 왼쪽 버튼은 부지 선택이나 군주 이동, 오른쪽·가운데 드래그는 카메라 회전입니다.
+    // 왼쪽 버튼을 누른 채 끌면 군주가 마우스를 따라갑니다.
     this.canvas.addEventListener('pointermove', (e) => {
       const worldPt = this.sceneManager.updateMouseRay(e.clientX, e.clientY);
-      if (this.isRightDragging) {
-        const dx = e.clientX - this.lastDragX;
-        this.lastDragX = e.clientX;
-        this.sceneManager.cameraYaw -= dx * 0.0075;
-        return;
-      }
       if (this.isLeftMoving && this.engine.hero && !this.engine.hero.isDead) {
+        this.pendingSocketId = null;
         this.engine.hero.targetX = Math.max(-39, Math.min(39, worldPt.x));
         this.engine.hero.targetZ = Math.max(-39, Math.min(39, worldPt.z));
       }
     });
 
     this.canvas.addEventListener('pointerdown', (e) => {
+      if (e.button !== 0) return;
       const worldPt = this.sceneManager.updateMouseRay(e.clientX, e.clientY);
+      const hero = this.engine.hero;
+      if (!hero || hero.isDead) return;
 
-      // 오른쪽·가운데 버튼: 카메라 회전
-      if (e.button === 2 || e.button === 1) {
-        this.isRightDragging = true;
-        this.lastDragX = e.clientX;
-        this.canvas.style.cursor = 'grabbing';
-        return;
+      // 부지를 누르면 그 앞까지 걸어갑니다. 도착하면 건설 메뉴가 열립니다.
+      let closestSock = null;
+      let bestDist = 3.5;
+      for (const s of this.engine.sockets) {
+        const d = Math.hypot(s.x - worldPt.x, s.z - worldPt.z);
+        if (d < bestDist) {
+          bestDist = d;
+          closestSock = s;
+        }
       }
 
-      // 왼쪽 버튼: 부지 선택 또는 군주 이동
-      if (e.button === 0) {
-        let closestSock = null;
-        let bestDist = 3.5;
-        for (const s of this.engine.sockets) {
-          const d = Math.hypot(s.x - worldPt.x, s.z - worldPt.z);
-          if (d < bestDist) {
-            bestDist = d;
-            closestSock = s;
-          }
-        }
-        if (closestSock) {
-          soundEngine.playSfx('ui_click');
-          this.engine.selectedSocketId = closestSock.id;
-          this.renderArchitectPanel();
-        } else if (this.engine.hero && !this.engine.hero.isDead) {
-          // 누른 지점으로 이동하고, 버튼을 누른 채 끌면 계속 따라갑니다.
-          this.isLeftMoving = true;
-          this.engine.hero.targetX = Math.max(-39, Math.min(39, worldPt.x));
-          this.engine.hero.targetZ = Math.max(-39, Math.min(39, worldPt.z));
-          this.vfxManager.spawnShockwave(worldPt.x, worldPt.z, 1.1, 0xfde047, 0.22);
-        }
+      this.isLeftMoving = true;
+      if (closestSock) {
+        soundEngine.playSfx('ui_click');
+        // 도착했을 때 메뉴를 열어 두도록 예약합니다. 밤에는 예약하지 않습니다.
+        this.pendingSocketId = this.engine.phase === 'day' ? closestSock.id : null;
+        hero.targetX = closestSock.x;
+        hero.targetZ = closestSock.z;
+      } else {
+        this.pendingSocketId = null;
+        hero.targetX = Math.max(-39, Math.min(39, worldPt.x));
+        hero.targetZ = Math.max(-39, Math.min(39, worldPt.z));
+        this.vfxManager.spawnShockwave(worldPt.x, worldPt.z, 1.1, 0xfde047, 0.22);
       }
     });
 
     window.addEventListener('pointerup', (e) => {
-      if (e.button === 2 || e.button === 1) {
-        this.isRightDragging = false;
-        if (this.canvas) this.canvas.style.cursor = '';
-      }
-      if (e.button === 0) {
-        this.isLeftMoving = false;
-      }
+      if (e.button === 0) this.isLeftMoving = false;
     });
 
     this.canvas.addEventListener('contextmenu', (e) => e.preventDefault());
-
-    this.canvas.addEventListener(
-      'wheel',
-      (e) => {
-        this.sceneManager.cameraZoom = Math.max(
-          0.55,
-          Math.min(1.65, this.sceneManager.cameraZoom + (e.deltaY > 0 ? 0.08 : -0.08))
-        );
-      },
-      { passive: true }
-    );
 
     // Keyboard Shortcuts
     window.addEventListener('keydown', (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
       const code = e.code;
       this.keysDown.add(code);
+
+      // 직접 걸어가기 시작하면 '걸어서 도착하면 메뉴 열기' 예약은 취소합니다.
+      if (/^(KeyW|KeyA|KeyS|KeyD|ArrowUp|ArrowDown|ArrowLeft|ArrowRight)$/.test(code)) {
+        this.pendingSocketId = null;
+      }
+
+      // 키를 누르고 있을 때 메뉴가 여러 번 열리고 닫히거나, 연속 건설되지 않게 합니다.
+      if (e.repeat) return;
 
       const titleOverlay = document.getElementById('title-overlay');
       if (titleOverlay && !titleOverlay.classList.contains('hidden')) {
@@ -475,6 +444,10 @@ class ArgoniaApp {
       }
 
       if (code === 'Escape') {
+        if (this.buildMenuSocketId) {
+          this.closeBuildMenu();
+          return;
+        }
         const hub = document.getElementById('command-hub-modal');
         if (hub?.classList.contains('hidden')) {
           this.openCommandHub(false);
@@ -484,33 +457,45 @@ class ArgoniaApp {
         return;
       }
 
-      // If Command Hub is open, ignore battlefield hotkeys
+      // 사령부가 열려 있으면 전장 단축키는 듣지 않습니다.
       if (!document.getElementById('command-hub-modal')?.classList.contains('hidden')) return;
+
+      // Alt를 누르고 있는 동안 모든 부지가 보입니다.
+      if (code === 'AltLeft' || code === 'AltRight') {
+        e.preventDefault();
+        this.isAltDown = true;
+        return;
+      }
+
+      // 건설 메뉴가 열려 있으면 숫자키로 고릅니다.
+      if (this.buildMenuSocketId && /^Digit[1-9]$/.test(code)) {
+        e.preventDefault();
+        this.chooseBuildOption(Number(code.slice(5)) - 1);
+        return;
+      }
 
       if (code === 'KeyQ') this.engine.castHeroSkill('q', this.sceneManager.mouseWorld);
       else if (code === 'KeyE') this.engine.castHeroSkill('e', this.sceneManager.mouseWorld);
       else if (code === 'KeyR') this.engine.castHeroSkill('r', this.sceneManager.mouseWorld);
       else if (code === 'Space') {
         e.preventDefault();
-        this.engine.triggerHeroDash(0, 0);
+        if (this.engine.phase === 'night') {
+          this.engine.triggerHeroDash(0, 0);
+        } else if (this.buildMenuSocketId) {
+          this.closeBuildMenu();
+        } else if (this.nearSocketId) {
+          this.interactWithNearbyPlot();
+        } else {
+          this.showToast('건설 부지 앞에서 Space를 누르세요.', 'info');
+        }
       } else if (code === 'KeyT') {
         if (this.engine.hero) {
           this.engine.commandRally(this.engine.hero.x, this.engine.hero.z);
-        }
-      } else if (code === 'KeyB') {
-        this.engine.autoBuildSmart();
-        this.renderArchitectPanel();
-      } else if (code === 'KeyF') {
-        if (this.engine.selectedSocketId) {
-          this.engine.buildOrUpgradeSocket(this.engine.selectedSocketId);
-          this.renderArchitectPanel();
         }
       } else if (code === 'Enter') {
         if (this.engine.phase === 'day') {
           this.engine.startNightWave();
         }
-      } else if (code === 'KeyV') {
-        document.getElementById('btn-cam-mode')?.click();
       } else if (code === 'KeyM') {
         document.getElementById('btn-audio-mute')?.click();
       } else if (code === 'KeyP') {
@@ -522,6 +507,14 @@ class ArgoniaApp {
 
     window.addEventListener('keyup', (e) => {
       this.keysDown.delete(e.code);
+      if (e.code === 'AltLeft' || e.code === 'AltRight') {
+        this.isAltDown = false;
+      }
+    });
+
+    // Alt를 누른 채 다른 곳을 눌러도 브라우저 메뉴가 뜨지 않게 합니다.
+    window.addEventListener('blur', () => {
+      this.isAltDown = false;
     });
   }
 
@@ -530,6 +523,8 @@ class ArgoniaApp {
   // =========================================================================
   openCommandHub(isInitialStartup = false) {
     this.engine.isPaused = true;
+    this.pendingSocketId = null;
+    this.closeBuildMenu();
     document.getElementById('tactical-guide-banner')?.classList.add('hidden');
     document.getElementById('command-hub-modal')?.classList.remove('hidden');
     document.getElementById('ingame-hud')?.classList.add('hidden');
@@ -547,7 +542,6 @@ class ArgoniaApp {
     document.getElementById('ingame-hud')?.classList.remove('hidden');
     this.worldMarkersLayer?.classList.remove('hidden');
     this.syncHud(this.engine.getHudSnapshot());
-    this.renderArchitectPanel();
   }
 
   launchNewExpedition() {
@@ -564,6 +558,8 @@ class ArgoniaApp {
     });
 
     this.rebuildSocketBadges();
+    this.pendingSocketId = null;
+    this.sceneManager.cameraYaw = 0;
     this.closeCommandHub();
   }
 
@@ -845,21 +841,21 @@ class ArgoniaApp {
     } else {
       grid.innerHTML = `
         <div class="codex-item-card">
-          <strong style="color:#fde047;">낮에는 경제부터</strong>
+          <strong style="color:#fde047;">낮: 부지에 서서 짓기</strong>
           <p style="font-size:12px;color:#cbd5e1;line-height:1.5;">
-            해가 떠 있는 동안 금광과 풍차, 아르곤 정제소를 세웁니다. 수입은 다음 날 아침에 한꺼번에 들어오고, 부서진 성벽과 포탑도 그때 무료로 다시 세워집니다.
+            군주를 부지 앞으로 옮기고 Space를 누르면 지을 수 있는 건물이 나옵니다. Alt를 누르고 있으면 전장의 모든 부지가 보입니다. 수입은 다음 날 아침에 들어오고, 부서진 성벽과 포탑도 그때 무료로 다시 세워집니다.
           </p>
         </div>
         <div class="codex-item-card">
           <strong style="color:#38bdf8;">건물 3단계와 특화 진화</strong>
           <p style="font-size:12px;color:#cbd5e1;line-height:1.5;">
-            건물은 Lv.3까지 올린 뒤 두 갈래 특화 진화 가운데 하나를 고릅니다. 궁수탑이라면 보스용 발리스타와 다수 처리용 개틀링 석궁으로 갈립니다. B 키를 누르면 지을 만한 곳을 알아서 골라 줍니다.
+            건물은 Lv.3까지 올린 뒤 두 갈래 특화 진화 가운데 하나를 고릅니다. 궁수탑이라면 보스용 발리스타와 다수 처리용 개틀링 석궁으로 갈립니다. 같은 부지에서 Space를 다시 누르면 다음 단계가 나옵니다.
           </p>
         </div>
         <div class="codex-item-card">
-          <strong style="color:#a855f7;">군주 직접 조작</strong>
+          <strong style="color:#a855f7;">밤: 군주로 직접 싸우기</strong>
           <p style="font-size:12px;color:#cbd5e1;line-height:1.5;">
-            WASD나 클릭으로 군주를 움직이고 Q, E, R과 Space 돌진을 씁니다. 차원문이 밀리면 T로 병영 병력을 군주에게 불러 모으세요.
+            Enter로 밤을 시작하면 군주가 가까운 적을 알아서 칩니다. Q, E, R 스킬과 Space 돌진을 쓰고, 차원문이 밀리면 T로 병영 병력을 불러 모으세요.
           </p>
         </div>
       `;
@@ -1090,142 +1086,210 @@ class ArgoniaApp {
     }
   }
 
-  renderArchitectPanel() {
-    const body = document.getElementById('arch-body');
-    const title = document.getElementById('arch-title');
-    if (!body || !title) return;
-
-    const selId = this.engine.selectedSocketId;
-    const sock = this.engine.sockets.find((s) => s.id === selId);
-
-    if (!sock) {
-      title.textContent = '건설 감독';
-      body.innerHTML = `
-        <div class="arch-idle-hint">
-          건설 부지를 클릭하면 지을 수 있는 건물이 나옵니다. 자동 건설은 <kbd>B</kbd> 키입니다.
-        </div>
-      `;
-      return;
+  // =========================================================================
+  // 건설: 군주가 부지 앞에 서면 열립니다 (쓰론폴 방식)
+  // =========================================================================
+  findSocketNearHero(range = 4.2) {
+    const hero = this.engine.hero;
+    if (!hero || hero.isDead) return null;
+    let best = null;
+    let bestDist = range;
+    for (const sock of this.engine.sockets) {
+      const d = Math.hypot(sock.x - hero.x, sock.z - hero.z);
+      if (d < bestDist) {
+        bestDist = d;
+        best = sock;
+      }
     }
+    return best;
+  }
 
-    title.textContent = sock.label;
+  openBuildMenu(socketId) {
+    const sock = this.engine.sockets.find((s) => s.id === socketId);
+    if (!sock) return;
+    this.buildMenuSocketId = socketId;
+    this.engine.selectedSocketId = socketId;
+    document.getElementById('build-menu')?.classList.remove('hidden');
+    this.renderBuildMenu();
+    this.positionBuildMenu(true);
+    soundEngine.playSfx('ui_click');
+  }
+
+  closeBuildMenu() {
+    this.buildMenuSocketId = null;
+    this.engine.selectedSocketId = null;
+    document.getElementById('build-menu')?.classList.add('hidden');
+  }
+
+  getBuildOptions(sock) {
     const b = sock.building;
 
     if (!b) {
-      // 빈 부지: 지을 수 있는 건물을 모두 보여 줍니다.
-      body.innerHTML =
-        sock.allowed
-          .map((typeId) => {
-            const bDef = getBuildingSpec(typeId);
-            const t1 = getBuildingTierSpec(typeId, 1, null);
-            const cost = this.engine.getActionCost(typeId, 1, null);
-            return `
-              <div class="arch-option-card" data-build-type="${typeId}">
-                <div class="arch-opt-top">
-                  <span class="arch-opt-name">${bDef.name}</span>
-                  <span class="arch-opt-cost">${cost.gold}G ${cost.argon > 0 ? `· ${cost.argon}A` : ''}</span>
-                </div>
-                <div class="arch-opt-desc">${t1.desc}</div>
-              </div>
-            `;
-          })
-          .join('') +
-        `<button id="btn-arch-back" class="btn-mini" style="margin-top:2px;">선택 해제</button>`;
+      return sock.allowed.map((typeId) => {
+        const def = getBuildingSpec(typeId);
+        const tier1 = getBuildingTierSpec(typeId, 1, null);
+        return {
+          type: 'build',
+          key: typeId,
+          icon: def.icon,
+          name: def.name,
+          desc: tier1 ? tier1.desc : def.desc,
+          cost: this.engine.getActionCost(typeId, 1, null),
+        };
+      });
+    }
 
-      body.querySelectorAll('[data-build-type]').forEach((card) => {
-        card.addEventListener('click', () => {
-          const res = this.engine.buildOrUpgradeSocket(sock.id, card.dataset.buildType, null);
-          if (!res.ok) this.showToast(res.reason, 'danger');
-          this.renderArchitectPanel();
-        });
-      });
-      document.getElementById('btn-arch-back')?.addEventListener('click', () => {
-        this.engine.selectedSocketId = null;
-        this.renderArchitectPanel();
-      });
+    if (!b.evolutionId && b.tier < 3) {
+      const next = getBuildingTierSpec(b.typeId, b.tier + 1, null);
+      return [
+        {
+          type: 'upgrade',
+          key: null,
+          icon: b.baseDef.icon,
+          name: next.name,
+          desc: next.desc,
+          cost: this.engine.getActionCost(b.typeId, b.tier + 1, null),
+        },
+      ];
+    }
+
+    if (!b.evolutionId && b.tier === 3) {
+      return (b.baseDef.evolutions || []).map((evo) => ({
+        type: 'evolution',
+        key: evo.id,
+        icon: evo.icon,
+        name: evo.name,
+        desc: evo.desc,
+        cost: this.engine.getActionCost(b.typeId, 3, evo.id),
+      }));
+    }
+
+    return [];
+  }
+
+  renderBuildMenu() {
+    const sock = this.engine.sockets.find((s) => s.id === this.buildMenuSocketId);
+    const titleEl = document.getElementById('build-menu-title');
+    const listEl = document.getElementById('build-menu-options');
+    if (!sock || !titleEl || !listEl) return;
+
+    const b = sock.building;
+    titleEl.textContent = b ? `${b.spec.name} · ${sock.label}` : sock.label;
+
+    const options = this.getBuildOptions(sock);
+    this.buildOptions = options;
+
+    if (options.length === 0) {
+      listEl.innerHTML = `<div class="build-menu-note">${b ? b.spec.desc : '지을 수 있는 건물이 없습니다.'}</div>`;
       return;
     }
 
-    // Existing building on socket
-    let actionsHtml = '';
-    if (b.evolutionId) {
-      actionsHtml = `
-        <div class="arch-option-card evolution-card">
-          <div class="arch-opt-top">
-            <span class="arch-opt-name">특화 진화 · ${b.spec.name}</span>
-          </div>
-          <div class="arch-opt-desc">${b.spec.desc}</div>
-        </div>
-      `;
-    } else if (b.tier < 3) {
-      const nextSpec = getBuildingTierSpec(b.typeId, b.tier + 1, null);
-      const cost = this.engine.getActionCost(b.typeId, b.tier + 1, null);
-      actionsHtml = `
-        <div class="arch-option-card" id="btn-arch-upgrade">
-          <div class="arch-opt-top">
-            <span class="arch-opt-name">${nextSpec.name}로 강화 [F]</span>
-            <span class="arch-opt-cost">${cost.gold}G ${cost.argon > 0 ? `· ${cost.argon}A` : ''}</span>
-          </div>
-          <div class="arch-opt-desc">${nextSpec.desc}</div>
-        </div>
-      `;
-    } else {
-      // 3단계: 특화 진화 두 갈래
-      actionsHtml = (b.baseDef.evolutions || [])
-        .map((evo) => {
-          const cost = this.engine.getActionCost(b.typeId, 3, evo.id);
-          return `
-            <div class="arch-option-card evolution-card" data-evo-id="${evo.id}">
-              <div class="arch-opt-top">
-                <span class="arch-opt-name">${evo.name}</span>
-                <span class="arch-opt-cost">${cost.gold}G · ${cost.argon}A</span>
-              </div>
-              <div class="arch-opt-desc">${evo.desc}</div>
-            </div>
-          `;
-        })
-        .join('');
+    listEl.innerHTML = options
+      .map((opt, i) => {
+        const affordable = this.engine.gold >= opt.cost.gold && this.engine.argon >= opt.cost.argon;
+        const costText = [opt.cost.gold > 0 ? `${opt.cost.gold}G` : '', opt.cost.argon > 0 ? `${opt.cost.argon}A` : '']
+          .filter(Boolean)
+          .join(' · ');
+        return `
+          <button class="build-option ${affordable ? '' : 'unaffordable'}" data-opt-index="${i}">
+            <span class="build-option-key">${i + 1}</span>
+            <span class="build-option-icon">${opt.icon}</span>
+            <span class="build-option-body">
+              <span class="build-option-name">${opt.name}</span>
+              <span class="build-option-desc">${opt.desc}</span>
+            </span>
+            <span class="build-option-cost">${costText}</span>
+          </button>
+        `;
+      })
+      .join('');
+
+    if (b && b.typeId !== 'citadel') {
+      listEl.insertAdjacentHTML(
+        'beforeend',
+        '<button class="build-menu-demolish" data-demolish="1">철거 · 70% 환급</button>'
+      );
+      listEl.querySelector('[data-demolish]')?.addEventListener('click', () => {
+        const res = this.engine.demolishSocketBuilding(sock.id);
+        if (!res.ok) {
+          this.showToast(res.reason, 'danger');
+          return;
+        }
+        this.renderBuildMenu();
+        this.positionBuildMenu(true);
+      });
     }
 
-    const demolishBtn =
-      b.typeId !== 'citadel' && this.engine.phase === 'day'
-        ? `<button id="btn-arch-demolish" class="btn-mini" style="margin-top:4px;color:#f5b5b5;border-color:rgba(201,59,59,0.5);">철거 (70% 환급)</button>`
-        : '';
-
-    body.innerHTML = `
-      <div style="background:rgba(0,0,0,0.42);border-left:2px solid var(--brass-bright);padding:7px 10px;font-size:12px;">
-        <strong>${b.spec.name}</strong>
-        <div class="tabular-nums" style="font-size:10.5px;color:var(--text-parchment);margin-top:2px;">내구도 ${Math.round(b.hp)} / ${b.maxHp.toLocaleString()}</div>
-      </div>
-      ${actionsHtml}
-      ${demolishBtn}
-      <button id="btn-arch-back" class="btn-mini" style="margin-top:2px;">선택 해제</button>
-    `;
-
-    document.getElementById('btn-arch-upgrade')?.addEventListener('click', () => {
-      const res = this.engine.buildOrUpgradeSocket(sock.id);
-      if (!res.ok) this.showToast(res.reason, 'danger');
-      this.renderArchitectPanel();
+    listEl.querySelectorAll('[data-opt-index]').forEach((btn) => {
+      btn.addEventListener('click', () => this.chooseBuildOption(Number(btn.dataset.optIndex)));
     });
+  }
 
-    body.querySelectorAll('[data-evo-id]').forEach((card) => {
-      card.addEventListener('click', () => {
-        const res = this.engine.buildOrUpgradeSocket(sock.id, null, card.dataset.evoId);
-        if (!res.ok) this.showToast(res.reason, 'danger');
-        this.renderArchitectPanel();
-      });
-    });
+  chooseBuildOption(index, socketId = this.buildMenuSocketId) {
+    const opt = (this.buildOptions || [])[index];
+    const sock = this.engine.sockets.find((s) => s.id === socketId);
+    if (!opt || !sock) return;
 
-    document.getElementById('btn-arch-demolish')?.addEventListener('click', () => {
-      const res = this.engine.demolishSocketBuilding(sock.id);
-      if (!res.ok) this.showToast(res.reason, 'danger');
-      this.renderArchitectPanel();
-    });
+    const res = this.engine.buildOrUpgradeSocket(
+      sock.id,
+      opt.type === 'build' ? opt.key : null,
+      opt.type === 'evolution' ? opt.key : null
+    );
 
-    document.getElementById('btn-arch-back')?.addEventListener('click', () => {
-      this.engine.selectedSocketId = null;
-      this.renderArchitectPanel();
-    });
+    if (!res.ok) {
+      this.showToast(res.reason, 'danger');
+      return;
+    }
+
+    soundEngine.playSfx('build_upgrade');
+    if (this.buildMenuSocketId === socketId) {
+      this.renderBuildMenu();
+      this.positionBuildMenu(true);
+    }
+  }
+
+  // Space: 고를 것이 하나뿐이면 바로 실행하고, 여러 개면 메뉴를 엽니다.
+  interactWithNearbyPlot() {
+    const sock = this.engine.sockets.find((s) => s.id === this.nearSocketId);
+    if (!sock) return;
+    const options = this.getBuildOptions(sock);
+    this.buildOptions = options;
+    if (options.length === 1) {
+      this.chooseBuildOption(0, sock.id);
+      return;
+    }
+    this.openBuildMenu(sock.id);
+  }
+
+  positionBuildMenu(remeasure = false) {
+    const menu = document.getElementById('build-menu');
+    const sock = this.engine.sockets.find((s) => s.id === this.buildMenuSocketId);
+    if (!menu || !sock || menu.classList.contains('hidden')) return;
+
+    if (remeasure || !this.buildMenuSize) {
+      this.buildMenuSize = { w: menu.offsetWidth, h: menu.offsetHeight };
+    }
+
+    const v = new THREE.Vector3(sock.x, sock.building ? 3.4 : 1.4, sock.z).project(this.sceneManager.camera);
+    if (v.z > 1) {
+      menu.style.display = 'none';
+      return;
+    }
+    menu.style.display = '';
+
+    const w = this.sceneManager.width;
+    const h = this.sceneManager.height;
+    const sx = (v.x * 0.5 + 0.5) * w;
+    const sy = (-v.y * 0.5 + 0.5) * h;
+    const halfW = this.buildMenuSize.w / 2;
+
+    // 건물을 가리지 않도록 부지 옆에 붙입니다. 오른쪽이 좁으면 왼쪽으로 뒤집습니다.
+    let x = sx + 46 + halfW;
+    if (x + halfW > w - 16) x = sx - 46 - halfW;
+    x = Math.max(halfW + 12, Math.min(w - halfW - 12, x));
+    const y = Math.max(96, Math.min(h - 120 - this.buildMenuSize.h, sy - this.buildMenuSize.h / 2));
+    const transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0) translateX(-50%)`;
+    if (menu.style.transform !== transform) menu.style.transform = transform;
   }
 
   // =========================================================================
@@ -1241,15 +1305,13 @@ class ArgoniaApp {
       el.className = 'world-socket-badge';
       el.addEventListener('click', (e) => {
         e.stopPropagation();
+        const hero = this.engine.hero;
+        if (!hero || hero.isDead) return;
         soundEngine.playSfx('ui_click');
-        if (this.engine.selectedSocketId === sock.id) {
-          // Clicking an already-selected badge immediately builds/upgrades it!
-          const res = this.engine.buildOrUpgradeSocket(sock.id);
-          if (!res.ok) this.showToast(res.reason, 'danger');
-        } else {
-          this.engine.selectedSocketId = sock.id;
-        }
-        this.renderArchitectPanel();
+        // 배지를 눌러도 부지 앞까지 걸어갑니다. 도착하면 건설 메뉴가 열립니다.
+        this.pendingSocketId = sock.id;
+        hero.targetX = sock.x;
+        hero.targetZ = sock.z;
       });
       this.worldMarkersLayer.appendChild(el);
       this.socketBadgeElements.set(sock.id, el);
@@ -1280,9 +1342,12 @@ class ArgoniaApp {
       const el = this.socketBadgeElements.get(sock.id);
       if (!el) continue;
 
-      // 밤에는 선택한 부지만 표시합니다.
       const b = sock.building;
-      if (this.engine.phase === 'night' && this.engine.selectedSocketId !== sock.id) {
+      const isNear = sock.id === this.nearSocketId;
+      const isMenu = sock.id === this.buildMenuSocketId;
+      // 낮에만, 그리고 Alt를 누르거나 군주가 부지 앞에 있을 때만 보입니다.
+      const visible = this.engine.phase === 'day' && (this.isAltDown || isNear || isMenu);
+      if (!visible) {
         el.style.display = 'none';
         continue;
       }
@@ -1296,37 +1361,69 @@ class ArgoniaApp {
       const sx = (tempV.x * 0.5 + 0.5) * w;
       const sy = (-tempV.y * 0.5 + 0.5) * h;
 
-      // 이름과 건설 가능 여부만 갱신합니다.
-      let labelHtml = '';
+      let label = '';
       let canAfford = false;
       if (!b) {
         const defType = sock.defaultType || sock.allowed[0];
         const cost = this.engine.getActionCost(defType, 1, null);
         canAfford = this.engine.gold >= cost.gold && this.engine.argon >= cost.argon;
-        const shortLabel = shortNames[defType] || '부지';
-        labelHtml = `${shortLabel}<span class="cost-tag">${cost.gold}G</span>`;
+        label = isNear || isMenu ? 'SPACE · 건설' : `${shortNames[defType] || '부지'} ${cost.gold}G`;
       } else if (!b.evolutionId && b.tier < 3) {
         const cost = this.engine.getActionCost(b.typeId, b.tier + 1, null);
         canAfford = this.engine.gold >= cost.gold && this.engine.argon >= cost.argon;
-        const shortLabel = shortNames[b.typeId] || b.baseDef.name;
-        labelHtml = `${shortLabel} Lv.${b.tier}<span class="cost-tag">▲${cost.gold}G</span>`;
+        label = isNear || isMenu ? 'SPACE · 강화' : `${shortNames[b.typeId] || b.baseDef.name} Lv.${b.tier}`;
       } else if (!b.evolutionId && b.tier === 3) {
-        const evo = b.baseDef.evolutions?.[0];
-        const cost = this.engine.getActionCost(b.typeId, 3, evo?.id);
+        const firstEvo = b.baseDef.evolutions?.[0];
+        const cost = this.engine.getActionCost(b.typeId, 3, firstEvo?.id);
         canAfford = this.engine.gold >= cost.gold && this.engine.argon >= cost.argon;
-        const shortLabel = shortNames[b.typeId] || b.baseDef.name;
-        labelHtml = `${shortLabel} Lv.3<span class="cost-tag">진화</span>`;
+        label = isNear || isMenu ? 'SPACE · 진화' : `${shortNames[b.typeId] || b.baseDef.name} Lv.3`;
       } else {
-        const shortLabel = shortNames[b.typeId] || b.baseDef.name;
-        labelHtml = `${shortLabel} 완성`;
+        label = `${shortNames[b.typeId] || b.baseDef.name} 완성`;
       }
 
-      el.innerHTML = labelHtml;
-      el.classList.toggle('selected', this.engine.selectedSocketId === sock.id);
-      el.classList.toggle('affordable', canAfford);
-      el.style.display = 'block';
-      el.style.transform = `translate3d(${sx.toFixed(1)}px, ${sy.toFixed(1)}px, 0) translate(-50%, -50%)`;
+      const nearState = isNear || isMenu;
+      if (el.dataset.label !== label) {
+        el.innerHTML = label;
+        el.dataset.label = label;
+      }
+      if (el.dataset.near !== String(nearState)) {
+        el.classList.toggle('near', nearState);
+        el.dataset.near = String(nearState);
+      }
+      if (el.dataset.affordable !== String(canAfford)) {
+        el.classList.toggle('affordable', canAfford);
+        el.dataset.affordable = String(canAfford);
+      }
+      if (el.style.display !== 'block') el.style.display = 'block';
+      const transform = `translate3d(${sx.toFixed(1)}px, ${sy.toFixed(1)}px, 0) translate(-50%, -50%)`;
+      if (el.dataset.transform !== transform) {
+        el.style.transform = transform;
+        el.dataset.transform = transform;
+      }
     }
+  }
+
+  // 부지 접근 상태와 건설 메뉴를 매 프레임 갱신합니다.
+  updateSocketInteractions() {
+    const near = this.engine.phase === 'day' ? this.findSocketNearHero() : null;
+    this.nearSocketId = near ? near.id : null;
+
+    // 밤이 되었거나 군주가 쓰러졌으면 예약은 버립니다.
+    if (this.pendingSocketId && (this.engine.phase !== 'day' || this.engine.hero?.isDead)) {
+      this.pendingSocketId = null;
+    }
+
+    if (this.pendingSocketId && this.nearSocketId === this.pendingSocketId) {
+      this.pendingSocketId = null;
+      this.openBuildMenu(this.nearSocketId);
+    }
+
+    if (this.buildMenuSocketId && this.nearSocketId !== this.buildMenuSocketId) {
+      this.closeBuildMenu();
+    }
+
+    this.updateSocketBadgesProjection();
+    this.positionBuildMenu();
   }
 
   // =========================================================================
@@ -1369,7 +1466,6 @@ class ArgoniaApp {
       card.addEventListener('click', () => {
         modal.classList.add('hidden');
         this.engine.pickRelic(card.dataset.relicId);
-        this.renderArchitectPanel();
       });
     });
   }
@@ -1443,12 +1539,11 @@ class ArgoniaApp {
     }
 
     if (this.engine.isPaused) {
-      // 사령부가 열려 있는 동안에는 카메라를 천천히 돌립니다.
-      this.sceneManager.cameraYaw += dt * 0.12;
+      // 타이틀 화면에서만 배경이 천천히 돌아갑니다.
+      if (this.isTitleScreen) this.sceneManager.cameraYaw += dt * 0.12;
     } else {
-      if (this.keysDown.has('KeyZ')) this.sceneManager.cameraYaw -= dt * 1.65;
-      if (this.keysDown.has('KeyC')) this.sceneManager.cameraYaw += dt * 1.65;
-      this.engine.update(dt, { moveX, moveZ });
+      const sprint = this.keysDown.has('ShiftLeft') || this.keysDown.has('ShiftRight');
+      this.engine.update(dt, { moveX, moveZ, sprint });
     }
 
     const heroPos = this.engine.hero
@@ -1460,7 +1555,7 @@ class ArgoniaApp {
     this.sceneManager.render();
 
     if (!this.engine.isPaused) {
-      this.updateSocketBadgesProjection();
+      this.updateSocketInteractions();
       this.syncHud(this.engine.getHudSnapshot());
     }
 

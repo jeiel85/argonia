@@ -34,9 +34,7 @@ export class SceneManager {
     this.scene.fog = new THREE.FogExp2(0x1e293b, 0.0085);
 
     this.camera = new THREE.PerspectiveCamera(42, this.width / this.height, 0.5, 220);
-    this.cameraMode = 'tactical'; // 'tactical' | 'action' | 'overview'
     this.cameraYaw = 0;
-    this.cameraZoom = 1.0; // 0.55 (close) .. 1.65 (wide)
     this.cameraTarget = new THREE.Vector3(0, 0, 0);
     this.cameraPos = new THREE.Vector3(0, 32, 30);
     this.shakeAmount = 0;
@@ -210,13 +208,6 @@ export class SceneManager {
     }
   }
 
-  cycleCameraMode() {
-    const order = ['tactical', 'action', 'overview'];
-    const nextIdx = (order.indexOf(this.cameraMode) + 1) % order.length;
-    this.cameraMode = order[nextIdx];
-    return this.cameraMode;
-  }
-
   addScreenShake(amount = 0.5) {
     this.shakeAmount = Math.min(2.2, this.shakeAmount + amount);
   }
@@ -255,43 +246,15 @@ export class SceneManager {
     const focus = heroPosition || new THREE.Vector3(0, 0, 0);
     this.heroLight.position.set(focus.x, 3.4, focus.z);
 
-    let desiredTarget = new THREE.Vector3();
-    let desiredPos = new THREE.Vector3();
-
-    if (this.cameraMode === 'overview') {
-      desiredTarget.set(0, 0, -2);
-      const dist = 48 * this.cameraZoom;
-      desiredPos.set(
-        Math.sin(this.cameraYaw) * dist * 0.7,
-        46 * this.cameraZoom,
-        Math.cos(this.cameraYaw) * dist * 0.75
-      );
-    } else if (this.cameraMode === 'action') {
-      // Close dynamic 3rd-person action view
-      desiredTarget.set(
-        focus.x - Math.sin(this.cameraYaw) * 2.2,
-        1.8,
-        focus.z - Math.cos(this.cameraYaw) * 2.2
-      );
-      const dist = 16.5 * this.cameraZoom;
-      desiredPos.set(
-        focus.x + Math.sin(this.cameraYaw) * dist,
-        11.5 * this.cameraZoom,
-        focus.z + Math.cos(this.cameraYaw) * dist
-      );
-    } else {
-      // 'tactical' Thronefall-style tilted diorama camera following hero with battlefield tether
-      const tetherX = focus.x * 0.72;
-      const tetherZ = focus.z * 0.72;
-      desiredTarget.set(tetherX, 0.5, tetherZ);
-      const dist = 29 * this.cameraZoom;
-      const height = 30 * this.cameraZoom;
-      desiredPos.set(
-        tetherX + Math.sin(this.cameraYaw) * dist,
-        height,
-        tetherZ + Math.cos(this.cameraYaw) * dist
-      );
-    }
+    // 쓰론폴처럼 시점은 하나. 군주를 화면 안에 묶어 두고 고정된 각도로 따라갑니다.
+    const tetherX = focus.x * 0.72;
+    const tetherZ = focus.z * 0.72;
+    const desiredTarget = new THREE.Vector3(tetherX, 0.5, tetherZ);
+    const desiredPos = new THREE.Vector3(
+      tetherX + Math.sin(this.cameraYaw) * 29,
+      30,
+      tetherZ + Math.cos(this.cameraYaw) * 29
+    );
 
     const smooth = 1 - Math.exp(-10.5 * dt);
     this.cameraTarget.lerp(desiredTarget, smooth);
