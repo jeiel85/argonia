@@ -2,7 +2,7 @@
   "name": "argonia",
   "version": "1.0.0",
   "private": true,
-  "description": "👑 ARGONIA: Crown of the Spire — 3D Tactical Kingdom Defense, Hero Action & Relic Synergy Roguelite built with Three.js & WebAudio",
+  "description": "낮에 왕국을 세우고 밤에 직접 싸우는 3D 타워 디펜스 로그라이트. Three.js와 WebAudio로 만들었습니다.",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -16,10 +16,6 @@
     "webgl",
     "tower-defense",
     "roguelite",
-    "strategy-game",
-    "action-rpg",
-    "thronefall",
-    "procedural-generation",
     "webaudio",
     "browser-game"
   ],

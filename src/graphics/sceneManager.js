@@ -1,6 +1,6 @@
 /**
  * ARGONIA: Crown of the Spire
- * Three.js WebGL Scene Manager, Dynamic Day/Night Atmosphere, Starfield & Multi-Mode Camera Rig
+ * Three.js 렌더러, 주야간 조명, 카메라.
  */
 
 import * as THREE from 'three';
@@ -66,7 +66,7 @@ export class SceneManager {
       const renderPass = new RenderPass(this.scene, this.camera);
       this.composer.addPass(renderPass);
 
-      // Cinematic UnrealBloom for glowing spells, neon crystals, and molten impacts
+      // 발광 효과를 위한 블룸
       this.bloomPass = new UnrealBloomPass(
         new THREE.Vector2(this.width, this.height),
         0.55, // strength: lush & ethereal, not blinding

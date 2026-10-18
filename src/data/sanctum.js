@@ -1,41 +1,39 @@
 /**
- * Argonia Starlight Sanctum (별빛 성소), Challenge Skulls (시련의 해골), & Royal Achievements (업적)
- * Provides 24 Permanent Meta-Progression Upgrades across 4 constellations,
- * 6 Optional Challenge Skulls, 30 Achievements, and stat computation helpers.
+ * 왕실 성소 특성 24종, 시련의 서약 6종, 업적 30종과 계산 함수.
  */
 
 export const SANCTUM_BRANCHES = {
   crown_economy: {
     id: 'crown_economy',
-    name: '왕실 재정학 (번영)',
+    name: '왕실 재정학',
     nameEn: 'Crown Economy',
     icon: '🪙',
     color: '#f59e0b',
-    desc: '초기 자금, 여명 금화 및 아르곤 생산량, 건설 비용 절감을 영구적으로 강화합니다.'
+    desc: '시작 자금과 아침 수입, 건설 비용을 영구히 개선합니다.'
   },
   citadel_bastion: {
     id: 'citadel_bastion',
-    name: '불락의 성채학 (수호)',
+    name: '불락의 성채학',
     nameEn: 'Citadel Bastion',
     icon: '🏰',
     color: '#38bdf8',
-    desc: '왕성과 성벽의 내구도, 자동 수리, 방어 포탑의 화력과 사거리를 영구적으로 강화합니다.'
+    desc: '성채와 성벽의 내구도, 포탑 화력과 사거리를 올립니다.'
   },
   warlord_valor: {
     id: 'warlord_valor',
-    name: '전쟁군주의 무훈 (무력)',
+    name: '전쟁군주의 무훈',
     nameEn: 'Warlord Valor',
     icon: '⚔️',
     color: '#ef4444',
-    desc: '영웅의 전투력, 스킬 쿨타임, 부활 속도 및 수비대 병사들의 역량을 영구적으로 강화합니다.'
+    desc: '군주의 전투력과 스킬 회전, 병력의 질을 올립니다.'
   },
   astral_arcana: {
     id: 'astral_arcana',
-    name: '성좌의 비전학 (운명)',
+    name: '성좌의 비전학',
     nameEn: 'Astral Arcana',
     icon: '✨',
     color: '#a855f7',
-    desc: '유물 리롤, 희귀 유물 행운, 세트 시너지 증폭 및 별빛 왕관 획득량을 영구적으로 강화합니다.'
+    desc: '유물 선택과 시너지, 왕관 수급을 손봅니다.'
   }
 };
 
@@ -52,7 +50,7 @@ export const SANCTUM_UPGRADES = [
     maxLevel: 5,
     baseCost: 40,
     costScale: 1.6,
-    descPerLevel: '원정 시작 시 초기 금화 +35 증가',
+    descPerLevel: '원정 시작 금화 +35',
     statKey: 'startGoldBonus',
     valuePerLevel: 35
   },
@@ -65,7 +63,7 @@ export const SANCTUM_UPGRADES = [
     maxLevel: 5,
     baseCost: 45,
     costScale: 1.65,
-    descPerLevel: '원정 시작 시 초기 아르곤 +20 증가',
+    descPerLevel: '원정 시작 아르곤 +20',
     statKey: 'startArgonBonus',
     valuePerLevel: 20
   },
@@ -78,7 +76,7 @@ export const SANCTUM_UPGRADES = [
     maxLevel: 5,
     baseCost: 60,
     costScale: 1.7,
-    descPerLevel: '매 여명마다 금광 및 아르곤 수입 +6% 증가',
+    descPerLevel: '아침 금광·아르곤 수입 +6%',
     statKey: 'dawnIncomeMult',
     valuePerLevel: 0.06
   },
@@ -91,7 +89,7 @@ export const SANCTUM_UPGRADES = [
     maxLevel: 5,
     baseCost: 70,
     costScale: 1.75,
-    descPerLevel: '모든 건물 건설 및 업그레이드 비용 -4% 절감',
+    descPerLevel: '건설·강화 비용 -4%',
     statKey: 'buildCostDiscount',
     valuePerLevel: 0.04
   },
@@ -104,7 +102,7 @@ export const SANCTUM_UPGRADES = [
     maxLevel: 5,
     baseCost: 90,
     costScale: 1.8,
-    descPerLevel: '전투 종료 시 획득하는 별빛 왕관(메타 재화) +10% 증가',
+    descPerLevel: '획득 왕관 +10%',
     statKey: 'crownGainMult',
     valuePerLevel: 0.10
   },
@@ -112,12 +110,12 @@ export const SANCTUM_UPGRADES = [
     id: 'sanctum_starting_relic',
     branch: 'crown_economy',
     branchName: '왕실 재정학 (번영)',
-    name: '선대 왕의 유산 상속',
+    name: '선왕의 유산',
     icon: '🎁',
     maxLevel: 1,
     baseCost: 220,
     costScale: 2.0,
-    descPerLevel: '원정 시작 시 첫날 아침 즉시 왕실 유물 선택권 +1회 부여',
+    descPerLevel: '첫날 아침 유물 선택 +1회',
     statKey: 'startingRelicChoice',
     valuePerLevel: 1
   },
@@ -129,12 +127,12 @@ export const SANCTUM_UPGRADES = [
     id: 'sanctum_citadel_hp',
     branch: 'citadel_bastion',
     branchName: '불락의 성채학 (수호)',
-    name: '왕성 본채 초석 강화',
+    name: '성채 초석 보강',
     icon: '🏰',
     maxLevel: 5,
     baseCost: 45,
     costScale: 1.6,
-    descPerLevel: '중앙 왕성(Citadel)의 최대 체력 +12% 증가',
+    descPerLevel: '성채 최대 체력 +12%',
     statKey: 'citadelMaxHpMult',
     valuePerLevel: 0.12
   },
@@ -147,7 +145,7 @@ export const SANCTUM_UPGRADES = [
     maxLevel: 5,
     baseCost: 50,
     costScale: 1.6,
-    descPerLevel: '모든 성벽 및 방어 건물의 최대 체력 +10% 증가',
+    descPerLevel: '성벽·건물 최대 체력 +10%',
     statKey: 'wallMaxHpMult',
     valuePerLevel: 0.10
   },
@@ -155,12 +153,12 @@ export const SANCTUM_UPGRADES = [
     id: 'sanctum_auto_repair',
     branch: 'citadel_bastion',
     branchName: '불락의 성채학 (수호)',
-    name: '자율 수복 룬 각인',
+    name: '자동 수복 룬',
     icon: '🔧',
     maxLevel: 5,
     baseCost: 65,
     costScale: 1.7,
-    descPerLevel: '모든 성벽과 건물이 초당 +3의 체력을 자동 회복',
+    descPerLevel: '모든 건물 초당 수리 +3',
     statKey: 'buildingAutoRepair',
     valuePerLevel: 3
   },
@@ -173,7 +171,7 @@ export const SANCTUM_UPGRADES = [
     maxLevel: 5,
     baseCost: 60,
     costScale: 1.65,
-    descPerLevel: '모든 방어 포탑의 공격력 +7% 증가',
+    descPerLevel: '포탑 공격력 +7%',
     statKey: 'towerDamageMult',
     valuePerLevel: 0.07
   },
@@ -186,7 +184,7 @@ export const SANCTUM_UPGRADES = [
     maxLevel: 5,
     baseCost: 65,
     costScale: 1.7,
-    descPerLevel: '모든 방어 포탑의 공격 속도 +6% 증가',
+    descPerLevel: '포탑 공격 속도 +6%',
     statKey: 'towerSpeedMult',
     valuePerLevel: 0.06
   },
@@ -199,7 +197,7 @@ export const SANCTUM_UPGRADES = [
     maxLevel: 4,
     baseCost: 75,
     costScale: 1.75,
-    descPerLevel: '모든 방어 포탑의 사거리 +5% 증가',
+    descPerLevel: '포탑 사거리 +5%',
     statKey: 'towerRangeMult',
     valuePerLevel: 0.05
   },
@@ -216,7 +214,7 @@ export const SANCTUM_UPGRADES = [
     maxLevel: 5,
     baseCost: 50,
     costScale: 1.6,
-    descPerLevel: '영웅의 기본 및 스킬 공격력 +8% 증가',
+    descPerLevel: '군주 공격력 +8%',
     statKey: 'heroDamageMult',
     valuePerLevel: 0.08
   },
@@ -224,12 +222,12 @@ export const SANCTUM_UPGRADES = [
     id: 'sanctum_hero_hp',
     branch: 'warlord_valor',
     branchName: '전쟁군주의 무훈 (무력)',
-    name: '용혈의 축복 갑주',
+    name: '용혈 갑주',
     icon: '🛡️',
     maxLevel: 5,
     baseCost: 45,
     costScale: 1.6,
-    descPerLevel: '영웅의 최대 체력 +10% 증가',
+    descPerLevel: '군주 최대 체력 +10%',
     statKey: 'heroMaxHpMult',
     valuePerLevel: 0.10
   },
@@ -237,12 +235,12 @@ export const SANCTUM_UPGRADES = [
     id: 'sanctum_hero_haste',
     branch: 'warlord_valor',
     branchName: '전쟁군주의 무훈 (무력)',
-    name: '전술적 직관 각성',
+    name: '전술 직관',
     icon: '⏳',
     maxLevel: 5,
     baseCost: 70,
     costScale: 1.7,
-    descPerLevel: '영웅 스킬 쿨타임 감소 +5% 가속',
+    descPerLevel: '군주 스킬 대기시간 -5%',
     statKey: 'heroSkillHaste',
     valuePerLevel: 0.05
   },
@@ -255,7 +253,7 @@ export const SANCTUM_UPGRADES = [
     maxLevel: 4,
     baseCost: 55,
     costScale: 1.65,
-    descPerLevel: '영웅의 이동 속도 +5% 증가',
+    descPerLevel: '군주 이동 속도 +5%',
     statKey: 'heroMoveSpeedMult',
     valuePerLevel: 0.05
   },
@@ -268,7 +266,7 @@ export const SANCTUM_UPGRADES = [
     maxLevel: 5,
     baseCost: 60,
     costScale: 1.65,
-    descPerLevel: '병영 수비대 유닛의 공격력 및 체력 +8% 증가',
+    descPerLevel: '병력 공격력·체력 +8%',
     statKey: 'troopPowerMult',
     valuePerLevel: 0.08
   },
@@ -281,7 +279,7 @@ export const SANCTUM_UPGRADES = [
     maxLevel: 4,
     baseCost: 65,
     costScale: 1.7,
-    descPerLevel: '병영 유닛 충원 속도 +8% 증가',
+    descPerLevel: '병력 충원 속도 +8%',
     statKey: 'troopRespawnSpeed',
     valuePerLevel: 0.08
   },
@@ -293,12 +291,12 @@ export const SANCTUM_UPGRADES = [
     id: 'sanctum_relic_reroll',
     branch: 'astral_arcana',
     branchName: '성좌의 비전학 (운명)',
-    name: '운명의 수레바퀴 재굴림',
+    name: '운명의 재추첨',
     icon: '🎲',
     maxLevel: 3,
     baseCost: 85,
     costScale: 1.85,
-    descPerLevel: '원정 당 유물 선택지 리롤(재추첨) 횟수 +1회 추가',
+    descPerLevel: '유물 다시 뽑기 +1회',
     statKey: 'relicRerollCount',
     valuePerLevel: 1
   },
@@ -306,12 +304,12 @@ export const SANCTUM_UPGRADES = [
     id: 'sanctum_rare_luck',
     branch: 'astral_arcana',
     branchName: '성좌의 비전학 (운명)',
-    name: '성좌의 축복받은 눈',
+    name: '성좌의 눈',
     icon: '🍀',
     maxLevel: 5,
     baseCost: 75,
     costScale: 1.75,
-    descPerLevel: '희귀·영웅·전설 등급 유물 등장 확률 가중치 +10% 증가',
+    descPerLevel: '희귀 이상 유물 확률 +10%',
     statKey: 'rareRelicLuck',
     valuePerLevel: 0.10
   },
@@ -319,12 +317,12 @@ export const SANCTUM_UPGRADES = [
     id: 'sanctum_crit_chance',
     branch: 'astral_arcana',
     branchName: '성좌의 비전학 (운명)',
-    name: '천체 관측 정밀타격',
+    name: '정밀 조준',
     icon: '🎯',
     maxLevel: 5,
     baseCost: 70,
     costScale: 1.7,
-    descPerLevel: '영웅과 모든 포탑의 기본 치명타 확률 +2.5% 증가',
+    descPerLevel: '치명타 확률 +2.5%',
     statKey: 'critChanceBonus',
     valuePerLevel: 0.025
   },
@@ -332,12 +330,12 @@ export const SANCTUM_UPGRADES = [
     id: 'sanctum_boss_damage',
     branch: 'astral_arcana',
     branchName: '성좌의 비전학 (운명)',
-    name: '거신 사냥꾼의 비기',
+    name: '거신 사냥법',
     icon: '🐉',
     maxLevel: 5,
     baseCost: 65,
     costScale: 1.7,
-    descPerLevel: '보스 및 정예 몬스터에게 입히는 모든 피해 +8% 증가',
+    descPerLevel: '보스·정예 피해 +8%',
     statKey: 'bossDamageBonus',
     valuePerLevel: 0.08
   },
@@ -345,12 +343,12 @@ export const SANCTUM_UPGRADES = [
     id: 'sanctum_revive_grace',
     branch: 'astral_arcana',
     branchName: '성좌의 비전학 (운명)',
-    name: '불멸의 별빛 소생술',
+    name: '별빛 소생',
     icon: '✨',
     maxLevel: 4,
     baseCost: 60,
     costScale: 1.65,
-    descPerLevel: '영웅 사망 시 부활 대기 시간 -10% 단축',
+    descPerLevel: '군주 부활 대기시간 -10%',
     statKey: 'reviveGraceSpeed',
     valuePerLevel: 0.10
   },
@@ -358,12 +356,12 @@ export const SANCTUM_UPGRADES = [
     id: 'sanctum_synergy_amp',
     branch: 'astral_arcana',
     branchName: '성좌의 비전학 (운명)',
-    name: '왕실 문장 공명 증폭기',
+    name: '문장 공명 증폭',
     icon: '🔮',
     maxLevel: 4,
     baseCost: 110,
     costScale: 1.9,
-    descPerLevel: '유물 세트 시너지(2/4/6세트) 보너스 효과 +10% 증폭',
+    descPerLevel: '세트 시너지 효과 +10%',
     statKey: 'synergyAmplifier',
     valuePerLevel: 0.10
   }
@@ -381,7 +379,7 @@ export const MUTATOR_SKULLS = [
     color: '#f97316',
     heat: 1,
     crownBonusMult: 0.25,
-    desc: '매일 밤 몰려오는 적의 개체 수가 +35% 증가합니다.',
+    desc: '밤마다 오는 적의 수가 35% 늘어납니다.',
     rewardText: '별빛 왕관 보상 +25%',
     mods: {
       enemyCountMult: 0.35
@@ -395,7 +393,7 @@ export const MUTATOR_SKULLS = [
     color: '#ef4444',
     heat: 1,
     crownBonusMult: 0.25,
-    desc: '모든 일반 및 정예 적의 최대 체력이 +40% 증가합니다.',
+    desc: '일반·정예 적의 최대 체력이 40% 늘어납니다.',
     rewardText: '별빛 왕관 보상 +25%',
     mods: {
       enemyHpMult: 0.40
@@ -409,7 +407,7 @@ export const MUTATOR_SKULLS = [
     color: '#eab308',
     heat: 2,
     crownBonusMult: 0.30,
-    desc: '적들의 이동 속도와 공격 속도가 +25% 빨라집니다.',
+    desc: '적의 이동과 공격이 25% 빨라집니다.',
     rewardText: '별빛 왕관 보상 +30%',
     mods: {
       enemySpeedMult: 0.25,
@@ -424,7 +422,7 @@ export const MUTATOR_SKULLS = [
     color: '#a855f7',
     heat: 2,
     crownBonusMult: 0.30,
-    desc: '여명마다 금광과 아르곤 광산의 생산량이 -20% 감소합니다.',
+    desc: '아침 금광·아르곤 생산이 20% 줄어듭니다.',
     rewardText: '별빛 왕관 보상 +30%',
     mods: {
       economyPenaltyMult: 0.20
@@ -438,7 +436,7 @@ export const MUTATOR_SKULLS = [
     color: '#38bdf8',
     heat: 1,
     crownBonusMult: 0.25,
-    desc: '아군 성벽과 방어 포탑이 적에게 받는 피해가 +30% 증가합니다.',
+    desc: '성벽과 포탑이 받는 피해가 30% 늘어납니다.',
     rewardText: '별빛 왕관 보상 +25%',
     mods: {
       buildingDamageTakenMult: 0.30
@@ -452,7 +450,7 @@ export const MUTATOR_SKULLS = [
     color: '#ec4899',
     heat: 3,
     crownBonusMult: 0.40,
-    desc: '보스 몬스터의 체력이 +50% 증가하고 주변 적을 강화하는 광폭화 오라를 두릅니다.',
+    desc: '보스 체력 50% 증가. 주변 적을 강화하는 오라를 두릅니다.',
     rewardText: '별빛 왕관 보상 +40%',
     mods: {
       bossHpMult: 0.50,
@@ -465,282 +463,284 @@ export const MUTATOR_SKULLS = [
  * 30 Royal Achievements (왕실 업적 도감)
  */
 export const ACHIEVEMENTS = [
-  // Campaign & Territory Mastery (1-8)
+  // 왕국
   {
     id: 'ach_first_dawn',
-    name: '첫 번째 여명',
-    desc: '첫 밤의 습격을 막아내고 아침 해를 맞이하세요.',
+    name: '첫날 밤',
+    desc: '첫 습격을 막아내면 열립니다.',
     icon: '🌅',
     rewardCrowns: 25,
     category: 'campaign',
-    conditionText: '웨이브 1 클리어'
+    conditionText: '1일차 밤 방어'
   },
   {
-    id: 'ach_solaria_victor',
-    name: '황금 평원의 수호자',
-    desc: '솔라리아 황금 평원의 모든 웨이브를 방어하고 승리하세요.',
+    id: 'ach_solaria',
+    name: '솔라리아 평정',
+    desc: '제1왕국을 끝까지 지켜냅니다.',
     icon: '🌾',
     rewardCrowns: 60,
     category: 'campaign',
-    conditionText: '제1영지 클리어'
+    conditionText: '제1왕국 클리어'
   },
   {
-    id: 'ach_frost_victor',
-    name: '만년설 협곡의 정복자',
-    desc: '북방 설원 협곡의 혹한과 빙결 거인을 물리치세요.',
+    id: 'ach_frostpeak',
+    name: '서리봉우리 평정',
+    desc: '눈보라가 몰아치는 제2왕국을 지켜냅니다.',
     icon: '❄️',
     rewardCrowns: 80,
     category: 'campaign',
-    conditionText: '제2영지 클리어'
+    conditionText: '제2왕국 클리어'
   },
   {
-    id: 'ach_volcano_victor',
-    name: '잿빛 화산의 파수꾼',
-    desc: '화산 분화구에서 쏟아지는 화염 군단을 격파하세요.',
-    icon: '🌋',
+    id: 'ach_crimson',
+    name: '붉은 사구 평정',
+    desc: '모래폭풍이 지나간 제3왕국을 지켜냅니다.',
+    icon: '🏜️',
     rewardCrowns: 100,
     category: 'campaign',
-    conditionText: '제3영지 클리어'
+    conditionText: '제3왕국 클리어'
   },
   {
-    id: 'ach_abyss_savior',
-    name: '아르곤 왕국의 구원자',
-    desc: '최종장 심연의 균열에서 고대 마왕을 처단하고 왕국을 구원하세요.',
+    id: 'ach_ashen',
+    name: '잿빛 용광로 평정',
+    desc: '용암 위의 제4왕국을 지켜냅니다.',
+    icon: '🌋',
+    rewardCrowns: 120,
+    category: 'campaign',
+    conditionText: '제4왕국 클리어'
+  },
+  {
+    id: 'ach_astral',
+    name: '성좌의 심장 평정',
+    desc: '마지막 제5왕국을 지켜냅니다.',
+    icon: '🌌',
+    rewardCrowns: 180,
+    category: 'campaign',
+    conditionText: '제5왕국 클리어'
+  },
+  {
+    id: 'ach_all_realms',
+    name: '다섯 왕국',
+    desc: '다섯 왕국을 모두 평정합니다.',
     icon: '👑',
-    rewardCrowns: 150,
+    rewardCrowns: 300,
     category: 'campaign',
-    conditionText: '최종 영지 클리어'
+    conditionText: '왕국 5개 클리어'
   },
   {
-    id: 'ach_untouched_citadel',
-    name: '흠집 없는 왕성',
-    desc: '중앙 왕성(Citadel)이 단 1의 피해도 입지 않고 원정에서 승리하세요.',
-    icon: '🏰',
-    rewardCrowns: 90,
-    category: 'campaign',
-    conditionText: '왕성 체력 100% 유지 승리'
-  },
-  {
-    id: 'ach_speed_commander',
-    name: '전격전의 명장',
-    desc: '모든 밤 웨이브를 지체 없이 즉시 호출하여 원정을 완수하세요.',
-    icon: '⚡',
-    rewardCrowns: 70,
-    category: 'campaign',
-    conditionText: '조기 호출만으로 승리'
-  },
-  {
-    id: 'ach_endless_wave_15',
-    name: '끝없는 밤의 파수꾼',
-    desc: '무한 혈투 모드에서 15일 밤 이상 생존하세요.',
+    id: 'ach_endless_15',
+    name: '열다섯 밤',
+    desc: '무한의 심연에서 15일차까지 버팁니다.',
     icon: '🌙',
     rewardCrowns: 120,
     category: 'campaign',
-    conditionText: '무한 모드 15웨이브 돌파'
+    conditionText: '무한 15일차'
+  },
+  {
+    id: 'ach_endless_30',
+    name: '서른 밤',
+    desc: '무한의 심연에서 30일차까지 버팁니다.',
+    icon: '♾️',
+    rewardCrowns: 250,
+    category: 'campaign',
+    conditionText: '무한 30일차'
   },
 
-  // Economy & Architecture (9-14)
+  // 경제
   {
-    id: 'ach_gold_tycoon',
-    name: '황금성의 재벌',
-    desc: '단일 원정 중 보유 금화 1,000 이상을 달성하세요.',
+    id: 'ach_gold_run',
+    name: '금고가 두둑한 날',
+    desc: '한 원정에서 금화를 1,000 이상 캡니다.',
     icon: '💰',
     rewardCrowns: 50,
     category: 'economy',
-    conditionText: '보유 금화 1,000 달성'
+    conditionText: '한 원정 금화 1,000'
   },
   {
-    id: 'ach_argon_baron',
-    name: '아르곤 연금 남작',
-    desc: '단일 원정 중 보유 아르곤 결정 400 이상을 달성하세요.',
+    id: 'ach_argon_run',
+    name: '아르곤 부자',
+    desc: '한 원정에서 아르곤을 400 이상 캡니다.',
     icon: '💎',
     rewardCrowns: 55,
     category: 'economy',
-    conditionText: '보유 아르곤 400 달성'
+    conditionText: '한 원정 아르곤 400'
   },
   {
-    id: 'ach_full_fortification',
-    name: '철옹성 건설자',
-    desc: '영지 내의 모든 건설 슬롯에 건물이나 포탑을 건설하세요.',
+    id: 'ach_build_18',
+    name: '빈 부지 없이',
+    desc: '한 원정에서 건물을 18채 올립니다.',
     icon: '🔨',
     rewardCrowns: 45,
     category: 'economy',
-    conditionText: '모든 건설 슬롯 활성화'
+    conditionText: '건물 18채 건설'
   },
   {
-    id: 'ach_tier3_architect',
-    name: '왕립 대건축가',
-    desc: '한 원정에서 5개 이상의 건물을 최고 단계(3티어)까지 승급하세요.',
+    id: 'ach_evo_5',
+    name: '다섯 갈래 진화',
+    desc: '한 원정에서 특화 진화를 5번 합니다.',
     icon: '🏛️',
     rewardCrowns: 65,
     category: 'economy',
-    conditionText: '3티어 건물 5개 보유'
+    conditionText: '특화 진화 5회'
   },
   {
-    id: 'ach_mine_monopoly',
-    name: '채굴왕의 전성시대',
-    desc: '모든 금광과 아르곤 광산을 최고 단계로 업그레이드하세요.',
+    id: 'ach_gold_total',
+    name: '누적 채굴',
+    desc: '금화를 모두 합쳐 10,000을 캡니다.',
     icon: '⛏️',
-    rewardCrowns: 60,
+    rewardCrowns: 90,
     category: 'economy',
-    conditionText: '모든 광산 최대 레벨 달성'
-  },
-  {
-    id: 'ach_zero_wall_loss',
-    name: '무너지지 않는 방벽',
-    desc: '원정 승리 시까지 성벽이 단 한 번도 완파되지 않게 방어하세요.',
-    icon: '🧱',
-    rewardCrowns: 75,
-    category: 'economy',
-    conditionText: '성벽 완파 0회 승리'
+    conditionText: '누적 금화 10,000'
   },
 
-  // Combat & Hero Mastery (15-22)
+  // 전투
   {
     id: 'ach_slayer_500',
-    name: '백전노장 집행관',
-    desc: '누적 500마리의 침략군 몬스터를 처치하세요.',
+    name: '오백',
+    desc: '적을 모두 합쳐 500 마리 잡습니다.',
     icon: '⚔️',
     rewardCrowns: 40,
     category: 'combat',
-    conditionText: '누적 적 처치 500회'
+    conditionText: '누적 처치 500'
   },
   {
     id: 'ach_slayer_2500',
-    name: '심연의 학살자',
-    desc: '누적 2,500마리의 침략군 몬스터를 처치하세요.',
+    name: '이천오백',
+    desc: '적을 모두 합쳐 2,500 마리 잡습니다.',
     icon: '🩸',
     rewardCrowns: 95,
     category: 'combat',
-    conditionText: '누적 적 처치 2,500회'
+    conditionText: '누적 처치 2,500'
   },
   {
-    id: 'ach_boss_hunter',
-    name: '거신 사냥꾼',
-    desc: '보스급 거대 괴수를 누적 10회 처치하세요.',
+    id: 'ach_boss_10',
+    name: '보스 사냥꾼',
+    desc: '보스를 모두 합쳐 10번 잡습니다.',
     icon: '🐉',
     rewardCrowns: 85,
     category: 'combat',
-    conditionText: '보스 몬스터 10회 처치'
+    conditionText: '보스 10회 처치'
   },
   {
-    id: 'ach_immortal_commander',
-    name: '불멸의 군주',
-    desc: '영웅이 단 한 번도 쓰러지지 않고 원정을 승리로 이끄세요.',
-    icon: '🛡️',
-    rewardCrowns: 75,
+    id: 'ach_score_50k',
+    name: '오만 점',
+    desc: '한 원정에서 50,000점을 넘깁니다.',
+    icon: '🎯',
+    rewardCrowns: 70,
     category: 'combat',
-    conditionText: '영웅 사망 0회 승리'
+    conditionText: '한 원정 50,000점'
   },
   {
-    id: 'ach_all_heroes_victor',
-    name: '삼위일체 왕권',
-    desc: '태양성기사, 폭풍궁수, 비전마도사 세 영웅으로 각각 승리를 달성하세요.',
+    id: 'ach_victories_5',
+    name: '다섯 번의 승리',
+    desc: '원정을 5번 성공시킵니다.',
     icon: '🎖️',
     rewardCrowns: 110,
     category: 'combat',
-    conditionText: '3명의 영웅 모두로 승리'
+    conditionText: '승리 5회'
   },
   {
-    id: 'ach_crit_master',
-    name: '섬광의 일격',
-    desc: '단일 원정에서 치명타 확률 45% 이상을 달성하세요.',
-    icon: '🎯',
-    rewardCrowns: 65,
+    id: 'ach_hero_all',
+    name: '네 명의 군주',
+    desc: '네 군주로 각각 한 번씩 이깁니다.',
+    icon: '🏆',
+    rewardCrowns: 150,
     category: 'combat',
-    conditionText: '치명타 확률 45% 달성'
-  },
-  {
-    id: 'ach_thorns_fortress',
-    name: '가시 면류관의 성채',
-    desc: '가시 반사 피해 비율 60% 이상을 달성하여 적들이 스스로 자멸하게 만드세요.',
-    icon: '🌵',
-    rewardCrowns: 70,
-    category: 'combat',
-    conditionText: '가시 반사 60% 달성'
-  },
-  {
-    id: 'ach_garrison_legion',
-    name: '왕국 총동원령',
-    desc: '한 전장에 아군 수비대 병사를 동시에 16기 이상 유지하세요.',
-    icon: '📯',
-    rewardCrowns: 55,
-    category: 'combat',
-    conditionText: '동시 수비대 병력 16기 배치'
+    conditionText: '군주 4명 승리'
   },
 
-  // Relics, Synergies & Challenge Skulls (23-30)
+  // 유물
   {
-    id: 'ach_synergy_4set',
-    name: '왕실 문장의 공명',
-    desc: '아무 유물 세트나 4세트 시너지 효과를 활성화하세요.',
+    id: 'ach_synergy_4',
+    name: '네 개의 표식',
+    desc: '아무 세트나 4세트를 맞춥니다.',
     icon: '✨',
     rewardCrowns: 55,
     category: 'relics',
-    conditionText: '4세트 시너지 발동'
+    conditionText: '4세트 시너지'
   },
   {
-    id: 'ach_synergy_6set',
-    name: '절대 서약의 완성',
-    desc: '단일 원정에서 6세트 최종 유물 시너지를 완성하세요.',
+    id: 'ach_synergy_6',
+    name: '여섯 개의 표식',
+    desc: '아무 세트나 6세트를 완성합니다.',
     icon: '🌟',
     rewardCrowns: 110,
     category: 'relics',
-    conditionText: '6세트 시너지 발동'
+    conditionText: '6세트 시너지'
   },
   {
-    id: 'ach_cursed_pact',
-    name: '금단에 손을 댄 군주',
-    desc: '저주받은 유물(Cursed Relic)을 2개 이상 보유한 상태로 승리하세요.',
+    id: 'ach_relic_legend_3',
+    name: '전설 셋',
+    desc: '한 원정에서 전설 유물을 3개 모읍니다.',
+    icon: '📜',
+    rewardCrowns: 85,
+    category: 'relics',
+    conditionText: '전설 유물 3개'
+  },
+  {
+    id: 'ach_cursed_2',
+    name: '저주 두 개',
+    desc: '저주 유물 2개를 안고 이깁니다.',
     icon: '🩸',
     rewardCrowns: 90,
     category: 'relics',
-    conditionText: '저주 유물 2개 이상 보유 승리'
+    conditionText: '저주 유물 2개 보유 승리'
   },
   {
-    id: 'ach_legendary_hoarder',
-    name: '전설의 보물고',
-    desc: '단일 원정에서 전설(Legendary) 등급 유물을 3개 이상 수집하세요.',
-    icon: '🏆',
-    rewardCrowns: 85,
+    id: 'ach_relic_10',
+    name: '유물 수집가',
+    desc: '한 원정에서 유물을 10개 모읍니다.',
+    icon: '🏺',
+    rewardCrowns: 100,
     category: 'relics',
-    conditionText: '전설 유물 3개 수집'
+    conditionText: '유물 10개 보유'
   },
+
+  // 시련
   {
-    id: 'ach_skull_initiate',
-    name: '시련을 마주한 자',
-    desc: '시련의 해골을 1개 이상 활성화한 상태로 원정에서 승리하세요.',
+    id: 'ach_skull_1',
+    name: '시련 하나',
+    desc: '시련의 서약 1개를 걸고 이깁니다.',
     icon: '💀',
     rewardCrowns: 70,
     category: 'challenge',
-    conditionText: '시련의 해골 1개 이상 승리'
+    conditionText: '서약 1개 승리'
   },
   {
-    id: 'ach_skull_veteran',
-    name: '고통의 정복자',
-    desc: '시련의 해골을 3개 이상 동시에 활성화하고 원정에서 승리하세요.',
+    id: 'ach_skull_3',
+    name: '시련 셋',
+    desc: '시련의 서약 3개를 걸고 이깁니다.',
     icon: '🔥',
     rewardCrowns: 130,
     category: 'challenge',
-    conditionText: '시련의 해골 3개 이상 승리'
+    conditionText: '서약 3개 승리'
   },
   {
-    id: 'ach_skull_all_six',
-    name: '심연의 절대군주',
-    desc: '6개의 모든 시련의 해골을 동시에 활성화하고 불가능한 승리를 쟁취하세요.',
+    id: 'ach_skull_6',
+    name: '시련 여섯',
+    desc: '여섯 개를 모두 걸고 이깁니다.',
     icon: '👑',
     rewardCrowns: 250,
     category: 'challenge',
-    conditionText: '시련의 해골 6개 전부 활성화 승리'
+    conditionText: '서약 6개 승리'
   },
   {
-    id: 'ach_sanctum_archmage',
-    name: '성좌의 대현자',
-    desc: '별빛 성소에서 영구 특성 업그레이드를 총 25레벨 이상 달성하세요.',
-    icon: '🌌',
+    id: 'ach_sanctum_25',
+    name: '성소 25레벨',
+    desc: '성소 특성을 합쳐 25레벨 올립니다.',
+    icon: '🌠',
     rewardCrowns: 100,
     category: 'challenge',
-    conditionText: '성소 누적 레벨 25 달성'
+    conditionText: '성소 누적 25레벨'
+  },
+  {
+    id: 'ach_runs_10',
+    name: '열 번의 원정',
+    desc: '원정을 10번 치릅니다.',
+    icon: '🗺️',
+    rewardCrowns: 60,
+    category: 'challenge',
+    conditionText: '원정 10회'
   }
 ];
 

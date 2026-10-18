@@ -1,6 +1,6 @@
 /**
  * ARGONIA: Crown of the Spire
- * 3D Visual Effects, Projectiles, Beams, Shockwaves, Ground Zones & Floating Combat Text
+ * 파티클, 투사체, 충격파, 장판, 피해 숫자.
  */
 
 import * as THREE from 'three';

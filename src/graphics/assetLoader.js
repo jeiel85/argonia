@@ -1,9 +1,6 @@
 /**
  * ARGONIA: Crown of the Spire
- * 3D Asset Loader & Blender GLB Model Cache Manager
- *
- * Preloads and manages high-fidelity stylized 3D assets generated in Blender 5.2 LTS
- * for the 4 Sovereign Champions and 5 Colossal Act Bosses.
+ * Blender로 만든 GLB 모델을 불러오고 캐시합니다.
  */
 
 import * as THREE from 'three';

@@ -1,5 +1,5 @@
 /* =========================================================================
-   ARGONIA: Crown of the Spire — Bespoke Obsidian & Burnished Brass Tactical UI
+   ARGONIA: Crown of the Spire — HUD 스타일
    ========================================================================= */
 
 :root {
@@ -72,7 +72,7 @@ kbd {
 }
 
 /* =========================================================================
-   ARCHITECTURAL OBSIDIAN & BRASS PLAQUE SYSTEM
+   패널 공통 스타일
    ========================================================================= */
 .royal-plaque,
 .glass-panel {
@@ -101,16 +101,15 @@ kbd {
 }
 
 .section-eyebrow {
-  font-family: var(--font-display);
-  font-size: 10.5px;
+  font-family: var(--font-sans);
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.09em;
+  letter-spacing: 0.02em;
   color: var(--brass-bright);
-  text-transform: uppercase;
 }
 
 /* =========================================================================
-   WORLD OVERLAY MARKERS & FLOATING COMBAT TEXT
+   3D 좌표에 붙는 배지와 전투 숫자
    ========================================================================= */
 .world-overlay-layer {
   position: fixed;
@@ -187,7 +186,7 @@ kbd {
 }
 
 /* =========================================================================
-   TOAST NOTIFICATIONS
+   알림
    ========================================================================= */
 .toast-container {
   position: fixed;
@@ -240,7 +239,7 @@ kbd {
 }
 
 /* =========================================================================
-   IN-GAME HUD: MODULAR TOP CLUSTERS
+   인게임 HUD 상단
    ========================================================================= */
 .ingame-hud {
   position: fixed;
@@ -310,10 +309,10 @@ kbd {
 }
 
 .phase-indicator {
-  font-family: var(--font-display);
-  font-size: 10px;
+  font-family: var(--font-sans);
+  font-size: 11px;
   font-weight: 800;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.02em;
   padding: 3px 6px;
   border-radius: 2px;
   background: rgba(243, 204, 104, 0.14);
@@ -332,12 +331,14 @@ kbd {
   font-weight: 700;
   color: var(--text-ivory);
   line-height: 1.2;
+  white-space: nowrap;
 }
 
 .hud-wave-subtitle {
   font-size: 10.5px;
   color: var(--text-parchment);
   font-weight: 500;
+  white-space: nowrap;
 }
 
 .citadel-hp-box {
@@ -356,10 +357,10 @@ kbd {
 }
 
 .citadel-tag {
-  font-family: var(--font-display);
-  letter-spacing: 0.08em;
+  font-family: var(--font-sans);
+  letter-spacing: 0.02em;
   color: var(--brass-bright);
-  font-size: 9.5px;
+  font-size: 10.5px;
 }
 
 .hp-track {
@@ -423,11 +424,11 @@ kbd {
 }
 
 .res-pill .res-label {
-  font-family: var(--font-display);
-  font-size: 8.5px;
+  font-family: var(--font-sans);
+  font-size: 9.5px;
   font-weight: 700;
   color: var(--text-muted);
-  letter-spacing: 0.1em;
+  letter-spacing: 0.02em;
 }
 
 .res-pill strong {
@@ -503,7 +504,7 @@ kbd {
 }
 
 /* =========================================================================
-   LEFT & RIGHT CONTEXTUAL DOCKS
+   좌우 패널
    ========================================================================= */
 .hud-left-dock {
   position: absolute;
@@ -540,12 +541,12 @@ kbd {
 }
 
 .badge-pill {
-  font-family: var(--font-display);
+  font-family: var(--font-sans);
   padding: 2px 6px;
   border-radius: 2px;
-  font-size: 9.5px;
+  font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.02em;
   background: rgba(204, 164, 92, 0.12);
   color: var(--brass-bright);
   border: 1px solid rgba(204, 164, 92, 0.35);
@@ -727,7 +728,7 @@ kbd {
 }
 
 /* =========================================================================
-   BOTTOM BAR: CENTERED MONARCH DOCK & RIGHT WAR-HORN
+   하단 바
    ========================================================================= */
 .hud-bottom-bar {
   position: absolute;
@@ -803,7 +804,7 @@ kbd {
 
 .skill-btn {
   position: relative;
-  width: 60px;
+  width: 66px;
   height: 50px;
   border-radius: 2px;
   background: rgba(0, 0, 0, 0.48);
@@ -871,9 +872,10 @@ kbd {
 .score-svg { color: var(--brass-bright); }
 
 .skill-label {
-  font-size: 9.5px;
+  font-size: 9px;
   font-weight: 600;
   color: var(--text-parchment);
+  white-space: nowrap;
 }
 
 .skill-cd-overlay {
@@ -948,7 +950,7 @@ kbd {
 }
 
 /* =========================================================================
-   MODALS: COMMAND HUB, RELIC DRAFT, RUN END
+   모달
    ========================================================================= */
 .modal-backdrop {
   position: fixed;
@@ -1018,9 +1020,9 @@ kbd {
 }
 
 .hub-tagline {
-  font-family: var(--font-display);
-  font-size: 10px;
-  letter-spacing: 0.12em;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  letter-spacing: 0.01em;
   color: var(--text-muted);
   margin-top: 2px;
 }
@@ -1067,10 +1069,10 @@ kbd {
 }
 
 .crown-label {
-  font-family: var(--font-display);
-  font-size: 9.5px;
+  font-family: var(--font-sans);
+  font-size: 10.5px;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.02em;
   color: var(--text-parchment);
 }
 
@@ -1146,6 +1148,34 @@ kbd {
   font-weight: 600;
   color: var(--text-parchment);
   cursor: pointer;
+}
+
+.endless-toggle-label input[type='checkbox'] {
+  appearance: none;
+  width: 13px;
+  height: 13px;
+  border: 1px solid var(--brass-border);
+  border-radius: 2px;
+  background: rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  position: relative;
+}
+
+.endless-toggle-label input[type='checkbox']:checked {
+  background: var(--gold-vivid);
+  border-color: var(--gold-vivid);
+}
+
+.endless-toggle-label input[type='checkbox']:checked::after {
+  content: '';
+  position: absolute;
+  left: 3.5px;
+  top: 0.5px;
+  width: 4px;
+  height: 8px;
+  border: solid #14120f;
+  border-width: 0 2px 2px 0;
+  transform: rotate(42deg);
 }
 
 .realm-cards-list,
@@ -1443,13 +1473,13 @@ kbd {
 }
 
 .relic-crown-badge {
-  font-family: var(--font-display);
+  font-family: var(--font-sans);
   display: inline-block;
   padding: 3px 10px;
   border-radius: 2px;
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.02em;
   background: rgba(204, 164, 92, 0.16);
   border: 1px solid var(--brass-border);
   color: var(--gold-vivid);
@@ -1531,7 +1561,7 @@ kbd {
 }
 
 /* =========================================================================
-   IMMERSIVE TITLE SCREEN (ZERO SLOP ENTRANCE)
+   타이틀 화면
    ========================================================================= */
 .title-overlay {
   position: fixed;
@@ -1613,10 +1643,10 @@ kbd {
   background: linear-gradient(180deg, #d4a853 0%, #aa8032 100%);
   border: 1px solid #fde047;
   color: #12100d;
-  font-family: var(--font-display);
+  font-family: var(--font-sans);
   font-size: 15px;
   font-weight: 900;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.01em;
   border-radius: 4px;
   cursor: pointer;
   display: flex;
@@ -1671,15 +1701,14 @@ kbd {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 9.5px;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 500;
   color: var(--text-muted);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: 0.01em;
 }
 
 /* =========================================================================
-   TACTICAL GUIDE BANNER
+   조작 안내 배너
    ========================================================================= */
 .tactical-guide-banner {
   position: fixed;

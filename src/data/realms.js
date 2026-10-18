@@ -1,6 +1,6 @@
 /**
  * ARGONIA: Crown of the Spire
- * 5 Handcrafted 3D Realms, Strategic Socket Layouts, Spawn Portals & 55+ Wave Tables + Endless Generator
+ * 손으로 배치한 영토 5곳. 건설 부지, 차원문 좌표, 웨이브 구성과 무한 모드 생성기.
  */
 
 export const REALMS = [
@@ -11,16 +11,17 @@ export const REALMS = [
     id: 'solaria_meadows',
     index: 0,
     name: '제1왕국: 솔라리아 여명 평원',
+    shortName: '솔라리아 평원',
     nameEn: 'Realm I: Solaria Meadowlands',
-    subtitle: '에메랄드 강줄기와 황금 들판의 성채',
+    subtitle: '강줄기와 들판 사이의 성채',
     icon: '🌿',
-    difficultyLabel: '★☆☆☆☆ (입문 ~ 정규)',
+    difficultyLabel: '★☆☆☆☆ (입문)',
     totalWaves: 10,
     startGold: 135,
     startArgon: 4,
     rewardCrowns: 150,
     bossId: 'boss_kragasha',
-    desc: '푸른 초원과 두 갈래 다리 건너편에서 고블린 약탈군과 강철 오크 군단이 침공합니다. 금광과 풍차를 빠르게 확보해 경제를 부흥시키고 길목에 성벽과 포탑을 세우세요.',
+    desc: '완만한 초원입니다. 다리 두 갈래로 고블린과 오크가 들어옵니다. 금광과 풍차를 먼저 올리고, 길목에 성벽과 포탑을 세우면 됩니다.',
     palette: {
       groundPrimary: 0x3b6e38,
       groundSecondary: 0x2d572c,
@@ -41,7 +42,7 @@ export const REALMS = [
     hazard: {
       type: 'none',
       name: '온화한 여명풍',
-      desc: '낮 동안 건설 비용이 5% 절감되며 성채 수리 효율이 높습니다.',
+      desc: '낮에는 건설 비용이 5% 싸고 성채 수리가 빠릅니다.',
     },
     spawnPortals: [
       { id: 'north_rift', name: '북부 숲 협곡', x: 0, z: -38, color: 0xef4444 },
@@ -88,8 +89,9 @@ export const REALMS = [
     id: 'frostpeak_caldera',
     index: 1,
     name: '제2왕국: 서리봉우리 만년설 칼데라',
+    shortName: '서리봉우리',
     nameEn: 'Realm II: Frostpeak Caldera',
-    subtitle: '얼어붙은 호수와 고대 빙룡의 둥지',
+    subtitle: '얼어붙은 호수, 빙룡의 둥지',
     icon: '❄️',
     difficultyLabel: '★★☆☆☆ (숙련)',
     totalWaves: 10,
@@ -97,7 +99,7 @@ export const REALMS = [
     startArgon: 6,
     rewardCrowns: 220,
     bossId: 'boss_borealis',
-    desc: '혹한의 눈보라가 몰아치는 설원 분지입니다. 성벽을 넘어 날아오는 한기 망령과 거대한 빙하 맘모스를 화염 박격포와 대공 궁수탑으로 요격하세요.',
+    desc: '눈보라가 몰아치는 설원 분지입니다. 성벽을 넘어오는 망령과 빙하 맘모스가 함께 옵니다. 화염 박격포와 감시탑을 섞어 세우세요.',
     palette: {
       groundPrimary: 0xcbd5e1,
       groundSecondary: 0x94a3b8,
@@ -117,8 +119,8 @@ export const REALMS = [
     },
     hazard: {
       type: 'blizzard',
-      name: '극저온 한파 돌풍',
-      desc: '밤 동안 18초마다 눈보라가 불어닥쳐 화염 계열 포탑 주변이 아닌 외부 유닛의 이동 속도가 잠시 느려집니다.',
+      name: '극저온 한파',
+      desc: '밤에는 18초마다 눈보라가 몰아칩니다. 화염 포탑 곁을 벗어난 병사는 발이 느려집니다.',
     },
     spawnPortals: [
       { id: 'glacier_north', name: '북부 빙하 협곡', x: -12, z: -38, color: 0x38bdf8 },
@@ -161,8 +163,9 @@ export const REALMS = [
     id: 'crimson_oasis',
     index: 2,
     name: '제3왕국: 붉은 사구 태양 오아시스',
+    shortName: '붉은 사구',
     nameEn: 'Realm III: Crimson Dune Oasis',
-    subtitle: '고대 파라오의 유적과 황금 모래폭풍',
+    subtitle: '파라오의 유적과 모래폭풍',
     icon: '🏜️',
     difficultyLabel: '★★★☆☆ (베테랑)',
     totalWaves: 11,
@@ -170,7 +173,7 @@ export const REALMS = [
     startArgon: 8,
     rewardCrowns: 310,
     bossId: 'boss_akhen_ra',
-    desc: '풍부한 황금 광맥이 묻힌 오아시스 유적지입니다. 끊임없이 해골을 소환하는 강령술사와 잠복 전갈 군세를 광역 화력과 성기사단으로 분쇄하세요.',
+    desc: '황금 광맥이 많은 오아시스 유적입니다. 해골을 계속 부르는 강령술사와 전갈 떼가 나옵니다. 넓게 때리는 화력이 필요합니다.',
     palette: {
       groundPrimary: 0xd97706,
       groundSecondary: 0xb45309,
@@ -191,7 +194,7 @@ export const REALMS = [
     hazard: {
       type: 'sandstorm',
       name: '황금 사막의 신기루',
-      desc: '모든 금광의 여명 수입이 +15% 증가하지만, 적 원거리 술사들의 사거리가 길어집니다.',
+      desc: '금광 수입이 15% 늘어납니다. 대신 적 술사들의 사거리가 길어집니다.',
     },
     spawnPortals: [
       { id: 'pyramid_north', name: '북부 태양 피라미드', x: 0, z: -39, color: 0xf59e0b },
@@ -234,8 +237,9 @@ export const REALMS = [
     id: 'ashen_forge',
     index: 3,
     name: '제4왕국: 잿빛 용광로 대화구',
+    shortName: '잿빛 용광로',
     nameEn: 'Realm IV: Ashen Magma Forge',
-    subtitle: '끓어오르는 용암 강과 풍부한 아르곤 결정 지대',
+    subtitle: '용암 강과 아르곤 결정 지대',
     icon: '🌋',
     difficultyLabel: '★★★★☆ (마스터)',
     totalWaves: 12,
@@ -243,7 +247,7 @@ export const REALMS = [
     startArgon: 12,
     rewardCrowns: 420,
     bossId: 'boss_ignis_valkor',
-    desc: '용암이 흐르는 흑요석 협곡입니다. 죽으면서 분열하는 용암 골렘과 하늘을 뒤덮는 화염 와이번 군단을 상대로 빙결 첨탑과 비전 오벨리스크의 극한 시너지를 발휘하세요.',
+    desc: '용암이 흐르는 흑요석 협곡입니다. 죽으면 갈라지는 골렘과 하늘을 채우는 와이번이 옵니다. 빙결 첨탑과 비전 오벨리스크를 같이 세우세요.',
     palette: {
       groundPrimary: 0x27272a,
       groundSecondary: 0x18181b,
@@ -264,7 +268,7 @@ export const REALMS = [
     hazard: {
       type: 'magma_surge',
       name: '지열 과충전',
-      desc: '아르곤 정제소 생산량이 +25% 증가하며 모든 포탑의 공격력이 +10% 상승하지만, 적들의 이동 속도가 10% 빠릅니다.',
+      desc: '아르곤 생산이 25%, 포탑 공격력이 10% 오릅니다. 대신 적도 10% 빠릅니다.',
     },
     spawnPortals: [
       { id: 'magma_nw', name: '북서 용암 분화구', x: -28, z: -34, color: 0xef4444 },
@@ -308,16 +312,17 @@ export const REALMS = [
     id: 'astral_citadel',
     index: 4,
     name: '제5왕국: 아르고니아 성좌의 심장',
+    shortName: '성좌의 심장',
     nameEn: 'Realm V: Argonia Astral Sanctum',
-    subtitle: '천공의 부유섬과 별포식자 말라코르와의 최후 결전',
+    subtitle: '천공의 부유섬, 마지막 결전',
     icon: '🌌',
-    difficultyLabel: '★★★★★ (신화 / 최종장)',
+    difficultyLabel: '★★★★★ (최종장)',
     totalWaves: 12,
     startGold: 290,
     startArgon: 18,
     rewardCrowns: 650,
     bossId: 'boss_malakor',
-    desc: '아르고니아 제국의 수도이자 별빛 에너지가 응집된 천공 요새입니다. 사방의 차원 균열에서 쏟아지는 공허 군단과 심연의 별포식자 말라코르를 물리치고 왕좌를 되찾으세요!',
+    desc: '제국의 수도이자 마지막 전장입니다. 사방의 차원문이 한꺼번에 열리고, 별포식자 말라코르가 왕좌 앞에서 기다립니다.',
     palette: {
       groundPrimary: 0x1e1b4b,
       groundSecondary: 0x312e81,
@@ -338,7 +343,7 @@ export const REALMS = [
     hazard: {
       type: 'astral_convergence',
       name: '성좌의 가호와 공허 침식',
-      desc: '영웅의 스킬 재사용 대기시간이 20% 감소하고 시작 자원이 풍부하지만, 모든 차원문에서 동시에 대군이 진격합니다.',
+      desc: '군주 스킬 재사용 대기시간이 20% 짧고 시작 자원이 넉넉합니다. 대신 모든 차원문이 동시에 열립니다.',
     },
     spawnPortals: [
       { id: 'void_north', name: '북방 천공 차원문', x: 0, z: -39, color: 0xf43f5e },
@@ -544,10 +549,10 @@ export function generateWaveDescriptor(realmIndex, waveNumber, isEndless = false
     isBossWave,
     isMidBossWave,
     title: isBossWave
-      ? `💀 제${waveNumber}야: 심연의 군주 강림`
+      ? `${waveNumber}일차 밤 · 심연의 군주 강림`
       : isMidBossWave
-      ? `⚔️ 제${waveNumber}야: 정예 공성군 선봉대`
-      : `🌙 제${waveNumber}야: 어둠의 진군`,
+      ? `${waveNumber}일차 밤 · 정예 공성군 선봉`
+      : `${waveNumber}일차 밤 · 어둠의 진군`,
     groups,
     portalSummaries: Object.values(summaryMap),
     clearGoldBonus: Math.round(25 + waveNumber * 12 + (isBossWave ? 90 : 0)),

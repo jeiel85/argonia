@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { assetLoader, MODEL_SPECS } from './assetLoader.js';
 
-// Preload Blender 5.2 GLB models automatically in browser environment
+// 브라우저에서 GLB 모델을 미리 불러옵니다.
 if (typeof window !== 'undefined') {
   assetLoader.preloadAll();
 }
@@ -361,7 +361,7 @@ export function createHeroMesh(heroDef) {
     baseY: 0,
   };
 
-  // Seamless hot-swap callback once Blender model finishes loading in background
+  // Blender 모델 로딩이 끝나면 절차적 메시와 교체합니다.
   if (MODEL_SPECS[modelKey]) {
     assetLoader.onReady(modelKey, () => {
       if (group.parent) {
@@ -1123,7 +1123,7 @@ export function createEnemyMesh(enemyDef = {}) {
     originalColors: hitMeshes.map((m) => m.color.getHex()),
   };
 
-  // Seamless hot-swap callback once Blender boss model finishes loading in background
+  // 보스 모델 로딩이 끝나면 절차적 메시와 교체합니다.
   if (isBoss && MODEL_SPECS[id]) {
     assetLoader.onReady(id, () => {
       if (group.parent) {

@@ -1,6 +1,5 @@
 /**
- * Argonia Royal Relics & Decrees System (왕실 유물 & 칙령 도감)
- * Includes 6 Synergy Sets, 48 Distinct Royal Relics & Decrees, and Modifier Aggregation Engine.
+ * 왕실 유물과 칙령. 시너지 세트 6종, 유물 48종, 보정치 합산 로직.
  */
 
 export const DEFAULT_RELIC_MODS = {
@@ -43,7 +42,7 @@ export const SYNERGY_SETS = {
     nameEn: 'Solar Crown Covenant',
     icon: '☀️',
     color: '#f59e0b',
-    description: '여명의 황금 축복과 화염 심판을 결합하여 부와 화력을 동시에 증폭시키는 왕실 정통 서약입니다.',
+    description: '아침 수입과 화염 피해를 같이 올립니다. 돈이 곧 화력이 되는 조합입니다.',
     tiers: [
       {
         count: 2,
@@ -71,7 +70,7 @@ export const SYNERGY_SETS = {
     nameEn: 'Argon Alchemical Guild',
     icon: '💎',
     color: '#06b6d4',
-    description: '고순도 아르곤 결정과 공학 설계를 통해 건설 비용을 절감하고 포탑 사거리와 공속을 극대화합니다.',
+    description: '건설 비용을 깎고 포탑의 사거리와 공격 속도를 올립니다.',
     tiers: [
       {
         count: 2,
@@ -99,7 +98,7 @@ export const SYNERGY_SETS = {
     nameEn: 'Iron Bastion Order',
     icon: '🛡️',
     color: '#94a3b8',
-    description: '성벽과 방어탑을 난공불락의 요새로 단련하고 접근하는 적들에게 치명적인 가시 반사 피해를 되돌려줍니다.',
+    description: '성벽과 건물을 단단하게 만들고, 때린 적에게 피해를 돌려줍니다.',
     tiers: [
       {
         count: 2,
@@ -127,7 +126,7 @@ export const SYNERGY_SETS = {
     nameEn: 'Crimson Blood Crusade',
     icon: '⚔️',
     color: '#ef4444',
-    description: '전장의 피로 영웅과 병사들을 각성시켜 압도적인 공격력과 생명력 흡수, 보스 처단 능력을 부여합니다.',
+    description: '군주와 병력의 공격력, 생명력 흡수, 보스 처치 능력을 끌어올립니다.',
     tiers: [
       {
         count: 2,
@@ -143,7 +142,7 @@ export const SYNERGY_SETS = {
       },
       {
         count: 6,
-        label: '피의 군주 강림: 영웅·병력 공격력 +45%, 치명타 피해 +50%, 생명력 흡수 +10%',
+        label: '피의 군주: 영웅·병력 공격력 +45%, 치명타 피해 +50%, 생명력 흡수 +10%',
         effectKey: 'crusade_6',
         value: { heroDamageMult: 0.45, troopDamageMult: 0.45, critDamageMult: 0.50, heroLifesteal: 0.10 }
       }
@@ -155,7 +154,7 @@ export const SYNERGY_SETS = {
     nameEn: 'Absolute Zero Schola',
     icon: '❄️',
     color: '#38bdf8',
-    description: '혹한의 마력으로 진격하는 적들을 둔화시키고 얼어붙은 적을 산산조각내어 광역 파편 피해를 입힙니다.',
+    description: '적을 느리게 만들고, 얼어붙은 적을 부수면 주변까지 얼립니다.',
     tiers: [
       {
         count: 2,
@@ -183,7 +182,7 @@ export const SYNERGY_SETS = {
     nameEn: 'Storm Conclave',
     icon: '⚡',
     color: '#a855f7',
-    description: '전격 연쇄와 가속 마법을 통해 포탑과 영웅의 공격 속도를 한계 이상으로 끌어올립니다.',
+    description: '공격 속도와 연쇄 번개를 올려 순간 화력을 높입니다.',
     tiers: [
       {
         count: 2,
@@ -220,8 +219,8 @@ export const RELICS = [
     synergy: 'solar_crown',
     icon: '☀️',
     color: '#f59e0b',
-    desc: '매 아침(여명)마다 모든 금광이 추가 +15% 보너스 골드를 즉시 생산합니다.',
-    lore: '솔라리아 초대 국왕이 제정한 황금 조세 칙령.',
+    desc: '아침마다 금광 수입이 15% 늘어납니다.',
+    lore: '솔라리아 초대 국왕이 정한 조세 칙령. 지금도 그대로 지켜진다.',
     mods: {
       goldIncomeMult: 0.15
     },
@@ -236,8 +235,8 @@ export const RELICS = [
     synergy: 'argon_guild',
     icon: '⛏️',
     color: '#06b6d4',
-    desc: '아르곤 결정 광산의 채굴 효율이 +22% 증가하고 아침마다 추가 금화 +15를 얻습니다.',
-    lore: '광맥의 주파수에 맞춰 스스로 진동하는 드워프제 채굴 도구.',
+    desc: '아르곤 채굴량 22% 증가, 아침마다 15골드 추가.',
+    lore: '광맥의 진동에 맞춰 스스로 떨리는 드워프 곡괭이.',
     mods: {
       argonIncomeMult: 0.22,
       startingDawnGold: 15
@@ -253,8 +252,8 @@ export const RELICS = [
     synergy: 'blood_crusade',
     icon: '📜',
     color: '#f97316',
-    desc: '적 처치 시 25% 확률로 현상금 주머니(+4 금화)를 즉시 획득합니다.',
-    lore: '성벽 밖에서 쓰러진 마물의 귀마다 은화가 매겨져 있다.',
+    desc: '적을 잡으면 25% 확률로 4골드를 더 받습니다.',
+    lore: '성벽 밖에서 죽은 것들의 귀에도 값이 매겨져 있다.',
     mods: {
       killGoldChance: 0.25,
       killGoldAmount: 4
@@ -270,8 +269,8 @@ export const RELICS = [
     synergy: ['argon_guild', 'iron_bastion'],
     icon: '📐',
     color: '#38bdf8',
-    desc: '모든 건물 건설 및 업그레이드 비용이 12% 감소하며 건물 최대 체력이 +10% 증가합니다.',
-    lore: '왕국의 모든 성채 설계도에 찍히는 청금석 인장.',
+    desc: '건설과 강화 비용 12% 감소, 건물 최대 체력 10% 증가.',
+    lore: '왕국의 모든 설계도에 찍히는 청금석 인장.',
     mods: {
       buildDiscount: 0.12,
       buildingHpMult: 0.10
@@ -287,8 +286,8 @@ export const RELICS = [
     synergy: 'solar_crown',
     icon: '🏆',
     color: '#fbbf24',
-    desc: '매 여명마다 고정 보너스 금화 +35를 획득하고 금광 수입이 +12% 증가합니다.',
-    lore: '아침 햇살이 닿는 순간 성배 내부에 순금 이슬이 맺힌다.',
+    desc: '아침마다 35골드 추가, 금광 수입 12% 증가.',
+    lore: '아침 해가 닿는 순간 성배 안쪽에 금빛 이슬이 맺힌다.',
     mods: {
       startingDawnGold: 35,
       goldIncomeMult: 0.12
@@ -304,8 +303,8 @@ export const RELICS = [
     synergy: 'argon_guild',
     icon: '⚗️',
     color: '#22d3ee',
-    desc: '금화 수입 +18%, 아르곤 채굴량 +28%, 적 처치 시 15% 확률로 +6 금화를 연성합니다.',
-    lore: '전장의 잿더미와 마석 파편을 순도 높은 귀금속으로 정제한다.',
+    desc: '금화 수입 18%, 아르곤 28% 증가. 적 처치 시 15% 확률로 6골드.',
+    lore: '전장의 재와 마석 조각을 녹여 금으로 바꾼다.',
     mods: {
       goldIncomeMult: 0.18,
       argonIncomeMult: 0.28,
@@ -323,8 +322,8 @@ export const RELICS = [
     synergy: 'solar_crown',
     icon: '🏦',
     color: '#eab308',
-    desc: '여명 도래 시 보유 중인 금화의 이자 한도가 +45 증가하고 건설 비용이 10% 절감됩니다.',
-    lore: '전쟁 중에도 황실 은행의 복리 이자는 단 하루도 멈추지 않는다.',
+    desc: '아침 이자 상한 45 증가, 건설 비용 10% 감소.',
+    lore: '전쟁 중에도 황실 은행의 이자는 하루도 거르지 않는다.',
     mods: {
       interestRateCap: 45,
       goldIncomeMult: 0.15,
@@ -341,8 +340,8 @@ export const RELICS = [
     synergy: 'solar_crown',
     icon: '👑',
     color: '#f59e0b',
-    desc: '금화 수입 +30%, 여명 보너스 금화 +50. 보유한 금화에 비례해 영웅과 포탑의 공격력이 추가 상승합니다.',
-    lore: '왕국의 부가 곧 검의 예리함이요 성벽의 높이라 선언한 전설의 보옥.',
+    desc: '금화 수입 30%, 아침 보너스 50골드. 보유 금화에 비례해 군주와 포탑 공격력이 오릅니다.',
+    lore: '왕국의 부가 곧 검의 날카로움이라고 못 박은 전설의 보옥.',
     mods: {
       goldIncomeMult: 0.30,
       startingDawnGold: 50,
@@ -360,8 +359,8 @@ export const RELICS = [
     synergy: 'argon_guild',
     icon: '💎',
     color: '#0ea5e9',
-    desc: '아르곤 수입 +32%, 모든 건물 건설 및 승급 비용 -8%.',
-    lore: '왕실 직할 광산 외의 모든 사적 아르곤 거래를 금한다는 칙령.',
+    desc: '아르곤 수입 32%, 건설·강화 비용 8% 감소.',
+    lore: '왕실 광산 밖의 사적 거래를 모두 금지한 칙령.',
     mods: {
       argonIncomeMult: 0.32,
       buildDiscount: 0.08
@@ -377,8 +376,8 @@ export const RELICS = [
     synergy: 'storm_conclave',
     icon: '🧭',
     color: '#a855f7',
-    desc: '여명마다 보급선 금화 +25가 도착하며 영웅의 이동 속도가 +10% 빨라집니다.',
-    lore: '어떤 폭풍우 속에서도 보급선을 성채까지 인도하는 마법 나침반.',
+    desc: '아침마다 25골드, 군주 이동 속도 10% 증가.',
+    lore: '어떤 폭풍에도 보급선을 성채까지 데려다 놓는다.',
     mods: {
       startingDawnGold: 25,
       heroMoveSpeedMult: 0.10
@@ -398,8 +397,8 @@ export const RELICS = [
     synergy: 'argon_guild',
     icon: '⚙️',
     color: '#38bdf8',
-    desc: '모든 방어 포탑의 공격 속도가 +16% 증가합니다.',
-    lore: '수천 번을 당겨도 탄성을 잃지 않는 정밀 미스릴 태엽 장치.',
+    desc: '모든 포탑 공격 속도 16% 증가.',
+    lore: '수천 번 당겨도 탄성을 잃지 않는 미스릴 태엽.',
     mods: {
       towerAttackSpeedMult: 0.16
     },
@@ -414,8 +413,8 @@ export const RELICS = [
     synergy: ['argon_guild', 'absolute_zero'],
     icon: '🔭',
     color: '#60a5fa',
-    desc: '모든 방어 포탑의 사거리가 +15% 증가하고 치명타 확률이 +6% 상승합니다.',
-    lore: '안개 낀 밤에도 수 킬로미터 밖 적장의 갑주 틈새를 비춘다.',
+    desc: '포탑 사거리 15%, 치명타 확률 6% 증가.',
+    lore: '안개 낀 밤에도 몇 리 밖 갑주 틈을 찾아낸다.',
     mods: {
       towerRangeMult: 0.15,
       critChance: 0.06
@@ -431,8 +430,8 @@ export const RELICS = [
     synergy: 'solar_crown',
     icon: '🔥',
     color: '#f97316',
-    desc: '포탑 공격력 +18%, 화염 지속 피해(화상) +35% 증가.',
-    lore: '성탑 꼭대기에서 꺼지지 않고 타오르는 성스러운 태양의 불씨.',
+    desc: '포탑 공격력 18%, 화상 피해 35% 증가.',
+    lore: '성탑 꼭대기에서 한 번도 꺼진 적 없는 불씨.',
     mods: {
       towerDamageMult: 0.18,
       burnDamageMult: 0.35
@@ -448,8 +447,8 @@ export const RELICS = [
     synergy: 'absolute_zero',
     icon: '🧊',
     color: '#38bdf8',
-    desc: '빙결 포탑 및 냉기 효과의 둔화·쇄빙 피해가 +30% 증가하고 포탑 사거리가 +10% 늘어납니다.',
-    lore: '북방 극지의 빙하 가장 깊은 곳에서 채취한 얼어붙은 정령의 핵.',
+    desc: '빙결 둔화와 쇄빙 피해 30%, 포탑 사거리 10% 증가.',
+    lore: '북방 빙하 가장 깊은 곳에서 캐낸 얼음 정령의 핵.',
     mods: {
       frostSlowBonus: 0.30,
       towerRangeMult: 0.10
@@ -465,8 +464,8 @@ export const RELICS = [
     synergy: 'storm_conclave',
     icon: '⚡',
     color: '#c084fc',
-    desc: '번개 연쇄 피해량 +30%, 모든 포탑 공격 속도 +14%.',
-    lore: '대기 중의 마나를 고압 전류로 치환하여 인접한 적들을 연쇄 감전시킨다.',
+    desc: '번개 연쇄 피해 30%, 포탑 공격 속도 14% 증가.',
+    lore: '대기 중의 마나를 전류로 바꿔 옆의 적에게 넘긴다.',
     mods: {
       lightningChainBonus: 0.30,
       towerAttackSpeedMult: 0.14
@@ -482,8 +481,8 @@ export const RELICS = [
     synergy: ['iron_bastion', 'blood_crusade'],
     icon: '💣',
     color: '#ef4444',
-    desc: '포탑 공격력 +22%, 보스 및 정예 괴수에게 입히는 피해 +35% 증가.',
-    lore: '공성 거인의 두꺼운 흑요석 외피를 단숨에 관통하기 위해 제작된 중량 탄환.',
+    desc: '포탑 공격력 22%, 보스와 정예에게 35% 추가 피해.',
+    lore: '공성 거인의 흑요석 외피를 뚫으려고 만든 중량탄.',
     mods: {
       towerDamageMult: 0.22,
       bossDamageMult: 0.35
@@ -499,8 +498,8 @@ export const RELICS = [
     synergy: ['argon_guild', 'storm_conclave'],
     icon: '🔮',
     color: '#8b5cf6',
-    desc: '포탑 공격 속도 +28%, 치명타 확률 +10%, 치명타 피해 +30%.',
-    lore: '안전 제한 장치를 해제하여 마도 포탑의 발사 속도를 극한까지 끌어올린다.',
+    desc: '포탑 공격 속도 28%, 치명타 확률 10%, 치명타 피해 30% 증가.',
+    lore: '안전 장치를 떼어낸 제어반. 남은 건 발사 속도뿐이다.',
     mods: {
       towerAttackSpeedMult: 0.28,
       critChance: 0.10,
@@ -517,8 +516,8 @@ export const RELICS = [
     synergy: 'storm_conclave',
     icon: '🌩️',
     color: '#a855f7',
-    desc: '포탑 피해량 +32%, 포탑 공속 +25%, 번개 연쇄 보너스 +45%. 공격 시 과전류 연쇄 폭발을 일으킵니다.',
-    lore: '하늘의 요새 아스트라가 지상에 남긴 태초의 번개 결정체.',
+    desc: '포탑 피해 32%, 공격 속도 25%, 번개 연쇄 45% 증가. 공격할 때 과전류가 터집니다.',
+    lore: '하늘 요새 아스트라가 지상에 두고 간 번개 결정.',
     mods: {
       towerDamageMult: 0.32,
       towerAttackSpeedMult: 0.25,
@@ -536,8 +535,8 @@ export const RELICS = [
     synergy: 'absolute_zero',
     icon: '💠',
     color: '#0284c7',
-    desc: '포탑 피해량 +28%, 빙결 및 쇄빙 피해 +45%, 치명타 피해 +40%. 빙결된 적 처치 시 얼음 파편이 폭발합니다.',
-    lore: '빛조차 얼려버리는 칠면체 프리즘으로, 전장을 고요한 얼음 조각상으로 바꾼다.',
+    desc: '포탑 피해 28%, 빙결·쇄빙 피해 45%, 치명타 피해 40% 증가. 얼린 적이 죽으면 파편이 터집니다.',
+    lore: '빛까지 얼린다는 칠면체. 전장을 조각상으로 바꿔 놓는다.',
     mods: {
       towerDamageMult: 0.28,
       frostSlowBonus: 0.45,
@@ -554,8 +553,8 @@ export const RELICS = [
     synergy: 'solar_crown',
     icon: '🌞',
     color: '#f59e0b',
-    desc: '포탑 사거리 +25%, 화염 피해 +50%, 보스 대상 피해 +30%. 여명과 전투 중 태양 유성 세례를 부릅니다.',
-    lore: '성층권 너머의 태양열을 한 점으로 집속시켜 적진을 증발시키는 고대 병기.',
+    desc: '포탑 사거리 25%, 화염 피해 50%, 보스 피해 30% 증가. 아침과 전투 중에 태양 유성이 떨어집니다.',
+    lore: '성층권 너머의 햇빛을 한 점에 모으는 고대 병기.',
     mods: {
       towerRangeMult: 0.25,
       burnDamageMult: 0.50,
@@ -577,8 +576,8 @@ export const RELICS = [
     synergy: 'storm_conclave',
     icon: '👢',
     color: '#c084fc',
-    desc: '영웅 이동 속도 +18%, 영웅 공격 속도 +12% 증가.',
-    lore: '전장의 어느 곳이라도 바람처럼 달려가 전열을 구원하는 신성한 각반.',
+    desc: '군주 이동 속도 18%, 공격 속도 12% 증가.',
+    lore: '바람처럼 달려 전열을 메우는 날개 각반.',
     mods: {
       heroMoveSpeedMult: 0.18,
       heroAttackSpeedMult: 0.12
@@ -594,8 +593,8 @@ export const RELICS = [
     synergy: 'blood_crusade',
     icon: '💍',
     color: '#ef4444',
-    desc: '영웅 생명력 흡수 +10%, 영웅 공격력 +14% 증가.',
-    lore: '적의 심장 박동을 멈출 때마다 착용자의 상처가 순식간에 아문다.',
+    desc: '군주 생명력 흡수 10%, 공격력 14% 증가.',
+    lore: '적의 심장이 멈출 때마다 착용자의 상처가 아문다.',
     mods: {
       heroLifesteal: 0.10,
       heroDamageMult: 0.14
@@ -611,8 +610,8 @@ export const RELICS = [
     synergy: ['absolute_zero', 'storm_conclave'],
     icon: '⏳',
     color: '#38bdf8',
-    desc: '영웅 액티브 스킬 쿨타임 가속 +22%, 영웅 이동 속도 +10%.',
-    lore: '흐르는 모래알마다 짧은 찰나를 영원처럼 늘리는 시간 마법이 깃들어 있다.',
+    desc: '군주 스킬 재사용 대기시간 22% 감소, 이동 속도 10% 증가.',
+    lore: '모래알 하나에 짧은 순간을 길게 늘리는 법이 담겨 있다.',
     mods: {
       heroCooldownMult: 0.22,
       heroMoveSpeedMult: 0.10
@@ -628,8 +627,8 @@ export const RELICS = [
     synergy: 'iron_bastion',
     icon: '🦺',
     color: '#94a3b8',
-    desc: '영웅 최대 체력 +35%, 가시 반사 피해 +15%.',
-    lore: '수백 자루의 화살을 맞고도 끝내 성문을 지켜낸 사자왕의 황금빛 흉갑.',
+    desc: '군주 최대 체력 35%, 가시 반사 15% 증가.',
+    lore: '화살을 수백 대 맞고도 성문을 놓지 않은 왕의 흉갑.',
     mods: {
       heroMaxHpMult: 0.35,
       thornsReflect: 0.15
@@ -645,8 +644,8 @@ export const RELICS = [
     synergy: 'blood_crusade',
     icon: '🪓',
     color: '#dc2626',
-    desc: '영웅 치명타 확률 +12%, 치명타 피해 +35%, 보스 추가 피해 +20%.',
-    lore: '군주의 적에게 자비 없는 일격을 내리는 거대한 양손 처형 도끼.',
+    desc: '군주 치명타 확률 12%, 치명타 피해 35%, 보스 피해 20% 증가.',
+    lore: '자비를 남기지 않는 양손 도끼. 한 번에 끝낸다.',
     mods: {
       critChance: 0.12,
       critDamageMult: 0.35,
@@ -663,8 +662,8 @@ export const RELICS = [
     synergy: 'absolute_zero',
     icon: '🗡️',
     color: '#0ea5e9',
-    desc: '영웅 공격력 +26%, 스킬 쿨타임 가속 +18%, 빙결 및 쇄빙 피해 +28%.',
-    lore: '검신이 스치는 궤적마다 공기 중의 수분이 칼날 같은 고드름으로 변한다.',
+    desc: '군주 공격력 26%, 스킬 대기시간 18%, 빙결 피해 28% 증가.',
+    lore: '검날이 지나간 자리의 물기가 고드름이 된다.',
     mods: {
       heroDamageMult: 0.26,
       heroCooldownMult: 0.18,
@@ -681,8 +680,8 @@ export const RELICS = [
     synergy: 'solar_crown',
     icon: '🪶',
     color: '#f97316',
-    desc: '영웅 최대 체력 +30%, 영웅 공격력 +24%, 화염 지속 피해 +30%.',
-    lore: '죽음의 문턱에서도 태양의 불꽃과 함께 다시 솟구쳐 오르는 불사조 깃털 망토.',
+    desc: '군주 최대 체력 30%, 공격력 24%, 화상 피해 30% 증가.',
+    lore: '죽음의 문턱에서도 불꽃과 함께 다시 일어난다.',
     mods: {
       heroMaxHpMult: 0.30,
       heroDamageMult: 0.24,
@@ -699,8 +698,8 @@ export const RELICS = [
     synergy: 'blood_crusade',
     icon: '🍷',
     color: '#ef4444',
-    desc: '영웅 공격 속도 +28%, 생명력 흡수 +12%, 체력이 낮을수록 공격력이 폭발적으로 증가합니다.',
-    lore: '고통을 잊게 하고 오직 전진과 살육만을 갈망하게 만드는 금단의 성배.',
+    desc: '군주 공격 속도 28%, 생명력 흡수 12%. 체력이 낮을수록 공격력이 오릅니다.',
+    lore: '고통을 잊게 하고 앞으로만 밀어붙이는 성배.',
     mods: {
       heroAttackSpeedMult: 0.28,
       heroLifesteal: 0.12,
@@ -717,8 +716,8 @@ export const RELICS = [
     synergy: 'storm_conclave',
     icon: '🔱',
     color: '#a855f7',
-    desc: '영웅 공격력 +40%, 공격 속도 +30%, 스킬 쿨타임 가속 +25%, 번개 연쇄 보너스 +35%.',
-    lore: '한 번의 투창으로 먹구름을 가르고 적 군단 전체에 벼락을 꽂아넣는 신화 속 무기.',
+    desc: '군주 공격력 40%, 공격 속도 30%, 스킬 대기시간 25%, 번개 연쇄 35% 증가.',
+    lore: '한 번 던지면 먹구름이 갈라지고 군단에 벼락이 꽂힌다.',
     mods: {
       heroDamageMult: 0.40,
       heroAttackSpeedMult: 0.30,
@@ -736,8 +735,8 @@ export const RELICS = [
     synergy: ['blood_crusade', 'solar_crown'],
     icon: '⚔️',
     color: '#f43f5e',
-    desc: '영웅 공격력 +45%, 보스 대상 피해 +50%, 치명타 확률 +15%, 치명타 피해 +45%.',
-    lore: '심연의 고대신마저 두 동강 냈다고 전해지는 아르곤 왕가의 최고 비보.',
+    desc: '군주 공격력 45%, 보스 피해 50%, 치명타 확률 15%, 치명타 피해 45% 증가.',
+    lore: '심연의 고대신을 둘로 갈랐다는 왕가의 검.',
     mods: {
       heroDamageMult: 0.45,
       bossDamageMult: 0.50,
@@ -759,8 +758,8 @@ export const RELICS = [
     synergy: 'blood_crusade',
     icon: '📯',
     color: '#f59e0b',
-    desc: '수비대 병력의 훈련 및 충원 속도가 +22% 빨라지고 병력 공격력이 +15% 증가합니다.',
-    lore: '성루에서 뿔피리가 울려 퍼지면 지친 병사들도 다시 창을 고쳐 쥔다.',
+    desc: '병력 충원 속도 22%, 병력 공격력 15% 증가.',
+    lore: '성루에서 울리면 지친 병사도 창을 다시 쥔다.',
     mods: {
       troopSpawnSpeedMult: 0.22,
       troopDamageMult: 0.15
@@ -776,8 +775,8 @@ export const RELICS = [
     synergy: 'iron_bastion',
     icon: '🛡️',
     color: '#94a3b8',
-    desc: '아군 병력의 최대 체력이 +28% 증가하고 근접 가시 반사가 +10% 부여됩니다.',
-    lore: '방패와 방패 사이에 단 한 치의 틈도 허용하지 않는 강철 진형 전술서.',
+    desc: '병력 최대 체력 28% 증가, 가시 반사 10% 추가.',
+    lore: '방패 사이로 손가락 하나 들어갈 틈도 두지 않는 진형.',
     mods: {
       troopHpMult: 0.28,
       thornsReflect: 0.10
@@ -793,8 +792,8 @@ export const RELICS = [
     synergy: 'solar_crown',
     icon: '🔱',
     color: '#fbbf24',
-    desc: '아군 병력 공격력 +26%, 화염 추가 피해 +20%, 보스 대상 피해 +15%.',
-    lore: '대장장이 사제들이 태양열로 단조하여 마물의 갑피를 녹여버리는 장창.',
+    desc: '병력 공격력 26%, 화상 피해 20%, 보스 피해 15% 증가.',
+    lore: '태양열로 벼려 마물의 갑피를 녹이는 미늘창.',
     mods: {
       troopDamageMult: 0.26,
       burnDamageMult: 0.20,
@@ -811,8 +810,8 @@ export const RELICS = [
     synergy: 'absolute_zero',
     icon: '🚩',
     color: '#38bdf8',
-    desc: '아군 병력 체력 +25%, 병력 충원 속도 +20%, 빙결 둔화 및 쇄빙 피해 +18%.',
-    lore: '혹한의 눈보라 속에서도 단 한 번도 꺾이지 않은 북방 변경백의 군기.',
+    desc: '병력 체력 25%, 충원 속도 20%, 빙결 피해 18% 증가.',
+    lore: '눈보라 속에서도 한 번 꺾이지 않은 북방 군기.',
     mods: {
       troopHpMult: 0.25,
       troopSpawnSpeedMult: 0.20,
@@ -829,8 +828,8 @@ export const RELICS = [
     synergy: ['iron_bastion', 'blood_crusade'],
     icon: '🦅',
     color: '#eab308',
-    desc: '아군 병력 공격력 +35%, 병력 최대 체력 +35%, 병력 충원 속도 +25%.',
-    lore: '황금 독수리 군기가 서 있는 한 왕국의 근위대는 결코 패주하지 않는다.',
+    desc: '병력 공격력 35%, 체력 35%, 충원 속도 25% 증가.',
+    lore: '황금 독수리가 서 있는 한 근위대는 돌아서지 않는다.',
     mods: {
       troopDamageMult: 0.35,
       troopHpMult: 0.35,
@@ -847,8 +846,8 @@ export const RELICS = [
     synergy: 'blood_crusade',
     icon: '🪦',
     color: '#ef4444',
-    desc: '병력 공격력 +50%, 병력 체력 +45%, 병력 충원 속도 +35%, 치명타 확률 +10%.',
-    lore: '전사한 영웅들의 혼이 수비대 병사들의 검에 깃들어 초인적인 무력을 발휘한다.',
+    desc: '병력 공격력 50%, 체력 45%, 충원 속도 35%, 치명타 확률 10% 증가.',
+    lore: '죽은 자들의 혼이 검에 깃들어 병사를 다시 세운다.',
     mods: {
       troopDamageMult: 0.50,
       troopHpMult: 0.45,
@@ -870,8 +869,8 @@ export const RELICS = [
     synergy: 'iron_bastion',
     icon: '🧱',
     color: '#94a3b8',
-    desc: '모든 성벽과 건물의 최대 체력이 +22% 증가하고 건설 비용이 6% 감소합니다.',
-    lore: '화강암을 강철처럼 맞물리게 다듬는 고대 산맥 드워프의 비전 도구.',
+    desc: '모든 건물 최대 체력 22% 증가, 건설 비용 6% 감소.',
+    lore: '화강암을 강철처럼 맞물리게 다듬는 흙손.',
     mods: {
       buildingHpMult: 0.22,
       buildDiscount: 0.06
@@ -887,8 +886,8 @@ export const RELICS = [
     synergy: 'iron_bastion',
     icon: '🌵',
     color: '#64748b',
-    desc: '성벽과 아군을 공격하는 근접 적에게 입은 피해의 22%를 가시 피해로 즉시 반사합니다.',
-    lore: '성벽을 기어오르려던 마물들은 스스로의 무게에 찔려 추락한다.',
+    desc: '근접 피해의 22%를 반사하고, 건물 최대 체력 12% 증가.',
+    lore: '성벽을 오르던 것들은 제 무게에 찔려 떨어진다.',
     mods: {
       thornsReflect: 0.22,
       buildingHpMult: 0.12
@@ -904,8 +903,8 @@ export const RELICS = [
     synergy: 'iron_bastion',
     icon: '🌿',
     color: '#22c55e',
-    desc: '모든 손상된 성벽과 건물이 전투 중에도 초당 +14의 체력을 스스로 회복합니다.',
-    lore: '성벽의 균열마다 푸른 마력 덩굴이 자라나 무너진 돌을 다시 엮어낸다.',
+    desc: '모든 건물이 전투 중에도 초당 14씩 회복합니다. 최대 체력 18% 증가.',
+    lore: '균열마다 덩굴이 자라 무너진 돌을 다시 엮는다.',
     mods: {
       buildingRegenPerSec: 14,
       buildingHpMult: 0.18
@@ -921,8 +920,8 @@ export const RELICS = [
     synergy: ['iron_bastion', 'argon_guild'],
     icon: '🪨',
     color: '#38bdf8',
-    desc: '성벽 및 건물 최대 체력 +38%, 초당 자동 수리 +18, 가시 반사 +20%.',
-    lore: '성문 정중앙에 박혀 요새 전체에 보이지 않는 역장을 두르는 핵심 룬석.',
+    desc: '건물 최대 체력 38%, 초당 수리 18, 가시 반사 20% 증가.',
+    lore: '성문 한가운데 박혀 요새 전체를 감싸는 룬석.',
     mods: {
       buildingHpMult: 0.38,
       buildingRegenPerSec: 18,
@@ -939,8 +938,8 @@ export const RELICS = [
     synergy: 'argon_guild',
     icon: '💠',
     color: '#06b6d4',
-    desc: '건물 최대 체력 +30%, 포탑 공격력 +20%, 아르곤 수입 +25%.',
-    lore: '왕성 지하 거대 반응로에서 뿜어져 나오는 마력이 성채 전체의 포탑과 성벽을 강화한다.',
+    desc: '건물 최대 체력 30%, 포탑 공격력 20%, 아르곤 수입 25% 증가.',
+    lore: '왕성 지하의 반응로가 성채 전체에 힘을 보낸다.',
     mods: {
       buildingHpMult: 0.30,
       towerDamageMult: 0.20,
@@ -957,8 +956,8 @@ export const RELICS = [
     synergy: ['iron_bastion', 'solar_crown'],
     icon: '🛡️',
     color: '#f59e0b',
-    desc: '건물 최대 체력 +55%, 초당 건물 회복 +28, 가시 반사 +35%, 여명마다 성채가 태양 충격파를 발산합니다.',
-    lore: '신화 시대 일곱 마왕의 공성을 백 년간 막아낸 불멸의 황금 방패.',
+    desc: '건물 최대 체력 55%, 초당 회복 28, 가시 반사 35% 증가. 아침마다 성채가 충격파를 뿜습니다.',
+    lore: '일곱 마왕의 공성을 백 년 버텨낸 황금 방패.',
     mods: {
       buildingHpMult: 0.55,
       buildingRegenPerSec: 28,
@@ -979,8 +978,8 @@ export const RELICS = [
     synergy: 'blood_crusade',
     icon: '🩸',
     color: '#e11d48',
-    desc: '[저주] 영웅 및 포탑 공격력 +45%, 생명력 흡수 +15%. 단, 성벽과 건물의 최대 체력이 20% 감소합니다.',
-    lore: '성벽의 수호 결계를 제물로 바쳐 파괴적인 살상력을 얻는 심연의 계약.',
+    desc: '[저주] 군주와 포탑 공격력 45%, 생명력 흡수 15% 증가. 대신 건물 최대 체력 20% 감소.',
+    lore: '수호 결계를 담보로 잡고 살상력만 챙긴 계약.',
     mods: {
       heroDamageMult: 0.45,
       towerDamageMult: 0.45,
@@ -998,8 +997,8 @@ export const RELICS = [
     synergy: 'solar_crown',
     icon: '👹',
     color: '#f43f5e',
-    desc: '[저주] 금화 수입 +50%, 아르곤 수입 +40%, 처치 금화 확률 +30%. 단, 적들의 이동 속도가 18% 빨라집니다.',
-    lore: '황금을 끝없이 토해내지만 그 냄새에 굶주린 마물들이 광분하여 달려든다.',
+    desc: '[저주] 금화 수입 50%, 아르곤 수입 40%, 처치 골드 확률 30% 증가. 대신 적 이동 속도 18% 증가.',
+    lore: '황금을 토해내지만 그 냄새에 굶주린 것들이 몰려온다.',
     mods: {
       goldIncomeMult: 0.50,
       argonIncomeMult: 0.40,
@@ -1018,8 +1017,8 @@ export const RELICS = [
     synergy: 'argon_guild',
     icon: '☢️',
     color: '#ec4899',
-    desc: '[저주] 포탑 공격력 +55%, 포탑 공격 속도 +35%. 단, 건물 최대 체력이 25% 감소합니다.',
-    lore: '불안정하게 폭주하는 고대 마석. 성탑이 무너질 듯 진동하지만 화력만큼은 절대적이다.',
+    desc: '[저주] 포탑 공격력 55%, 공격 속도 35% 증가. 대신 건물 최대 체력 25% 감소.',
+    lore: '언제 터질지 모르는 마석. 성탑이 흔들리는데도 화력은 확실하다.',
     mods: {
       towerDamageMult: 0.55,
       towerAttackSpeedMult: 0.35,
@@ -1036,8 +1035,8 @@ export const RELICS = [
     synergy: 'storm_conclave',
     icon: '🎺',
     color: '#db2777',
-    desc: '[저주] 모든 치명타 확률 +20%, 치명타 피해 +65%, 스킬 쿨타임 가속 +25%. 단, 적 이동 속도가 15% 증가합니다.',
-    lore: '피아를 가리지 않고 전장의 모든 존재를 극한의 광란 상태로 몰아넣는 마계의 나팔.',
+    desc: '[저주] 치명타 확률 20%, 치명타 피해 65%, 스킬 대기시간 25% 감소. 대신 적 이동 속도 15% 증가.',
+    lore: '아군과 적군을 가리지 않고 광란으로 몰아넣는 나팔.',
     mods: {
       critChance: 0.20,
       critDamageMult: 0.65,
@@ -1055,8 +1054,8 @@ export const RELICS = [
     synergy: 'absolute_zero',
     icon: '💀',
     color: '#be123c',
-    desc: '[저주] 빙결·쇄빙 피해 +60%, 보스 대상 피해 +45%. 단, 성벽 체력이 15% 감소하고 적 이동 속도가 10% 증가합니다.',
-    lore: '북방 설원에서 얼어 죽은 고대 왕의 원한이 서린 얼음 왕관.',
+    desc: '[저주] 빙결·쇄빙 피해 60%, 보스 피해 45% 증가. 대신 성벽 체력 15% 감소, 적 이동 속도 10% 증가.',
+    lore: '설원에서 얼어 죽은 왕의 원한이 남은 왕관.',
     mods: {
       frostSlowBonus: 0.60,
       bossDamageMult: 0.45,
@@ -1074,8 +1073,8 @@ export const RELICS = [
     synergy: 'iron_bastion',
     icon: '⛓️',
     color: '#9f1239',
-    desc: '[저주] 가시 반사 피해 +55%, 수비대 공격력 +45%, 초당 건물 회복 +22. 단, 성벽 최대 체력이 18% 감소합니다.',
-    lore: '상처를 입을수록 적에게 수배의 고통을 되돌려주는 잔혹한 성유물.',
+    desc: '[저주] 가시 반사 55%, 병력 공격력 45%, 초당 건물 회복 22 증가. 대신 성벽 최대 체력 18% 감소.',
+    lore: '맞을수록 더 세게 돌려주는 성유물.',
     mods: {
       thornsReflect: 0.55,
       troopDamageMult: 0.45,

@@ -1,6 +1,6 @@
 /**
  * ARGONIA: Crown of the Spire
- * Persistent Meta-Progression, Achievements, Codex, Run History & Mid-Run Checkpoint System
+ * 영구 성장 데이터, 업적, 도감, 원정 기록, 중간 저장.
  */
 
 import { SANCTUM_UPGRADES, ACHIEVEMENTS, computeSanctumStats, getSanctumUpgradeCost } from '../data/sanctum.js';
@@ -12,10 +12,10 @@ const CHECKPOINT_KEY = 'argonia_active_run_checkpoint_v1';
 export function createDefaultSaveData() {
   return {
     version: 1,
-    crowns: 120, // Starter Royal Treasury grant so players can immediately experience Sanctum upgrades
+    crowns: 120, // 성소 특성을 바로 하나 사 볼 수 있게 주는 시작 왕관
     totalCrownsEarned: 120,
     unlockedHeroes: ['arthuria', 'kaelen'],
-    unlockedRealms: [0, 1, 2, 3, 4], // All 5 realms selectable from the war-map (recommended order 1->5)
+    unlockedRealms: [0, 1, 2, 3, 4], // 다섯 영토를 처음부터 고를 수 있습니다.
     clearedRealms: [],
     highestRealmCleared: -1,
     bestEndlessWave: 0,
@@ -25,7 +25,8 @@ export function createDefaultSaveData() {
     activeSkulls: [],
     sanctumLevels: {},
     unlockedAchievements: [],
-    discoveredRelics: ['solar_tithe', 'iron_ram_banner', 'argon_condenser'],
+    heroesWon: [],
+    discoveredRelics: ['solar_tithe', 'ballista_tension_spring', 'permafrost_core'],
     discoveredEnemies: ['goblin_raider', 'shield_orc', 'kobold_sapper', 'boss_kragasha'],
     lifetimeStats: {
       runsPlayed: 0,
@@ -110,11 +111,11 @@ export class SaveSystem {
 
   buySanctumUpgrade(upgradeId) {
     const upg = SANCTUM_UPGRADES.find((u) => u.id === upgradeId);
-    if (!upg) return { ok: false, reason: '존재하지 않는 성소 특성입니다.' };
+    if (!upg) return { ok: false, reason: '없는 특성입니다.' };
     const currentLv = this.data.sanctumLevels[upgradeId] || 0;
-    if (currentLv >= upg.maxLevel) return { ok: false, reason: '이미 최고 단계에 도달했습니다.' };
+    if (currentLv >= upg.maxLevel) return { ok: false, reason: '이미 최고 단계입니다.' };
     const cost = getSanctumUpgradeCost(upg, currentLv);
-    if (this.data.crowns < cost) return { ok: false, reason: '별빛 왕관(👑)이 부족합니다.' };
+    if (this.data.crowns < cost) return { ok: false, reason: '별빛 왕관이 부족합니다.' };
 
     this.data.crowns -= cost;
     this.data.sanctumLevels[upgradeId] = currentLv + 1;
@@ -138,10 +139,10 @@ export class SaveSystem {
 
   unlockHero(heroId) {
     const hero = HEROES.find((h) => h.id === heroId);
-    if (!hero) return { ok: false, reason: '영웅을 찾을 수 없습니다.' };
+    if (!hero) return { ok: false, reason: '없는 군주입니다.' };
     if (this.data.unlockedHeroes.includes(heroId)) return { ok: true, already: true };
     if (this.data.crowns < hero.unlockCost) {
-      return { ok: false, reason: `별빛 왕관이 부족합니다 (${hero.unlockCost} 👑 필요)` };
+      return { ok: false, reason: `별빛 왕관이 부족합니다 (${hero.unlockCost}개 필요)` };
     }
     this.data.crowns -= hero.unlockCost;
     this.data.unlockedHeroes.push(heroId);
@@ -173,6 +174,9 @@ export class SaveSystem {
       }
       this.data.highestRealmCleared = Math.max(this.data.highestRealmCleared, summary.realmIndex);
       st.maxSkullsCleared = Math.max(st.maxSkullsCleared, (summary.activeSkulls || []).length);
+      if (summary.heroId && !this.data.heroesWon.includes(summary.heroId)) {
+        this.data.heroesWon.push(summary.heroId);
+      }
     }
     st.wavesSurvived += summary.wave || 0;
     st.enemiesSlain += summary.enemiesSlain || 0;
@@ -188,15 +192,15 @@ export class SaveSystem {
     }
     this.data.bestScore = Math.max(this.data.bestScore, summary.score || 0);
 
-    // Award Crowns
+    // 왕관 지급
     const earnedCrowns = Math.max(15, Math.round(summary.crownsEarned || 0));
     this.data.crowns += earnedCrowns;
     this.data.totalCrownsEarned += earnedCrowns;
 
-    // Evaluate new achievements
+    // 업적 확인
     const newlyUnlocked = this.evaluateAchievements(summary);
 
-    // Record history entry (keep top/recent 25)
+    // 최근 25건만 남깁니다.
     this.data.runHistory.unshift({
       id: `run_${Date.now()}`,
       date: new Date().toISOString(),
@@ -229,44 +233,57 @@ export class SaveSystem {
     const newly = [];
     const st = this.data.lifetimeStats;
     const totalSanctumLevels = Object.values(this.data.sanctumLevels).reduce((a, b) => a + b, 0);
+    const run = latestRun || {};
+    const relics = run.ownedRelics || [];
+    const bestSet = (run.activeSets || []).reduce((max, s) => Math.max(max, s.count || 0), 0);
+    const legendaries = relics.filter((r) => r.rarity === 'legendary').length;
+    const cursed = relics.filter((r) => r.rarity === 'cursed').length;
+    const skulls = (run.activeSkulls || []).length;
+
+    // 조건은 업적 id별로 하나씩. 모두 실제로 집계되는 값만 봅니다.
+    const conditions = {
+      ach_first_dawn: () => st.wavesSurvived >= 1,
+      ach_solaria: () => this.data.clearedRealms.includes(0),
+      ach_frostpeak: () => this.data.clearedRealms.includes(1),
+      ach_crimson: () => this.data.clearedRealms.includes(2),
+      ach_ashen: () => this.data.clearedRealms.includes(3),
+      ach_astral: () => this.data.clearedRealms.includes(4),
+      ach_all_realms: () => this.data.clearedRealms.length >= 5,
+      ach_endless_15: () => this.data.bestEndlessWave >= 15,
+      ach_endless_30: () => this.data.bestEndlessWave >= 30,
+      ach_gold_run: () => (run.goldMined || 0) >= 1000,
+      ach_argon_run: () => (run.argonMined || 0) >= 400,
+      ach_build_18: () => (run.buildingsConstructed || 0) >= 18,
+      ach_evo_5: () => (run.evolutionsCount || 0) >= 5,
+      ach_gold_total: () => st.goldMined >= 10000,
+      ach_slayer_500: () => st.enemiesSlain >= 500,
+      ach_slayer_2500: () => st.enemiesSlain >= 2500,
+      ach_boss_10: () => st.bossesSlain >= 10,
+      ach_score_50k: () => this.data.bestScore >= 50000,
+      ach_victories_5: () => st.victories >= 5,
+      ach_hero_all: () => this.data.heroesWon.length >= 4,
+      ach_synergy_4: () => bestSet >= 4,
+      ach_synergy_6: () => bestSet >= 6,
+      ach_relic_legend_3: () => legendaries >= 3,
+      ach_cursed_2: () => Boolean(run.victory) && cursed >= 2,
+      ach_relic_10: () => relics.length >= 10,
+      ach_skull_1: () => Boolean(run.victory) && skulls >= 1,
+      ach_skull_3: () => Boolean(run.victory) && skulls >= 3,
+      ach_skull_6: () => Boolean(run.victory) && skulls >= 6,
+      ach_sanctum_25: () => totalSanctumLevels >= 25,
+      ach_runs_10: () => st.runsPlayed >= 10
+    };
 
     for (const ach of ACHIEVEMENTS) {
       if (this.data.unlockedAchievements.includes(ach.id)) continue;
-      let passed = false;
+      const check = conditions[ach.id];
+      if (!check || !check()) continue;
 
-      // Flexible condition checks across all 30 achievements
-      const id = ach.id;
-      if (id.includes('first_blood') || id.includes('slayer_1')) passed = st.enemiesSlain >= 50;
-      else if (id.includes('slayer_2') || id.includes('centurion')) passed = st.enemiesSlain >= 300;
-      else if (id.includes('slayer_3') || id.includes('thousand')) passed = st.enemiesSlain >= 1000;
-      else if (id.includes('slayer_4') || id.includes('legion')) passed = st.enemiesSlain >= 3000;
-      else if (id.includes('realm_1') || id.includes('solaria')) passed = this.data.clearedRealms.includes(0);
-      else if (id.includes('realm_2') || id.includes('frostpeak')) passed = this.data.clearedRealms.includes(1);
-      else if (id.includes('realm_3') || id.includes('crimson') || id.includes('oasis')) passed = this.data.clearedRealms.includes(2);
-      else if (id.includes('realm_4') || id.includes('ashen') || id.includes('forge')) passed = this.data.clearedRealms.includes(3);
-      else if (id.includes('realm_5') || id.includes('astral') || id.includes('malakor')) passed = this.data.clearedRealms.includes(4);
-      else if (id.includes('all_realms') || id.includes('emperor')) passed = this.data.clearedRealms.length >= 5;
-      else if (id.includes('gold_1') || id.includes('merchant')) passed = st.goldMined >= 500;
-      else if (id.includes('gold_2') || id.includes('tycoon')) passed = st.goldMined >= 2500;
-      else if (id.includes('gold_3') || id.includes('midas')) passed = st.goldMined >= 10000;
-      else if (id.includes('evol') || id.includes('architect')) passed = st.evolutionsUnlocked >= 3;
-      else if (id.includes('relic') || id.includes('collector')) passed = this.data.discoveredRelics.length >= 10;
-      else if (id.includes('skull_1') || id.includes('challenger')) passed = st.maxSkullsCleared >= 1;
-      else if (id.includes('skull_3') || id.includes('hell')) passed = st.maxSkullsCleared >= 3;
-      else if (id.includes('skull_6') || id.includes('deity')) passed = st.maxSkullsCleared >= 6;
-      else if (id.includes('endless_15')) passed = this.data.bestEndlessWave >= 15;
-      else if (id.includes('endless_25')) passed = this.data.bestEndlessWave >= 25;
-      else if (id.includes('sanctum')) passed = totalSanctumLevels >= 5;
-      else if (id.includes('boss')) passed = st.bossesSlain >= 1;
-      else if (latestRun && latestRun.victory && st.victories >= 1) passed = true;
-
-      if (passed) {
-        this.data.unlockedAchievements.push(ach.id);
-        const reward = ach.rewardCrowns || 40;
-        this.data.crowns += reward;
-        this.data.totalCrownsEarned += reward;
-        newly.push(ach);
-      }
+      this.data.unlockedAchievements.push(ach.id);
+      const reward = ach.rewardCrowns || 40;
+      this.data.crowns += reward;
+      this.data.totalCrownsEarned += reward;
+      newly.push(ach);
     }
     return newly;
   }

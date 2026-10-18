@@ -1,22 +1,13 @@
 /**
- * @fileoverview Viral Export & Royal Chronicle Generator for Argonia: Crown of the Spire.
- * Pure ES Module with zero external dependencies.
- * Provides 1920x1080 2D canvas poster rendering, social share text formatting (Threads/X),
- * and 60fps WebGL MediaRecorder clip capture.
+ * 원정 결과를 이미지와 공유 문구로 내보냅니다.
+ * 1920x1080 포스터 렌더링, 공유 텍스트 생성, WebGL 화면 녹화를 담당합니다.
  */
 
 const DEMO_URL = 'https://jeiel85.github.io/argonia/';
-const WATERMARK_TEXT = 'ARGONIA // THREE.JS TACTICAL KINGDOM ROGUELITE';
+const RARITY_KO = { common: '일반', rare: '희귀', epic: '영웅', legendary: '전설', cursed: '저주' };
+const WATERMARK_TEXT = 'ARGONIA';
 
-/**
- * Helper to draw a rounded rectangle path on a 2D context.
- * @param {CanvasRenderingContext2D} ctx
- * @param {number} x
- * @param {number} y
- * @param {number} w
- * @param {number} h
- * @param {number} r
- */
+/** 둥근 사각형 경로를 그립니다. */
 function roundRectPath(ctx, x, y, w, h, r) {
   const radius = Math.min(r, w / 2, h / 2);
   ctx.beginPath();
@@ -28,13 +19,10 @@ function roundRectPath(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
-/**
- * Normalizes incoming runData with rich fallback defaults so rendering never fails.
- * @param {Object} raw
- */
+/** 포스터에 필요한 값만 남기고 기본값을 채웁니다. */
 function normalizeRunData(raw = {}) {
   const wave = raw.wave ?? raw.waveReached ?? 1;
-  const maxWaves = raw.maxWaves ?? 15;
+  const maxWaves = raw.maxWaves ?? raw.totalWaves ?? 15;
   const isEndless = Boolean(raw.isEndless || raw.endlessMode || wave > maxWaves);
   const victory = Boolean(raw.victory ?? (raw.outcome === 'VICTORY'));
 
@@ -43,8 +31,8 @@ function normalizeRunData(raw = {}) {
     isEndless,
     wave,
     maxWaves,
-    realmName: raw.realmName || raw.realm?.name || 'Valerion — Sunlit Bastion (발레리온 성채)',
-    heroName: raw.heroName || raw.hero?.name || 'Aurelius the Dawnblade (여명검 아우렐리우스)',
+    realmName: raw.realmName || raw.realm?.name || '솔라리아 여명 평원',
+    heroName: raw.heroName || raw.hero?.name || '아르투리아',
     heroIcon: raw.heroIcon || raw.hero?.icon || '👑',
     score: Number(raw.score ?? raw.totalScore ?? 0),
     enemiesSlain: Number(raw.enemiesSlain ?? raw.kills ?? 0),
@@ -60,17 +48,12 @@ function normalizeRunData(raw = {}) {
       minute: '2-digit',
       hour12: false
     }),
-    synergies: Array.isArray(raw.synergies) ? raw.synergies : [],
-    relics: Array.isArray(raw.relics) ? raw.relics : []
+    synergies: Array.isArray(raw.synergies) ? raw.synergies : Array.isArray(raw.activeSets) ? raw.activeSets : [],
+    relics: Array.isArray(raw.relics) ? raw.relics : Array.isArray(raw.ownedRelics) ? raw.ownedRelics : []
   };
 }
 
-/**
- * Generates an offscreen 1920x1080 Royal Chronicle poster canvas and returns its dataUrl + blobPromise.
- * @param {Object} runData
- * @param {HTMLCanvasElement} [sourceCanvas]
- * @returns {{ dataUrl: string, blobPromise: Promise<Blob|null>, canvas: HTMLCanvasElement }}
- */
+/** 1920x1080 포스터를 그려 dataUrl과 blob을 돌려줍니다. */
 export function generateChroniclePoster(runData = {}, sourceCanvas = null) {
   const data = normalizeRunData(runData);
   const W = 1920;
@@ -170,21 +153,21 @@ export function generateChroniclePoster(runData = {}, sourceCanvas = null) {
   ctx.textAlign = 'center';
   ctx.fillStyle = '#38bdf8';
   ctx.font = '700 20px "Segoe UI", "Malgun Gothic", sans-serif';
-  ctx.fillText('ARGONIA: CROWN OF THE SPIRE — ROYAL CHRONICLE (왕국 연대기 기록서)', W / 2, 108);
+  ctx.fillText('ARGONIA — 왕국 연대기', W / 2, 108);
 
   // Outcome Badge Pill
-  let badgeText = `⚔️ VALIANT STAND — WAVE ${data.wave}`;
+  let badgeText = `방어 실패 · ${data.wave}일차`;
   let badgeBorder = '#f87171';
   let badgeFill = 'rgba(127, 29, 29, 0.55)';
   let badgeTextColor = '#fecaca';
 
   if (data.isEndless) {
-    badgeText = `♾️ ENDLESS ABYSS RECORD — WAVE ${data.wave}`;
+    badgeText = `무한의 심연 · ${data.wave}일차`;
     badgeBorder = '#c084fc';
     badgeFill = 'rgba(88, 28, 135, 0.58)';
     badgeTextColor = '#f3e8ff';
   } else if (data.victory) {
-    badgeText = '👑 VICTORY — REALM CONQUERED';
+    badgeText = `평정 완료 · ${data.wave}일차`;
     badgeBorder = '#f5c542';
     badgeFill = 'rgba(120, 83, 14, 0.58)';
     badgeTextColor = '#fef08a';
@@ -232,27 +215,27 @@ export function generateChroniclePoster(runData = {}, sourceCanvas = null) {
 
   ctx.fillStyle = '#94a3b8';
   ctx.font = '600 21px "Segoe UI", "Malgun Gothic", sans-serif';
-  ctx.fillText(`🏰 Realm: ${data.realmName}`, infoX + 108, infoY + 86);
+  ctx.fillText(`영토 · ${data.realmName}`, infoX + 108, infoY + 86);
 
   // Right: Seed Code, Mutator Skulls, Timestamp
   ctx.textAlign = 'right';
-  const skullLabel = data.mutatorSkulls > 0 ? `💀 x${data.mutatorSkulls} MUTATOR SKULLS` : '🛡️ STANDARD ROYAL DECREE (💀 x0)';
+  const skullLabel = data.mutatorSkulls > 0 ? `시련 ${data.mutatorSkulls}개` : '시련 없음';
   ctx.fillStyle = data.mutatorSkulls > 0 ? '#fca5a5' : '#7dd3fc';
   ctx.font = '700 22px "Segoe UI", "Malgun Gothic", sans-serif';
   ctx.fillText(skullLabel, infoX + infoW - 32, infoY + 44);
 
   ctx.fillStyle = '#f5c542';
   ctx.font = '700 22px Consolas, "Courier New", monospace';
-  ctx.fillText(`SEED: ${data.seed}   |   🕒 ${data.timestamp}`, infoX + infoW - 32, infoY + 84);
+  ctx.fillText(`시드 ${data.seed}   |   ${data.timestamp}`, infoX + infoW - 32, infoY + 84);
   ctx.restore();
 
   // 5. Core Combat Statistics Grid (5 Cards)
   const stats = [
-    { label: 'WAVE REACHED (도달 웨이브)', value: data.isEndless ? `W-${data.wave} (♾️)` : `${data.wave} / ${data.maxWaves}`, accent: '#38bdf8', icon: '🌊' },
-    { label: 'TOTAL SCORE (총점)', value: data.score.toLocaleString(), accent: '#f5c542', icon: '🏆' },
-    { label: 'ENEMIES SLAIN (처치한 적)', value: data.enemiesSlain.toLocaleString(), accent: '#f87171', icon: '⚔️' },
-    { label: 'GOLD MINED (채굴 골드)', value: `${data.goldMined.toLocaleString()} G`, accent: '#fbbf24', icon: '🪙' },
-    { label: 'BOSSES DEFEATED (보스 토벌)', value: data.bossesDefeated.toLocaleString(), accent: '#c084fc', icon: '🐉' }
+    { label: '도달 일차', value: data.isEndless ? `${data.wave}일차` : `${data.wave} / ${data.maxWaves}`, accent: '#38bdf8', icon: '🌊' },
+    { label: '점수', value: data.score.toLocaleString(), accent: '#f5c542', icon: '🏆' },
+    { label: '처치한 적', value: data.enemiesSlain.toLocaleString(), accent: '#f87171', icon: '⚔️' },
+    { label: '채굴한 금화', value: data.goldMined.toLocaleString(), accent: '#fbbf24', icon: '🪙' },
+    { label: '잡은 보스', value: data.bossesDefeated.toLocaleString(), accent: '#c084fc', icon: '🐉' }
   ];
 
   const gridY = 352;
@@ -298,17 +281,15 @@ export function generateChroniclePoster(runData = {}, sourceCanvas = null) {
   ctx.textAlign = 'left';
   ctx.fillStyle = '#f5c542';
   ctx.font = '800 19px "Segoe UI", "Malgun Gothic", sans-serif';
-  ctx.fillText('✨ ACTIVE SYNERGY SETS (활성 유물 시너지 세트)', infoX + 26, synY + 36);
+  ctx.fillText('유물 시너지', infoX + 26, synY + 36);
 
-  const synergies = data.synergies.length > 0
-    ? data.synergies.slice(0, 5)
-    : [{ name: 'Royal Vanguard (왕실 선봉대)', icon: '🛡️', count: 2, required: 2 }];
+  const synergies = data.synergies.slice(0, 5);
 
   let badgeCursorX = infoX + 26;
   synergies.forEach((syn) => {
     const label = typeof syn === 'string'
-      ? `⚡ ${syn}`
-      : `${syn.icon || '⚡'} ${syn.name || syn.id} ${syn.count ? `(${syn.count}/${syn.required || syn.count})` : ''}`.trim();
+      ? String(syn)
+      : `${syn.icon || ''} ${syn.name || syn.id} ${syn.count ? `${syn.count}세트` : ''}`.trim();
 
     ctx.font = '700 20px "Segoe UI", "Malgun Gothic", sans-serif';
     const textWidth = ctx.measureText(label).width;
@@ -345,7 +326,7 @@ export function generateChroniclePoster(runData = {}, sourceCanvas = null) {
   ctx.textAlign = 'left';
   ctx.fillStyle = '#38bdf8';
   ctx.font = '800 19px "Segoe UI", "Malgun Gothic", sans-serif';
-  ctx.fillText('🏺 ROYAL RELIC VAULT — TOP 8 RELICS (보유 핵심 유물)', infoX + 26, relY + 36);
+  ctx.fillText('보유 유물', infoX + 26, relY + 36);
 
   const topRelics = data.relics.slice(0, 8);
   const cols = 4;
@@ -357,7 +338,7 @@ export function generateChroniclePoster(runData = {}, sourceCanvas = null) {
   if (topRelics.length === 0) {
     ctx.fillStyle = '#64748b';
     ctx.font = '600 22px "Segoe UI", "Malgun Gothic", sans-serif';
-    ctx.fillText('No Relics Claimed in This Expedition (수집한 유물 없음)', infoX + 26, relY + 140);
+    ctx.fillText('이번 원정에서 얻은 유물이 없습니다.', infoX + 26, relY + 140);
   } else {
     topRelics.forEach((relic, i) => {
       const col = i % cols;
@@ -365,10 +346,10 @@ export function generateChroniclePoster(runData = {}, sourceCanvas = null) {
       const rx = infoX + 26 + col * (relicCardW + relicGapX);
       const ry = relY + 54 + row * (relicCardH + relicGapY);
 
-      const rIcon = typeof relic === 'string' ? '💎' : (relic.icon || '💎');
-      const rName = typeof relic === 'string' ? relic : (relic.name || relic.title || 'Royal Relic');
+      const rIcon = typeof relic === 'string' ? '' : relic.icon || '';
+      const rName = typeof relic === 'string' ? relic : relic.name || relic.title || '유물';
       const rSub = typeof relic === 'object' && (relic.rarity || relic.set)
-        ? String(relic.rarity || relic.set).toUpperCase()
+        ? RARITY_KO[relic.rarity] || String(relic.set || '').toUpperCase()
         : 'ROYAL ARTIFACT';
 
       roundRectPath(ctx, rx, ry, relicCardW, relicCardH, 10);
@@ -404,7 +385,7 @@ export function generateChroniclePoster(runData = {}, sourceCanvas = null) {
   ctx.textAlign = 'right';
   ctx.fillStyle = '#f5c542';
   ctx.font = '800 22px "Segoe UI", sans-serif';
-  ctx.fillText(`🌐 PLAY LIVE: ${DEMO_URL}`, infoX + infoW, footerY);
+  ctx.fillText(`플레이: ${DEMO_URL}`, infoX + infoW, footerY);
   ctx.restore();
 
   const dataUrl = canvas.toDataURL('image/png');
@@ -443,27 +424,22 @@ export function downloadChroniclePoster(runData = {}, sourceCanvas = null) {
   return { dataUrl, blobPromise, filename };
 }
 
-/**
- * Builds a punchy, viral Korean + English share text formatted for Threads & X (Twitter).
- * @param {Object} runData
- * @returns {string}
- */
+/** 공유용 짧은 문구를 만듭니다. */
 export function buildShareText(runData = {}) {
   const data = normalizeRunData(runData);
 
   const headline = data.isEndless
-    ? `[ARGONIA] 무한의 심연 Wave ${data.wave} 기록 달성`
+    ? `[ARGONIA] 무한의 심연 ${data.wave}일차`
     : data.victory
-      ? `[ARGONIA] 왕국 방어전 클리어! (Wave ${data.wave})`
-      : `[ARGONIA] Wave ${data.wave} 방어전 기록`;
+      ? `[ARGONIA] ${data.wave}일차 방어 성공`
+      : `[ARGONIA] ${data.wave}일차에서 무너짐`;
 
   const lines = [
     headline,
-    `스코어: ${data.score.toLocaleString()}점 | 토벌: ${data.enemiesSlain}기 | 보스: ${data.bossesDefeated}체`,
-    `지휘: ${data.heroName} (${data.realmName})`,
-    `시드: ${data.seed}`,
-    '',
-    `웹에서 바로 플레이: ${DEMO_URL}`
+    `점수 ${data.score.toLocaleString()} · 처치 ${data.enemiesSlain} · 보스 ${data.bossesDefeated}`,
+    `${data.heroName} · ${data.realmName}`,
+    `시드 ${data.seed}`,
+    DEMO_URL
   ];
 
   return lines.join('\n');

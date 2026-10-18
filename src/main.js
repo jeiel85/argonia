@@ -1,6 +1,6 @@
 /**
  * ARGONIA: Crown of the Spire
- * Main Application Entry, 3D Viewport Controller, Interactive HUD & Command Hub Orchestrator
+ * 앱 진입점. 3D 뷰포트, HUD, 사령부 화면을 연결합니다.
  */
 
 import * as THREE from 'three';
@@ -30,6 +30,10 @@ import {
   BattleClipRecorder,
 } from './share/viralExporter.js';
 
+// 도감 카드와 유물 카드에 쓰는 한글 표기
+const CATEGORY_KO = { core: '본진', economy: '경제', defense: '방어', army: '병력', fortress: '성벽' };
+const RARITY_KO = { common: '일반', rare: '희귀', epic: '영웅', legendary: '전설', cursed: '저주' };
+
 class ArgoniaApp {
   constructor() {
     this.canvas = document.getElementById('game-canvas');
@@ -57,11 +61,11 @@ class ArgoniaApp {
       if (!btn) return;
       if (isRecording) {
         btn.classList.add('recording');
-        btn.textContent = `⏹ ${sec}s`;
+        btn.textContent = `● ${sec}s`;
       } else {
         btn.classList.remove('recording');
-        btn.textContent = '⏺ REC';
-        this.showToast('🎬 60fps WebM 전투 클립이 저장되었습니다!', 'info');
+        btn.textContent = 'REC';
+        this.showToast('전투 영상을 저장했습니다.', 'info');
       }
     });
 
@@ -89,7 +93,7 @@ class ArgoniaApp {
     });
     this.rebuildSocketBadges();
 
-    // Start with 3D background behind Title Overlay (Zero-slop onboarding)
+    // 타이틀 뒤로 3D 배경을 먼저 띄웁니다.
     this.engine.isPaused = true;
     document.getElementById('ingame-hud')?.classList.add('hidden');
     this.worldMarkersLayer?.classList.add('hidden');
@@ -144,7 +148,7 @@ class ArgoniaApp {
   }
 
   // =========================================================================
-  // EVENT BINDINGS & INPUT HANDLING
+  // 입력 처리
   // =========================================================================
   bindEvents() {
     const unlockAudioOnce = () => {
@@ -215,7 +219,7 @@ class ArgoniaApp {
     document.getElementById('btn-refund-sanctum')?.addEventListener('click', () => {
       const refunded = saveSystem.refundSanctumUpgrades();
       soundEngine.playSfx('gold_collect');
-      this.showToast(`🔄 성소 특성이 초기화되어 ${refunded} 👑 별빛 왕관이 환급되었습니다!`, 'gold');
+      this.showToast(`성소 특성을 초기화했습니다. 별빛 왕관 ${refunded}개를 돌려받았습니다.`, 'gold');
       this.renderHubAll();
     });
 
@@ -223,18 +227,18 @@ class ArgoniaApp {
     document.getElementById('btn-export-save')?.addEventListener('click', () => {
       const json = saveSystem.exportJson();
       navigator.clipboard?.writeText(json);
-      this.showToast('📤 세이브 JSON 데이터가 클립보드에 복사되었습니다!', 'info');
+      this.showToast('세이브 데이터를 클립보드에 복사했습니다.', 'info');
     });
 
     document.getElementById('btn-import-save')?.addEventListener('click', () => {
-      const raw = window.prompt('백업한 세이브 JSON 문자열을 붙여넣으세요:');
+      const raw = window.prompt('백업한 세이브 데이터를 붙여넣으세요.');
       if (!raw) return;
       try {
         saveSystem.importJson(raw);
-        this.showToast('📥 세이브 데이터를 성공적으로 복원했습니다!', 'gold');
+        this.showToast('세이브 데이터를 복원했습니다.', 'gold');
         this.renderHubAll();
       } catch {
-        this.showToast('⚠️ 올바른 JSON 형식이 아닙니다.', 'danger');
+        this.showToast('JSON 형식이 올바르지 않습니다.', 'danger');
       }
     });
 
@@ -268,16 +272,16 @@ class ArgoniaApp {
 
     document.getElementById('btn-cam-mode')?.addEventListener('click', () => {
       const mode = this.sceneManager.cycleCameraMode();
-      const labels = { tactical: '전술시점', action: '액션시점', overview: '전체조망' };
+      const labels = { tactical: '전술 시점', action: '추적 시점', overview: '조감 시점' };
       const labelEl = document.getElementById('cam-mode-label');
-      if (labelEl) labelEl.textContent = labels[mode] || '전술시점';
+      if (labelEl) labelEl.textContent = labels[mode] || '전술 시점';
       soundEngine.playSfx('ui_click');
     });
 
     document.getElementById('btn-audio-mute')?.addEventListener('click', (e) => {
       const muted = soundEngine.toggleMute();
       const textSpan = e.currentTarget.querySelector('span');
-      if (textSpan) textSpan.textContent = muted ? '음향 OFF' : '음향 ON';
+      if (textSpan) textSpan.textContent = muted ? '소리 끔' : '소리 켬';
     });
 
     document.getElementById('btn-rec-clip')?.addEventListener('click', () => {
@@ -285,7 +289,7 @@ class ArgoniaApp {
         this.clipRecorder.stop();
       } else {
         this.clipRecorder.start(this.canvas, 15000);
-        this.showToast('⏺ 60fps 전투 영상 녹화 시작 (최대 15초, 다시 누르면 저장)', 'info');
+        this.showToast('녹화를 시작했습니다. 최대 15초, 다시 누르면 저장됩니다.', 'info');
       }
     });
 
@@ -311,7 +315,7 @@ class ArgoniaApp {
         },
         this.canvas
       );
-      this.showToast('📸 4K 왕국 연대기 포스터 PNG가 다운로드되었습니다!', 'gold');
+      this.showToast('연대기 포스터를 저장했습니다.', 'gold');
     });
 
     document.getElementById('btn-zen-mode')?.addEventListener('click', () => {
@@ -364,7 +368,7 @@ class ArgoniaApp {
     document.getElementById('btn-download-poster')?.addEventListener('click', () => {
       if (this.lastRunSummary) {
         downloadChroniclePoster(this.lastRunSummary, this.canvas);
-        this.showToast('📸 4K 왕국 연대기 포스터 PNG 저장 완료!', 'gold');
+        this.showToast('연대기 포스터를 저장했습니다.', 'gold');
       }
     });
 
@@ -372,7 +376,7 @@ class ArgoniaApp {
       if (this.lastRunSummary) {
         const text = buildShareText(this.lastRunSummary);
         navigator.clipboard?.writeText(text);
-        this.showToast('🧵 Threads / X 공유 문구가 클립보드에 복사되었습니다!', 'gold');
+        this.showToast('공유 문구를 클립보드에 복사했습니다.', 'gold');
       }
     });
 
@@ -381,9 +385,7 @@ class ArgoniaApp {
       this.openCommandHub(false);
     });
 
-    // 3D Canvas Mouse & Wheel Controls
-    // - Left-Click (button 0): Select build socket OR move Hero (supports hold-and-drag to glide!)
-    // - Right-Click / Middle-Click Drag (button 2 or 1): Exclusively orbit 3D camera viewpoint (no hero movement overlap!)
+    // 왼쪽 버튼은 부지 선택이나 군주 이동, 오른쪽·가운데 드래그는 카메라 회전입니다.
     this.canvas.addEventListener('pointermove', (e) => {
       const worldPt = this.sceneManager.updateMouseRay(e.clientX, e.clientY);
       if (this.isRightDragging) {
@@ -401,7 +403,7 @@ class ArgoniaApp {
     this.canvas.addEventListener('pointerdown', (e) => {
       const worldPt = this.sceneManager.updateMouseRay(e.clientX, e.clientY);
 
-      // Right-Click (button 2) or Middle-Click (button 1): Camera Orbit ONLY
+      // 오른쪽·가운데 버튼: 카메라 회전
       if (e.button === 2 || e.button === 1) {
         this.isRightDragging = true;
         this.lastDragX = e.clientX;
@@ -409,7 +411,7 @@ class ArgoniaApp {
         return;
       }
 
-      // Left-Click (button 0): Select Socket or Move Hero
+      // 왼쪽 버튼: 부지 선택 또는 군주 이동
       if (e.button === 0) {
         let closestSock = null;
         let bestDist = 3.5;
@@ -425,7 +427,7 @@ class ArgoniaApp {
           this.engine.selectedSocketId = closestSock.id;
           this.renderArchitectPanel();
         } else if (this.engine.hero && !this.engine.hero.isDead) {
-          // Move hero toward clicked ground coordinate (and allow holding left-button to steer)
+          // 누른 지점으로 이동하고, 버튼을 누른 채 끌면 계속 따라갑니다.
           this.isLeftMoving = true;
           this.engine.hero.targetX = Math.max(-39, Math.min(39, worldPt.x));
           this.engine.hero.targetZ = Math.max(-39, Math.min(39, worldPt.z));
@@ -524,10 +526,11 @@ class ArgoniaApp {
   }
 
   // =========================================================================
-  // COMMAND HUB RENDERERS (EXPEDITION, SANCTUM, CODEX, ACHIEVEMENTS)
+  // 사령부 화면
   // =========================================================================
   openCommandHub(isInitialStartup = false) {
     this.engine.isPaused = true;
+    document.getElementById('tactical-guide-banner')?.classList.add('hidden');
     document.getElementById('command-hub-modal')?.classList.remove('hidden');
     document.getElementById('ingame-hud')?.classList.add('hidden');
     this.worldMarkersLayer?.classList.add('hidden');
@@ -586,13 +589,13 @@ class ArgoniaApp {
             <div class="select-card-top">
               <span class="select-card-title">${r.icon} ${r.name}</span>
               <span class="badge-pill ${isCleared ? 'gold-badge' : ''}">
-                ${isCleared ? '👑 정복 완료' : `${r.totalWaves} WAVES`}
+                ${isCleared ? '정복 완료' : `${r.totalWaves}일`}
               </span>
             </div>
             <div class="select-card-desc">${r.desc}</div>
             <div class="hero-skills-mini">
               <span class="hero-skill-tag">${r.difficultyLabel}</span>
-              <span class="hero-skill-tag">보상: ${r.rewardCrowns} 👑</span>
+              <span class="hero-skill-tag">보상 ${r.rewardCrowns} 👑</span>
               <span class="hero-skill-tag">환경: ${r.hazard.name}</span>
             </div>
           </div>
@@ -620,7 +623,7 @@ class ArgoniaApp {
             <div class="select-card-top">
               <span class="select-card-title">${h.icon} ${h.name} <small style="color:#94a3b8">(${h.title})</small></span>
               <span class="badge-pill ${unlocked ? 'gold-badge' : ''}">
-                ${unlocked ? (isSelected ? '출정 선택됨' : '사용 가능') : `🔒 ${h.unlockCost} 👑 해금`}
+                ${unlocked ? (isSelected ? '선택됨' : '사용 가능') : `잠김 · ${h.unlockCost} 👑`}
               </span>
             </div>
             <div class="select-card-desc">${h.passive.name}: ${h.passive.desc}</div>
@@ -644,7 +647,7 @@ class ArgoniaApp {
               return;
             }
             soundEngine.playSfx('relic_pick');
-            this.showToast(`🎉 새로운 군주 영웅 해금 완료!`, 'gold');
+            this.showToast(`군주를 해금했습니다: ${getHeroById(heroId).name}`, 'gold');
           } else {
             soundEngine.playSfx('ui_click');
           }
@@ -695,7 +698,7 @@ class ArgoniaApp {
         cpBanner.classList.remove('hidden');
         const rName = REALMS[cp.realmIndex]?.name || '솔라리아';
         const hName = getHeroById(cp.heroId)?.name || '아르투리아';
-        document.getElementById('checkpoint-desc').textContent = `${rName} · 제${cp.wave}야 · ${hName}`;
+        document.getElementById('checkpoint-desc').textContent = `${rName} · ${cp.wave}일차 · ${hName}`;
       } else {
         cpBanner.classList.add('hidden');
       }
@@ -709,8 +712,8 @@ class ArgoniaApp {
     if (!sub) return;
     const r = REALMS[this.selectedRealmIndex];
     const h = getHeroById(this.selectedHeroId);
-    const modeStr = this.isEndlessMode ? '♾️ 무한의 심연' : `${r.totalWaves}야 캠페인`;
-    sub.textContent = `${r.name} (${modeStr}) · ${h.name}`;
+    const modeStr = this.isEndlessMode ? '무한의 심연' : `${r.totalWaves}일 캠페인`;
+    sub.textContent = `${modeStr} · ${h.name}`;
   }
 
   renderSanctumTab() {
@@ -746,7 +749,7 @@ class ArgoniaApp {
                 } style="border-color:${canAfford ? '#f59e0b' : '#334155'};color:${
                   canAfford ? '#fde047' : '#64748b'
                 }">
-                      ${isMax ? 'MAX' : `${cost} 👑`}
+                      ${isMax ? 'MAX' : `👑 ${cost}`}
                     </button>
                   </div>
                 `;
@@ -780,7 +783,7 @@ class ArgoniaApp {
           .map(
             (ev) =>
               `<div style="font-size:11px;color:#e9d5ff;background:rgba(168,85,247,0.14);padding:5px 7px;border-radius:6px;margin-top:4px;">
-                <strong>★ 궁극진화: ${ev.icon} ${ev.name}</strong><br/>${ev.desc}
+                <strong>특화 진화 · ${ev.name}</strong><br/>${ev.desc}
               </div>`
           )
           .join('');
@@ -788,10 +791,10 @@ class ArgoniaApp {
           <div class="codex-item-card">
             <div style="display:flex;justify-content:space-between;align-items:center;">
               <strong style="font-size:14px;color:#fde047;">${b.icon} ${b.name}</strong>
-              <span class="badge-pill">${b.category.toUpperCase()}</span>
+              <span class="badge-pill">${CATEGORY_KO[b.category] || b.category}</span>
             </div>
             <p style="font-size:11px;color:#cbd5e1;">${b.desc}</p>
-            <div style="font-size:11px;color:#94a3b8;">1단계 비용: ${b.tiers[0].costGold}G · 체력: ${b.tiers[0].maxHp}</div>
+            <div style="font-size:11px;color:#94a3b8;">Lv.1 · ${b.tiers[0].costGold}G · 내구도 ${b.tiers[0].maxHp.toLocaleString()}</div>
             ${evoHtml}
           </div>
         `;
@@ -802,11 +805,11 @@ class ArgoniaApp {
           <div class="codex-item-card" style="border-color:${e.isBoss ? '#f43f5e' : 'rgba(148,163,184,0.22)'}">
             <div style="display:flex;justify-content:space-between;align-items:center;">
               <strong style="font-size:14px;color:${e.isBoss ? '#fda4af' : '#f8fafc'};">${e.icon} ${e.name}</strong>
-              <span class="badge-pill">${e.isBoss ? '💀 ACT BOSS' : e.isFlying ? '🪽 공중' : '⚔️ 지상'}</span>
+              <span class="badge-pill">${e.isBoss ? '보스' : e.isFlying ? '공중' : '지상'}</span>
             </div>
             <p style="font-size:11px;color:#cbd5e1;">${e.desc}</p>
             <div style="font-size:11px;color:#94a3b8;">
-              HP: ${e.maxHp} · 공격력: ${e.damage} · 장갑: ${Math.round((e.armor || 0) * 100)}% · 보상: ${e.goldReward}G
+              체력 ${e.maxHp} · 공격 ${e.damage} · 방어 ${Math.round((e.armor || 0) * 100)}% · 처치 ${e.goldReward}G
             </div>
           </div>
         `;
@@ -816,10 +819,10 @@ class ArgoniaApp {
         .map(
           (s) => `
           <div class="codex-item-card" style="border-color:#a855f7;">
-            <strong style="font-size:14px;color:#e9d5ff;">${s.icon} [세트 시너지] ${s.name}</strong>
+            <strong style="font-size:14px;color:#e9d5ff;">${s.icon} ${s.name} 세트</strong>
             <p style="font-size:11px;color:#cbd5e1;">${s.description || ''}</p>
             ${(s.tiers || [])
-              .map((t) => `<div style="font-size:11px;color:#fde047;">• (${t.count}세트) ${t.label}</div>`)
+              .map((t) => `<div style="font-size:11px;color:#fde047;">${t.count}세트 · ${t.label}</div>`)
               .join('')}
           </div>
         `
@@ -831,7 +834,7 @@ class ArgoniaApp {
         <div class="codex-item-card">
           <div style="display:flex;justify-content:space-between;align-items:center;">
             <strong style="font-size:13px;color:#fde047;">${r.icon} ${r.name}</strong>
-            <span class="badge-pill">${r.rarity.toUpperCase()}</span>
+            <span class="badge-pill">${RARITY_KO[r.rarity] || r.rarity}</span>
           </div>
           <p style="font-size:11px;color:#cbd5e1;">${r.desc}</p>
         </div>
@@ -842,21 +845,21 @@ class ArgoniaApp {
     } else {
       grid.innerHTML = `
         <div class="codex-item-card">
-          <strong style="color:#fde047;">☀️ 1. 주간 정비 & 경제 부흥</strong>
+          <strong style="color:#fde047;">낮에는 경제부터</strong>
           <p style="font-size:12px;color:#cbd5e1;line-height:1.5;">
-            낮 동안 금광(🪙), 풍차 농장(🌾), 아르곤 정제소(💎)를 먼저 건설하세요. 여명이 밝을 때마다 모든 경제 건물이 막대한 자원을 생산하며, 파괴된 성벽과 포탑도 여명에 100% 무료 재건됩니다!
+            해가 떠 있는 동안 금광과 풍차, 아르곤 정제소를 세웁니다. 수입은 다음 날 아침에 한꺼번에 들어오고, 부서진 성벽과 포탑도 그때 무료로 다시 세워집니다.
           </p>
         </div>
         <div class="codex-item-card">
-          <strong style="color:#38bdf8;">🏰 2. 3단계 강화 & 20종 궁극 특화 진화</strong>
+          <strong style="color:#38bdf8;">건물 3단계와 특화 진화</strong>
           <p style="font-size:12px;color:#cbd5e1;line-height:1.5;">
-            모든 건물은 Lv.3 달성 후 두 가지 궁극 진화 분기 중 하나를 선택할 수 있습니다. (예: 궁수탑 → 보스 학살용 [거신병 발리스타] vs 군단 섬멸용 [개틀링 석궁]). 단축키 [B]를 누르면 스마트 건설 감독관이 최적의 건물을 자동 증축합니다!
+            건물은 Lv.3까지 올린 뒤 두 갈래 특화 진화 가운데 하나를 고릅니다. 궁수탑이라면 보스용 발리스타와 다수 처리용 개틀링 석궁으로 갈립니다. B 키를 누르면 지을 만한 곳을 알아서 골라 줍니다.
           </p>
         </div>
         <div class="codex-item-card">
-          <strong style="color:#a855f7;">⚔️ 3. 군주 직접 전투 & 전군 집결 [T]</strong>
+          <strong style="color:#a855f7;">군주 직접 조작</strong>
           <p style="font-size:12px;color:#cbd5e1;line-height:1.5;">
-            WASD 또는 마우스 클릭으로 군주를 이동하며 Q, E, R 스킬과 Space 돌격 대시를 사용하세요. 위험한 차원문 앞에는 [T] 키를 눌러 병영의 성기사와 발키리 부대를 즉시 집결시킬 수 있습니다.
+            WASD나 클릭으로 군주를 움직이고 Q, E, R과 Space 돌진을 씁니다. 차원문이 밀리면 T로 병영 병력을 군주에게 불러 모으세요.
           </p>
         </div>
       `;
@@ -894,7 +897,7 @@ class ArgoniaApp {
         <div class="stat-mini-box"><span>누적 적 처치</span><strong>${st.enemiesSlain.toLocaleString()}</strong></div>
         <div class="stat-mini-box"><span>보스 토벌</span><strong>${st.bossesSlain}</strong></div>
         <div class="stat-mini-box"><span>누적 채굴 금화</span><strong>${st.goldMined.toLocaleString()}</strong></div>
-        <div class="stat-mini-box"><span>무한 최고 기록</span><strong>제${saveSystem.data.bestEndlessWave}야</strong></div>
+        <div class="stat-mini-box"><span>무한 최고 기록</span><strong>${saveSystem.data.bestEndlessWave}일차</strong></div>
         <div class="stat-mini-box"><span>최고 점수</span><strong>${saveSystem.data.bestScore.toLocaleString()}</strong></div>
       `;
     }
@@ -903,7 +906,7 @@ class ArgoniaApp {
     if (histEl) {
       const history = saveSystem.data.runHistory || [];
       if (history.length === 0) {
-        histEl.innerHTML = `<div style="font-size:12px;color:#64748b;padding:12px;">아직 완료된 원정 연대기가 없습니다. 첫 출정을 시작해 보세요!</div>`;
+        histEl.innerHTML = `<div style="font-size:12px;color:#64748b;padding:12px;">아직 기록이 없습니다.</div>`;
       } else {
         histEl.innerHTML = history
           .map(
@@ -911,7 +914,7 @@ class ArgoniaApp {
           <div class="ach-card">
             <div>
               <div style="font-size:12px;font-weight:800;color:${h.victory ? '#fde047' : '#f8fafc'}">
-                ${h.victory ? '👑 승리' : '⚔️ 분전'} · ${h.realmName} (제${h.wave}야)
+                ${h.victory ? '승리' : '패배'} · ${h.realmName} (${h.wave}일차)
               </div>
               <div style="font-size:11px;color:#94a3b8;">
                 ${h.heroName} · 점수 ${h.score.toLocaleString()} · 처치 ${h.enemiesSlain} · 시드 ${h.seed}
@@ -927,22 +930,22 @@ class ArgoniaApp {
   }
 
   // =========================================================================
-  // IN-GAME HUD & CONTEXTUAL ARCHITECT PANEL
+  // 인게임 HUD
   // =========================================================================
   syncHud(snap) {
     if (!snap) return;
 
     const phaseEl = document.getElementById('hud-phase-icon');
     if (phaseEl) {
-      phaseEl.textContent = snap.phase === 'night' ? 'NIGHT' : 'DAY';
+      phaseEl.textContent = snap.phase === 'night' ? '밤' : '낮';
       phaseEl.classList.toggle('night', snap.phase === 'night');
       phaseEl.classList.toggle('day', snap.phase !== 'night');
     }
-    document.getElementById('hud-realm-title').textContent = snap.realm.name;
+    document.getElementById('hud-realm-title').textContent = snap.realm.shortName || snap.realm.name;
     document.getElementById('hud-wave-subtitle').textContent =
       snap.phase === 'night'
-        ? `제${snap.wave}${snap.isEndless ? '(무한)' : `/${snap.totalWaves}`}야 교전 중 · 잔여 적군 ${snap.enemiesRemaining}`
-        : `제${snap.wave}${snap.isEndless ? '(무한)' : `/${snap.totalWaves}`}야 주간 정비`;
+        ? `${snap.wave}일차${snap.isEndless ? ' · 무한' : ''} · 남은 적 ${snap.enemiesRemaining}`
+        : `${snap.wave}일차${snap.isEndless ? ' · 무한' : ''} · 정비 중`;
 
     // Citadel HP
     const citPct = Math.max(0, Math.min(100, (snap.citadelHp / Math.max(1, snap.citadelMaxHp)) * 100));
@@ -957,10 +960,10 @@ class ArgoniaApp {
 
     // Hero Bar
     if (snap.hero) {
-      document.getElementById('hud-hero-name').textContent = snap.hero.name.replace('성군 ', '');
+      document.getElementById('hud-hero-name').textContent = snap.hero.name;
       const stateEl = document.getElementById('hud-hero-state');
       if (snap.hero.isDead) {
-        stateEl.textContent = `부활 (${snap.hero.reviveTimer.toFixed(1)}s)`;
+        stateEl.textContent = `부활까지 ${snap.hero.reviveTimer.toFixed(1)}초`;
         stateEl.style.color = '#ef5350';
       } else {
         stateEl.textContent = '지휘 중';
@@ -970,11 +973,11 @@ class ArgoniaApp {
       document.getElementById('hud-hero-hp-fill').style.width = `${hPct}%`;
       document.getElementById('hud-hero-hp-text').textContent = `${snap.hero.hp} / ${snap.hero.maxHp} HP`;
 
-      // Skills Names & Cooldowns (Keep vector SVG icons!)
+      // 스킬 이름과 재사용 대기시간
       for (const k of ['q', 'e', 'r']) {
         const sk = snap.hero.skills[k];
         const nameEl = document.getElementById(`skill-${k}-name`);
-        if (nameEl) nameEl.textContent = sk.name.slice(0, 5);
+        if (nameEl) nameEl.textContent = sk.short || sk.name;
         const cdEl = document.getElementById(`skill-${k}-cd`);
         const cdVal = snap.hero.skillCooldowns[k] || 0;
         if (cdVal > 0.05) {
@@ -1003,8 +1006,8 @@ class ArgoniaApp {
             <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
           </svg>
           <div class="call-night-text">
-            <strong>야간 공성 방어전</strong>
-            <small>잔여 적군 ${snap.enemiesRemaining}기 · 콤보 ${snap.killCombo}x</small>
+            <strong>방어 중</strong>
+            <small>남은 적 ${snap.enemiesRemaining} · 콤보 ${snap.killCombo}x</small>
           </div>
         `;
       } else {
@@ -1014,8 +1017,8 @@ class ArgoniaApp {
             <polygon points="12,2 22,8.5 12,22 2,8.5"/>
           </svg>
           <div class="call-night-text">
-            <strong>전투 개시 · 밤 맞이하기</strong>
-            <small>단축키 [Enter] · 제${snap.wave}야 출정</small>
+            <strong>밤 맞이하기</strong>
+            <small>Enter · ${snap.wave}일차 출정</small>
           </div>
         `;
       }
@@ -1036,13 +1039,13 @@ class ArgoniaApp {
       }
     }
 
-    // Left Dock: Threat Forecast (auto-hide during Night combat to keep viewport clean)
+    // 밤에는 정찰 카드를 접어 전장을 가리지 않습니다.
     const threatCard = document.getElementById('threat-forecast-card');
     if (threatCard) {
       threatCard.classList.toggle('hidden', snap.phase === 'night');
     }
     const waveBadge = document.getElementById('threat-wave-badge');
-    if (waveBadge) waveBadge.textContent = `WAVE ${snap.wave}`;
+    if (waveBadge) waveBadge.textContent = `${snap.wave}일차`;
     const portalListEl = document.getElementById('threat-portal-list');
     if (portalListEl && snap.currentWaveDesc) {
       portalListEl.innerHTML = snap.currentWaveDesc.portalSummaries
@@ -1064,10 +1067,10 @@ class ArgoniaApp {
     }
     const hazardEl = document.getElementById('realm-hazard-note');
     if (hazardEl && snap.realm.hazard) {
-      hazardEl.textContent = `${snap.realm.hazard.name} — ${snap.realm.hazard.desc}`;
+      hazardEl.textContent = `${snap.realm.hazard.name}. ${snap.realm.hazard.desc}`;
     }
 
-    // Left Dock: Synergy Sets & Relics (Only show card once player has at least 1 relic!)
+    // 유물을 하나라도 얻은 뒤에만 카드를 보여 줍니다.
     const relicCard = document.getElementById('relic-sidebar-card');
     if (relicCard) {
       relicCard.classList.toggle('hidden', snap.ownedRelics.length === 0);
@@ -1096,20 +1099,20 @@ class ArgoniaApp {
     const sock = this.engine.sockets.find((s) => s.id === selId);
 
     if (!sock) {
-      title.textContent = 'ARCHITECT · 건설 감독';
+      title.textContent = '건설 감독';
       body.innerHTML = `
         <div class="arch-idle-hint">
-          지도의 건설 부지를 좌클릭하여 건물을 설계하거나, <kbd>B</kbd> 키로 최적 건물을 자동 증축하십시오.
+          건설 부지를 클릭하면 지을 수 있는 건물이 나옵니다. 자동 건설은 <kbd>B</kbd> 키입니다.
         </div>
       `;
       return;
     }
 
-    title.textContent = `부지 설계 · ${sock.label}`;
+    title.textContent = sock.label;
     const b = sock.building;
 
     if (!b) {
-      // Empty socket: show all allowed building types!
+      // 빈 부지: 지을 수 있는 건물을 모두 보여 줍니다.
       body.innerHTML =
         sock.allowed
           .map((typeId) => {
@@ -1119,7 +1122,7 @@ class ArgoniaApp {
             return `
               <div class="arch-option-card" data-build-type="${typeId}">
                 <div class="arch-opt-top">
-                  <span class="arch-opt-name">${bDef.name} 건설</span>
+                  <span class="arch-opt-name">${bDef.name}</span>
                   <span class="arch-opt-cost">${cost.gold}G ${cost.argon > 0 ? `· ${cost.argon}A` : ''}</span>
                 </div>
                 <div class="arch-opt-desc">${t1.desc}</div>
@@ -1127,7 +1130,7 @@ class ArgoniaApp {
             `;
           })
           .join('') +
-        `<button id="btn-arch-back" class="btn-mini" style="margin-top:2px;">✕ 부지 선택 해제</button>`;
+        `<button id="btn-arch-back" class="btn-mini" style="margin-top:2px;">선택 해제</button>`;
 
       body.querySelectorAll('[data-build-type]').forEach((card) => {
         card.addEventListener('click', () => {
@@ -1149,7 +1152,7 @@ class ArgoniaApp {
       actionsHtml = `
         <div class="arch-option-card evolution-card">
           <div class="arch-opt-top">
-            <span class="arch-opt-name">★ 궁극 진화: ${b.spec.name}</span>
+            <span class="arch-opt-name">특화 진화 · ${b.spec.name}</span>
           </div>
           <div class="arch-opt-desc">${b.spec.desc}</div>
         </div>
@@ -1160,21 +1163,21 @@ class ArgoniaApp {
       actionsHtml = `
         <div class="arch-option-card" id="btn-arch-upgrade">
           <div class="arch-opt-top">
-            <span class="arch-opt-name">▲ ${nextSpec.name} 승급 [F]</span>
+            <span class="arch-opt-name">${nextSpec.name}로 강화 [F]</span>
             <span class="arch-opt-cost">${cost.gold}G ${cost.argon > 0 ? `· ${cost.argon}A` : ''}</span>
           </div>
           <div class="arch-opt-desc">${nextSpec.desc}</div>
         </div>
       `;
     } else {
-      // Tier 3 -> Show 2 Branching Evolutions!
+      // 3단계: 특화 진화 두 갈래
       actionsHtml = (b.baseDef.evolutions || [])
         .map((evo) => {
           const cost = this.engine.getActionCost(b.typeId, 3, evo.id);
           return `
             <div class="arch-option-card evolution-card" data-evo-id="${evo.id}">
               <div class="arch-opt-top">
-                <span class="arch-opt-name">★ ${evo.name}</span>
+                <span class="arch-opt-name">${evo.name}</span>
                 <span class="arch-opt-cost">${cost.gold}G · ${cost.argon}A</span>
               </div>
               <div class="arch-opt-desc">${evo.desc}</div>
@@ -1186,17 +1189,17 @@ class ArgoniaApp {
 
     const demolishBtn =
       b.typeId !== 'citadel' && this.engine.phase === 'day'
-        ? `<button id="btn-arch-demolish" class="btn-mini" style="margin-top:4px;color:#f5b5b5;border-color:rgba(201,59,59,0.5);">건물 철거 및 재설계 (70% 환급)</button>`
+        ? `<button id="btn-arch-demolish" class="btn-mini" style="margin-top:4px;color:#f5b5b5;border-color:rgba(201,59,59,0.5);">철거 (70% 환급)</button>`
         : '';
 
     body.innerHTML = `
       <div style="background:rgba(0,0,0,0.42);border-left:2px solid var(--brass-bright);padding:7px 10px;font-size:12px;">
         <strong>${b.spec.name}</strong>
-        <div class="tabular-nums" style="font-size:10.5px;color:var(--text-parchment);margin-top:2px;">내구도 ${Math.round(b.hp)} / ${b.maxHp} HP</div>
+        <div class="tabular-nums" style="font-size:10.5px;color:var(--text-parchment);margin-top:2px;">내구도 ${Math.round(b.hp)} / ${b.maxHp.toLocaleString()}</div>
       </div>
       ${actionsHtml}
       ${demolishBtn}
-      <button id="btn-arch-back" class="btn-mini" style="margin-top:2px;">✕ 선택 해제</button>
+      <button id="btn-arch-back" class="btn-mini" style="margin-top:2px;">선택 해제</button>
     `;
 
     document.getElementById('btn-arch-upgrade')?.addEventListener('click', () => {
@@ -1226,7 +1229,7 @@ class ArgoniaApp {
   }
 
   // =========================================================================
-  // 3D-TO-2D PROJECTED WORLD SOCKET BADGES
+  // 건설 부지 배지
   // =========================================================================
   rebuildSocketBadges() {
     if (!this.worldMarkersLayer) return;
@@ -1263,13 +1266,13 @@ class ArgoniaApp {
     const shortNames = {
       citadel: '성채',
       gold_mine: '금광',
-      windmill: '풍차농장',
+      windmill: '풍차',
       argon_refinery: '정제소',
       archer_tower: '감시탑',
-      arcane_obelisk: '방첨탑',
+      arcane_obelisk: '비전탑',
       flame_mortar: '박격포',
-      frost_spire: '서리탑',
-      barracks: '기사병영',
+      frost_spire: '빙결탑',
+      barracks: '병영',
       stone_wall: '성벽',
     };
 
@@ -1277,7 +1280,7 @@ class ArgoniaApp {
       const el = this.socketBadgeElements.get(sock.id);
       if (!el) continue;
 
-      // Hide socket build badges during Night unless selected
+      // 밤에는 선택한 부지만 표시합니다.
       const b = sock.building;
       if (this.engine.phase === 'night' && this.engine.selectedSocketId !== sock.id) {
         el.style.display = 'none';
@@ -1293,14 +1296,14 @@ class ArgoniaApp {
       const sx = (tempV.x * 0.5 + 0.5) * w;
       const sy = (-tempV.y * 0.5 + 0.5) * h;
 
-      // Update label & affordability highlight without cut-off strings or emoji clutter
+      // 이름과 건설 가능 여부만 갱신합니다.
       let labelHtml = '';
       let canAfford = false;
       if (!b) {
         const defType = sock.defaultType || sock.allowed[0];
         const cost = this.engine.getActionCost(defType, 1, null);
         canAfford = this.engine.gold >= cost.gold && this.engine.argon >= cost.argon;
-        const shortLabel = sock.slotType === 'tactical' ? '전술거점' : shortNames[defType] || '부지';
+        const shortLabel = shortNames[defType] || '부지';
         labelHtml = `${shortLabel}<span class="cost-tag">${cost.gold}G</span>`;
       } else if (!b.evolutionId && b.tier < 3) {
         const cost = this.engine.getActionCost(b.typeId, b.tier + 1, null);
@@ -1312,10 +1315,10 @@ class ArgoniaApp {
         const cost = this.engine.getActionCost(b.typeId, 3, evo?.id);
         canAfford = this.engine.gold >= cost.gold && this.engine.argon >= cost.argon;
         const shortLabel = shortNames[b.typeId] || b.baseDef.name;
-        labelHtml = `${shortLabel} Lv.3<span class="cost-tag">★진화</span>`;
+        labelHtml = `${shortLabel} Lv.3<span class="cost-tag">진화</span>`;
       } else {
         const shortLabel = shortNames[b.typeId] || b.baseDef.name;
-        labelHtml = `★ ${shortLabel} MAX`;
+        labelHtml = `${shortLabel} 완성`;
       }
 
       el.innerHTML = labelHtml;
@@ -1327,7 +1330,7 @@ class ArgoniaApp {
   }
 
   // =========================================================================
-  // RELIC DRAFT MODAL & RUN END CHRONICLE MODAL
+  // 유물 선택, 원정 결과
   // =========================================================================
   openRelicDraftModal(choices, rerollsLeft) {
     const modal = document.getElementById('relic-draft-modal');
@@ -1337,7 +1340,7 @@ class ArgoniaApp {
 
     modal.classList.remove('hidden');
     if (rerollBtn) {
-      rerollBtn.textContent = `🎲 선택지 재추첨 (남은 횟수: ${rerollsLeft})`;
+      rerollBtn.textContent = `다시 뽑기 (남은 횟수 ${rerollsLeft})`;
       rerollBtn.disabled = rerollsLeft <= 0;
     }
 
@@ -1352,11 +1355,11 @@ class ArgoniaApp {
         return `
           <div class="relic-choice-card" data-relic-id="${r.id}">
             <div class="relic-big-icon">${r.icon}</div>
-            <span class="badge-pill gold-badge">${r.rarity.toUpperCase()}</span>
+            <span class="badge-pill gold-badge">${RARITY_KO[r.rarity] || r.rarity}</span>
             <h3 style="font-size:16px;color:#fff;">${r.name}</h3>
             <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:center;">${synBadges}</div>
             <p style="font-size:12px;color:#cbd5e1;line-height:1.45;">${r.desc}</p>
-            <small style="font-size:10px;color:#64748b;margin-top:auto;">"${r.lore || ''}"</small>
+            <small style="font-size:10.5px;color:var(--text-muted);margin-top:auto;line-height:1.4;">${r.lore || ''}</small>
           </div>
         `;
       })
@@ -1386,27 +1389,27 @@ class ArgoniaApp {
     }
 
     headerEl.innerHTML = `
-      <div class="relic-crown-badge">${summary.victory ? '👑 REALM CONQUERED' : '⚔️ VALIANT LAST STAND'}</div>
+      <div class="relic-crown-badge">${summary.victory ? '영토 평정' : '방어 실패'}</div>
       <h2 style="font-size:24px;color:${summary.victory ? '#fde047' : '#fda4af'};margin-bottom:4px;">
-        ${summary.victory ? `${summary.realmName} 완벽 평정!` : `${summary.realmName} 제${summary.wave}야 방어전 종료`}
+        ${summary.victory ? `${summary.realmName} 평정` : `${summary.realmName} · ${summary.wave}일차 방어 종료`}
       </h2>
       <p style="font-size:13px;color:#cbd5e1;">
-        원정 보상으로 <strong style="color:#fde047;">+${summary.crownsEarned} 👑 별빛 왕관</strong>을 획득했습니다!
+        별빛 왕관 <strong style="color:#fde047;">${summary.crownsEarned}개</strong>를 얻었습니다.
       </p>
     `;
 
     statsEl.innerHTML = `
       <div class="lifetime-stats-box" style="margin-top:8px;">
-        <div class="stat-mini-box"><span>도달 웨이브</span><strong>제${summary.wave}야</strong></div>
+        <div class="stat-mini-box"><span>도달 일차</span><strong>${summary.wave}일차</strong></div>
         <div class="stat-mini-box"><span>최종 점수</span><strong>${summary.score.toLocaleString()}</strong></div>
-        <div class="stat-mini-box"><span>적군 처치</span><strong>${summary.enemiesSlain.toLocaleString()}</strong></div>
+        <div class="stat-mini-box"><span>처치한 적</span><strong>${summary.enemiesSlain.toLocaleString()}</strong></div>
         <div class="stat-mini-box"><span>보스 토벌</span><strong>${summary.bossesDefeated}</strong></div>
         <div class="stat-mini-box"><span>채굴 금화</span><strong>${summary.goldMined.toLocaleString()}G</strong></div>
-        <div class="stat-mini-box"><span>획득 왕관</span><strong>+${summary.crownsEarned} 👑</strong></div>
+        <div class="stat-mini-box"><span>획득 왕관</span><strong>${summary.crownsEarned} 👑</strong></div>
       </div>
     `;
 
-    // Render 3D scene once and generate 1920x1080 Chronicle Poster preview
+    // 3D 장면을 한 번 그려 포스터 미리보기를 만듭니다.
     this.sceneManager.render();
     const poster = generateChroniclePoster(summary, this.canvas);
     if (posterImg && poster?.dataUrl) {
@@ -1415,13 +1418,13 @@ class ArgoniaApp {
   }
 
   // =========================================================================
-  // MAIN 60FPS ANIMATION LOOP
+  // 메인 루프
   // =========================================================================
   loop(now) {
     const dt = Math.min(0.1, (now - this.lastFrameTime) / 1000);
     this.lastFrameTime = now;
 
-    // Poll WASD / Arrow movement input
+    // 이동 입력
     let moveX = 0;
     let moveZ = 0;
     if (this.keysDown.has('KeyW') || this.keysDown.has('ArrowUp')) moveZ -= 1;
@@ -1429,7 +1432,7 @@ class ArgoniaApp {
     if (this.keysDown.has('KeyA') || this.keysDown.has('ArrowLeft')) moveX -= 1;
     if (this.keysDown.has('KeyD') || this.keysDown.has('ArrowRight')) moveX += 1;
 
-    // Rotate movement vector by cameraYaw so WASD always matches screen orientation
+    // 카메라가 돌아간 만큼 입력 방향도 같이 돌립니다.
     if (moveX !== 0 || moveZ !== 0) {
       const cos = Math.cos(this.sceneManager.cameraYaw);
       const sin = Math.sin(this.sceneManager.cameraYaw);
@@ -1440,7 +1443,7 @@ class ArgoniaApp {
     }
 
     if (this.engine.isPaused) {
-      // Gently orbit camera when Command Hub is open for a gorgeous live 3D title screen!
+      // 사령부가 열려 있는 동안에는 카메라를 천천히 돌립니다.
       this.sceneManager.cameraYaw += dt * 0.12;
     } else {
       if (this.keysDown.has('KeyZ')) this.sceneManager.cameraYaw -= dt * 1.65;

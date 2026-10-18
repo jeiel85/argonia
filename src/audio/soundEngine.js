@@ -1,6 +1,5 @@
 /**
- * @fileoverview Argonia Procedural WebAudio Sound & Music Engine
- * 100% zero-asset procedural synthesis for medieval-fantasy tactical defense.
+ * WebAudio로 효과음과 배경 음악을 합성합니다.
  */
 
 const MIDI_TO_FREQ = (midi) => 440 * Math.pow(2, (midi - 69) / 12);

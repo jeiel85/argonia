@@ -1,6 +1,6 @@
 /**
  * ARGONIA: Crown of the Spire
- * 18 Distinct Enemy Archetypes + 5 Multi-Phase Act Bosses
+ * 적 18종과 다단계 보스 5종.
  */
 
 export const ENEMIES = {
@@ -25,7 +25,7 @@ export const ENEMIES = {
     color: 0x65a30d,
     accentColor: 0xd97706,
     behavior: 'standard',
-    desc: '무리를 지어 빠르게 달려드는 약탈병. 개별 체력은 낮지만 숫자에 주의해야 합니다.',
+    desc: '여럿이 한꺼번에 달려듭니다. 하나는 약하지만 수로 밀어붙입니다.',
   },
   shield_orc: {
     id: 'shield_orc',
@@ -47,7 +47,7 @@ export const ENEMIES = {
     color: 0x3f6212,
     accentColor: 0x64748b,
     behavior: 'tank',
-    desc: '두꺼운 철제 방패로 물리 화살 피해를 30% 경감시키는 전열 돌파병입니다.',
+    desc: '철제 방패로 물리 피해를 30% 막습니다. 앞에 세워 두면 길이 막힙니다.',
   },
   kobold_sapper: {
     id: 'kobold_sapper',
@@ -69,7 +69,7 @@ export const ENEMIES = {
     color: 0xea580c,
     accentColor: 0xfef08a,
     behavior: 'sapper', // Prioritizes walls & buildings, explodes on strike
-    desc: '화약통을 들고 성벽으로 돌진해 자폭 공격(구조물 2.5배 피해)을 가합니다.',
+    desc: '성벽으로 달려가 터집니다. 구조물에 2.5배 피해를 줍니다.',
   },
   warg_rider: {
     id: 'warg_rider',
@@ -91,7 +91,7 @@ export const ENEMIES = {
     color: 0x475569,
     accentColor: 0xef4444,
     behavior: 'hunter', // Prioritizes hero or exposed economy buildings
-    desc: '매우 빠른 기동력으로 방어선이 약한 농장과 영웅을 노리는 기마 습격자입니다.',
+    desc: '빠릅니다. 방어가 빈 농장이나 군주를 먼저 노립니다.',
   },
   dark_shaman: {
     id: 'dark_shaman',
@@ -114,7 +114,7 @@ export const ENEMIES = {
     accentColor: 0x22c55e,
     behavior: 'healer', // Periodically heals nearby enemies
     healPulseAmount: 35,
-    desc: '후방에서 원거리 주술탄을 쏘며 3.5초마다 주변 적군의 체력을 회복시킵니다.',
+    desc: '뒤에서 주술을 쏘고 3.5초마다 주변 적을 치료합니다. 먼저 끊는 게 좋습니다.',
   },
   siege_ram: {
     id: 'siege_ram',
@@ -136,7 +136,7 @@ export const ENEMIES = {
     color: 0x78350f,
     accentColor: 0x94a3b8,
     behavior: 'siege',
-    desc: '거대한 통나무 파성추와 철갑 지붕을 갖춘 중장갑 공성 병기입니다.',
+    desc: '느리지만 단단합니다. 성벽을 정면으로 두들깁니다.',
   },
 
   // === ACT II: FROSTPEAK CALDERA ===
@@ -160,7 +160,7 @@ export const ENEMIES = {
     color: 0xbae6fd,
     accentColor: 0x38bdf8,
     behavior: 'standard',
-    desc: '눈보라 속에서 무리 지어 질주하는 냉기 야수입니다.',
+    desc: '눈보라 속에서 무리로 달려듭니다.',
   },
   ice_wraith: {
     id: 'ice_wraith',
@@ -182,7 +182,7 @@ export const ENEMIES = {
     color: 0x06b6d4,
     accentColor: 0xe0f2fe,
     behavior: 'flying_ranged', // Bypasses walls, slows targets
-    desc: '성벽을 넘어 부유하며 포탑의 공격 속도를 얼어붙게 만드는 비행 망령입니다.',
+    desc: '성벽을 넘어 날아다니며 포탑의 공격 속도를 늦춥니다.',
   },
   frost_mammoth: {
     id: 'frost_mammoth',
@@ -204,7 +204,7 @@ export const ENEMIES = {
     color: 0x0284c7,
     accentColor: 0xf8fafc,
     behavior: 'siege',
-    desc: '압도적인 체력과 상아 돌격으로 성벽과 전열 보병을 짓밟는 거대 야수입니다.',
+    desc: '체력이 높고 상아로 성벽과 전열을 밀어냅니다.',
   },
 
   // === ACT III: CRIMSON DUNE OASIS ===
@@ -228,7 +228,7 @@ export const ENEMIES = {
     color: 0xd97706,
     accentColor: 0xfef08a,
     behavior: 'hunter',
-    desc: '모래바람을 타고 빠르게 파고들어 치명적인 독침 공격을 가합니다.',
+    desc: '모래를 타고 파고들어 독침을 꽂습니다.',
   },
   dune_necromancer: {
     id: 'dune_necromancer',
@@ -250,7 +250,7 @@ export const ENEMIES = {
     color: 0x9333ea,
     accentColor: 0xfbbf24,
     behavior: 'summoner', // Periodically spawns skeleton minions
-    desc: '전장을 가로지르며 주기적으로 고대 해골 병사를 소환하는 위험한 마법사입니다.',
+    desc: '해골 병사를 계속 불러냅니다. 살아 있는 한 끝이 없습니다.',
   },
   skeleton_warrior: {
     id: 'skeleton_warrior',
@@ -272,7 +272,7 @@ export const ENEMIES = {
     color: 0xe2e8f0,
     accentColor: 0xf59e0b,
     behavior: 'standard',
-    desc: '강령술사와 파라오의 부름에 의해 모래 속에서 끝없이 되살아나는 언데드 보병입니다.',
+    desc: '모래에서 다시 일어납니다. 강령술사와 함께 나오면 처리 순서가 중요합니다.',
   },
   scorpion_juggernaut: {
     id: 'scorpion_juggernaut',
@@ -294,7 +294,7 @@ export const ENEMIES = {
     color: 0xb45309,
     accentColor: 0x10b981,
     behavior: 'tank',
-    desc: '황금 갑각과 맹독 꼬리포를 지닌 사막의 중장갑 괴수입니다.',
+    desc: '황금 갑각에 맹독 꼬리포. 사막의 중장갑입니다.',
   },
 
   // === ACT IV: ASHEN FORGE & MAGMA RIFT ===
@@ -318,7 +318,7 @@ export const ENEMIES = {
     color: 0xdc2626,
     accentColor: 0xf97316,
     behavior: 'hunter',
-    desc: '불타는 송곳니로 아군 병영과 영웅을 물어뜯는 초고속 화염 마수입니다.',
+    desc: '불붙은 송곳니로 병영과 군주를 물고 빠집니다.',
   },
   magma_golem: {
     id: 'magma_golem',
@@ -340,7 +340,7 @@ export const ENEMIES = {
     color: 0x7f1d1d,
     accentColor: 0xfb923c,
     behavior: 'splitter', // Splits into 2 ember cores on death
-    desc: '파괴될 때 2개의 소형 용암 정령으로 분열하는 거대 암석 골렘입니다.',
+    desc: '죽으면 작은 용암 정령 둘로 갈라집니다.',
   },
   chaos_wyvern: {
     id: 'chaos_wyvern',
@@ -362,7 +362,7 @@ export const ENEMIES = {
     color: 0x991b1b,
     accentColor: 0xfbbf24,
     behavior: 'flying_ranged',
-    desc: '하늘에서 성벽을 무시하고 날아와 성채와 타워에 화염 브레스를 퍼붓습니다.',
+    desc: '성벽을 넘어 성채와 포탑에 불을 뿜습니다.',
   },
 
   // === ACT V: ARGONIA ASTRAL CITADEL ===
@@ -386,7 +386,7 @@ export const ENEMIES = {
     color: 0x581c87,
     accentColor: 0xf43f5e,
     behavior: 'hunter',
-    desc: '차원 도약으로 전열을 파고들어 막대한 공허 베기 피해를 입히는 정예 학살자입니다.',
+    desc: '차원을 넘어 전열로 파고들어 크게 벱니다.',
   },
   astral_archon: {
     id: 'astral_archon',
@@ -408,7 +408,7 @@ export const ENEMIES = {
     color: 0x312e81,
     accentColor: 0x38bdf8,
     behavior: 'flying_ranged',
-    desc: '공중에서 반중력 성좌 파동을 발사하며 주변 적군에게 보호막을 부여하는 고위 존재입니다.',
+    desc: '공중에서 파동을 쏘고 주변 적에게 보호막을 씌웁니다.',
   },
 
   // =========================================================================
@@ -438,7 +438,7 @@ export const ENEMIES = {
     behavior: 'boss',
     bossAbility: 'earthshatter_slam',
     abilityCooldown: 8.5,
-    desc: '거대한 강철 파성추를 휘두르며 8.5초마다 대지 분쇄 충격파를 일으켜 주변 성벽과 병사를 기절시킵니다.',
+    desc: '8.5초마다 대지를 내리쳐 주변 성벽과 병사를 기절시킵니다.',
   },
   boss_borealis: {
     id: 'boss_borealis',
@@ -464,7 +464,7 @@ export const ENEMIES = {
     behavior: 'boss',
     bossAbility: 'blizzard_breath',
     abilityCooldown: 7.5,
-    desc: '절대영도의 눈보라 브레스로 포탑들을 4초간 빙결시키고 얼음 망령들을 소환하는 고대 빙룡입니다.',
+    desc: '눈보라 브레스로 포탑을 4초 얼리고 얼음 망령을 부릅니다.',
   },
   boss_akhen_ra: {
     id: 'boss_akhen_ra',
@@ -490,7 +490,7 @@ export const ENEMIES = {
     behavior: 'boss',
     bossAbility: 'royal_legion_arise',
     abilityCooldown: 8.0,
-    desc: '태양신전의 저주받은 지팡이로 모래폭풍 레이저를 쏘며, 죽은 모래 해골 군단을 끊임없이 소환합니다.',
+    desc: '모래폭풍 광선을 쏘고 해골 군단을 계속 소환합니다.',
   },
   boss_ignis_valkor: {
     id: 'boss_ignis_valkor',
@@ -516,7 +516,7 @@ export const ENEMIES = {
     behavior: 'boss',
     bossAbility: 'meteor_cataclysm',
     abilityCooldown: 7.0,
-    desc: '걸음마다 용암 지대를 남기며, 하늘에서 화산 운석 폭우를 떨어뜨려 왕국 방어선을 초토화합니다.',
+    desc: '지나간 자리에 용암이 남고, 하늘에서 운석이 떨어집니다.',
   },
   boss_malakor: {
     id: 'boss_malakor',
@@ -542,7 +542,7 @@ export const ENEMIES = {
     behavior: 'boss',
     bossAbility: 'astral_annihilation',
     abilityCooldown: 6.5,
-    desc: '3페이즈에 걸쳐 차원 균열 포탈 개방, 궤도 암흑 레이저 폭격, 초신성 붕괴를 시전하는 아르고니아 최후의 재앙입니다.',
+    desc: '세 국면에 걸쳐 차원문을 열고 궤도 폭격과 초신성 붕괴를 씁니다.',
   },
 };
 
