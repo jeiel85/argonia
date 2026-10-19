@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { assetLoader, MODEL_SPECS } from './assetLoader.js';
 
-// 브라우저에서 GLB 모델을 미리 불러옵니다.
+// Preload Blender 5.2 GLB models automatically in browser environment
 if (typeof window !== 'undefined') {
   assetLoader.preloadAll();
 }
@@ -188,11 +188,12 @@ export function createHeroMesh(heroDef) {
   const blenderInst = assetLoader.instantiate(modelKey);
   if (blenderInst) {
     bodyGroup.add(blenderInst.wrapper);
+    if (blenderInst.rotators?.length) rotators.push(...blenderInst.rotators);
     group.add(bodyGroup);
     group.userData = {
       heroId,
       bodyGroup,
-      weaponGroup,
+      weaponGroup: blenderInst.weaponGroup || weaponGroup,
       auraRing,
       innerDisc,
       rotators,
@@ -361,7 +362,7 @@ export function createHeroMesh(heroDef) {
     baseY: 0,
   };
 
-  // Blender 모델 로딩이 끝나면 절차적 메시와 교체합니다.
+  // Seamless hot-swap callback once Blender model finishes loading in background
   if (MODEL_SPECS[modelKey]) {
     assetLoader.onReady(modelKey, () => {
       if (group.parent) {
@@ -371,6 +372,13 @@ export function createHeroMesh(heroDef) {
         const newInst = assetLoader.instantiate(modelKey);
         if (newInst) {
           bodyGroup.add(newInst.wrapper);
+          if (newInst.weaponGroup) {
+            group.userData.weaponGroup = newInst.weaponGroup;
+          }
+          if (newInst.rotators?.length) {
+            rotators.length = 0;
+            rotators.push(...newInst.rotators);
+          }
           group.userData.isBlenderModel = true;
         }
       }
@@ -479,6 +487,48 @@ export function createBuildingMesh(typeId, tier = 1, evolutionId = null) {
   const fireGlow = getStdMat(0xfb923c, 0.2, 0.2, 0xea580c, 1.2);
   const frostGlow = getStdMat(0x7dd3fc, 0.15, 0.4, 0x0284c7, 1.0);
   const arcaneGlow = getStdMat(0xc084fc, 0.15, 0.35, 0x9333ea, 1.2);
+
+  const bldgKey = `bldg_${typeId}`;
+  const applyBlenderBuilding = (inst) => {
+    group.add(inst.wrapper);
+    if (inst.rotators?.length) rotators.push(...inst.rotators);
+    if (inst.floaters?.length) floaters.push(...inst.floaters);
+    if (inst.windmillBlades) windmillBlades = inst.windmillBlades;
+    if (inst.turretHead) turretHead = inst.turretHead;
+
+    // Add bespoke Evolution Halo Ring when building reaches Tier-3 Evolution
+    if (evolutionId) {
+      const evoMat = evolutionId.includes('solar') || evolutionId.includes('magma')
+        ? fireGlow
+        : evolutionId.includes('frost') || evolutionId.includes('sniper') || evolutionId.includes('rune')
+          ? argonGlow
+          : arcaneGlow;
+      const ringY = typeId === 'citadel' ? 6.4 : 2.35;
+      const ringScale = typeId === 'citadel' ? 1.45 : 0.92;
+      const evoRing = makeMesh(COMMON_GEOS.torusLow(), evoMat, 0, ringY, 0, Math.PI / 2.2, 0, 0, ringScale, ringScale, ringScale);
+      group.add(evoRing);
+      rotators.push({ mesh: evoRing, speedZ: -2.2, speedX: 1.1 });
+    }
+  };
+
+  if (MODEL_SPECS[bldgKey]) {
+    const blenderBldg = assetLoader.instantiate(bldgKey);
+    if (blenderBldg) {
+      applyBlenderBuilding(blenderBldg);
+      group.scale.setScalar(tierScale);
+      group.userData = {
+        typeId,
+        tier: clampedTier,
+        evolutionId,
+        rotators,
+        floaters,
+        windmillBlades,
+        turretHead,
+        isBlenderModel: true,
+      };
+      return group;
+    }
+  }
 
   switch (typeId) {
     case 'citadel': {
@@ -791,6 +841,27 @@ export function createBuildingMesh(typeId, tier = 1, evolutionId = null) {
     turretHead,
   };
 
+  if (MODEL_SPECS[bldgKey]) {
+    assetLoader.onReady(bldgKey, () => {
+      if (group.parent) {
+        while (group.children.length > 0) {
+          group.remove(group.children[0]);
+        }
+        rotators.length = 0;
+        floaters.length = 0;
+        windmillBlades = null;
+        turretHead = null;
+        const newInst = assetLoader.instantiate(bldgKey);
+        if (newInst) {
+          applyBlenderBuilding(newInst);
+          group.userData.windmillBlades = windmillBlades;
+          group.userData.turretHead = turretHead;
+          group.userData.isBlenderModel = true;
+        }
+      }
+    });
+  }
+
   return group;
 }
 
@@ -1005,13 +1076,31 @@ export function createEnemyMesh(enemyDef = {}) {
     group.add(menaceRing);
   }
 
-  // If this is a colossal Act Boss and Blender model is loaded
-  if (isBoss && MODEL_SPECS[id]) {
-    const blenderInst = assetLoader.instantiate(id);
+  const enemyModelKey = isBoss && MODEL_SPECS[id]
+    ? id
+    : isFlying
+      ? 'enemy_flier'
+      : id.includes('spider') || id.includes('scorpion') || id.includes('scarab') || id.includes('hound') || id.includes('boar')
+        ? 'enemy_beast'
+        : id.includes('golem') || id.includes('juggernaut') || id.includes('colossus') || id.includes('troll') || id.includes('behemoth')
+          ? 'enemy_golem'
+          : 'enemy_infantry';
+
+  const tintOpts = isBoss ? {} : { primaryColor: primaryHex, accentColor: accentHex };
+
+  if (MODEL_SPECS[enemyModelKey]) {
+    const blenderInst = assetLoader.instantiate(enemyModelKey, tintOpts);
     if (blenderInst) {
+      if (isFlying && !isBoss) {
+        bodyGroup.position.y = 2.6;
+      }
       bodyGroup.add(blenderInst.wrapper);
+      hitMeshes.length = 0;
       if (blenderInst.hitMeshes?.length > 0) {
         hitMeshes.push(...blenderInst.hitMeshes);
+      }
+      if (blenderInst.wings?.length > 0) {
+        wings.push(...blenderInst.wings);
       }
       bodyGroup.scale.setScalar(baseScale);
       group.add(bodyGroup);
@@ -1022,6 +1111,8 @@ export function createEnemyMesh(enemyDef = {}) {
         isBoss,
         baseY: isFlying ? 2.6 : 0,
         bodyGroup,
+        weaponGroup: blenderInst.weaponGroup || null,
+        rotators: blenderInst.rotators || [],
         wings,
         hitMeshes,
         originalColors: hitMeshes.map((m) => m.color.getHex()),
@@ -1036,37 +1127,27 @@ export function createEnemyMesh(enemyDef = {}) {
     // ------------------------------------------------------------------------
     // 5 COLOSSAL ACT BOSSES
     // ------------------------------------------------------------------------
-    // Broad Armored Torso + Horned Crown + Glowing Core + Massive Weapon
     bodyGroup.add(makeMesh(COMMON_GEOS.box(), primaryMat, 0, 1.15, 0, 0, 0, 0, 1.15, 1.35, 0.82));
-    bodyGroup.add(makeMesh(COMMON_GEOS.octa(), accentMat, 0, 1.25, 0.42, 0, 0, 0, 0.32, 0.42, 0.22)); // Glowing chest core
-    // Legs
+    bodyGroup.add(makeMesh(COMMON_GEOS.octa(), accentMat, 0, 1.25, 0.42, 0, 0, 0, 0.32, 0.42, 0.22));
     bodyGroup.add(makeMesh(COMMON_GEOS.box(), darkArmorMat, -0.36, 0.38, 0, 0, 0, 0, 0.36, 0.76, 0.38));
     bodyGroup.add(makeMesh(COMMON_GEOS.box(), darkArmorMat, 0.36, 0.38, 0, 0, 0, 0, 0.36, 0.76, 0.38));
-    // Massive Pauldrons
     bodyGroup.add(makeMesh(COMMON_GEOS.dodeca(), darkArmorMat, -0.78, 1.62, 0, 0, 0, 0, 0.42, 0.38, 0.42));
     bodyGroup.add(makeMesh(COMMON_GEOS.dodeca(), darkArmorMat, 0.78, 1.62, 0, 0, 0, 0, 0.42, 0.38, 0.42));
-    // Head + Twin Curved Horns
     bodyGroup.add(makeMesh(COMMON_GEOS.sphereLow(), primaryMat, 0, 2.05, 0.08, 0, 0, 0, 0.38, 0.4, 0.38));
     bodyGroup.add(makeMesh(COMMON_GEOS.cone4(), accentMat, -0.34, 2.42, 0.05, 0.2, 0, 0.45, 0.14, 0.65, 0.14));
     bodyGroup.add(makeMesh(COMMON_GEOS.cone4(), accentMat, 0.34, 2.42, 0.05, 0.2, 0, -0.45, 0.14, 0.65, 0.14));
 
     if (id === 'boss_malakor' || id === 'boss_ignis_valkor' || isFlying) {
-      // Colossal Dragon/Void Wings
       const leftWing = makeMesh(COMMON_GEOS.box(), accentMat, -0.95, 1.65, -0.35, 0.2, 0.3, 0.3, 1.35, 0.75, 0.1);
       const rightWing = makeMesh(COMMON_GEOS.box(), accentMat, 0.95, 1.65, -0.35, 0.2, -0.3, -0.3, 1.35, 0.75, 0.1);
       bodyGroup.add(leftWing, rightWing);
       wings.push({ left: leftWing, right: rightWing });
     }
 
-    // Boss Cleaver / Greatmaul
     bodyGroup.add(makeMesh(COMMON_GEOS.cyl6(), darkArmorMat, 0.88, 1.25, 0.45, 0.4, 0, 0, 0.1, 1.85, 0.1));
     bodyGroup.add(makeMesh(COMMON_GEOS.box(), accentMat, 0.88, 1.95, 0.82, 0.4, 0, 0, 0.55, 0.68, 0.32));
 
   } else if (isFlying) {
-    // ------------------------------------------------------------------------
-    // FLYING ENEMIES (Harpy, Frost Wyrmling, Solar Phoenix, Magma Gargoyle, Void Seraph)
-    // Elevated at y = 2.6 so their air layer is unmistakable!
-    // ------------------------------------------------------------------------
     bodyGroup.position.y = 2.6;
     bodyGroup.add(makeMesh(COMMON_GEOS.octa(), primaryMat, 0, 0, 0, Math.PI / 2.4, 0, 0, 0.38, 0.72, 0.34));
     bodyGroup.add(makeMesh(COMMON_GEOS.sphereLow(), accentMat, 0, 0.18, 0.42, 0, 0, 0, 0.22, 0.22, 0.26));
@@ -1078,9 +1159,6 @@ export function createEnemyMesh(enemyDef = {}) {
     wings.push({ left: leftWing, right: rightWing });
 
   } else if (id.includes('spider') || id.includes('scorpion') || id.includes('scarab') || id.includes('hound') || id.includes('boar')) {
-    // ------------------------------------------------------------------------
-    // BEASTS / ARACHNIDS / SWARMERS
-    // ------------------------------------------------------------------------
     bodyGroup.add(makeMesh(COMMON_GEOS.sphereLow(), primaryMat, 0, 0.42, -0.12, 0, 0, 0, 0.46, 0.36, 0.58));
     bodyGroup.add(makeMesh(COMMON_GEOS.sphereLow(), accentMat, 0, 0.46, 0.42, 0, 0, 0, 0.28, 0.26, 0.28));
     for (let s = -1; s <= 1; s += 2) {
@@ -1089,9 +1167,6 @@ export function createEnemyMesh(enemyDef = {}) {
     }
 
   } else if (id.includes('golem') || id.includes('juggernaut') || id.includes('colossus') || id.includes('troll') || id.includes('behemoth')) {
-    // ------------------------------------------------------------------------
-    // HEAVY SIEGE GOLEMS & JUGGERNAUTS
-    // ------------------------------------------------------------------------
     bodyGroup.add(makeMesh(COMMON_GEOS.dodeca(), primaryMat, 0, 0.92, 0, 0, 0, 0, 0.68, 0.78, 0.58));
     bodyGroup.add(makeMesh(COMMON_GEOS.octa(), accentMat, 0, 0.98, 0.35, 0, 0, 0, 0.24, 0.32, 0.2));
     bodyGroup.add(makeMesh(COMMON_GEOS.box(), darkArmorMat, -0.28, 0.3, 0, 0, 0, 0, 0.28, 0.6, 0.3));
@@ -1100,13 +1175,10 @@ export function createEnemyMesh(enemyDef = {}) {
     bodyGroup.add(makeMesh(COMMON_GEOS.box(), primaryMat, 0.62, 0.85, 0.15, -0.3, 0, 0, 0.28, 0.72, 0.28));
 
   } else {
-    // ------------------------------------------------------------------------
-    // HUMANOID INFANTRY / CASTERS / RAIDERS
-    // ------------------------------------------------------------------------
     bodyGroup.add(makeMesh(COMMON_GEOS.box(), primaryMat, 0, 0.68, 0, 0, 0, 0, 0.48, 0.65, 0.34));
     bodyGroup.add(makeMesh(COMMON_GEOS.sphereLow(), primaryMat, 0, 1.18, 0, 0, 0, 0, 0.22, 0.24, 0.22));
-    bodyGroup.add(makeMesh(COMMON_GEOS.box(), accentMat, 0, 1.2, 0.16, 0, 0, 0, 0.18, 0.08, 0.1)); // Glowing eyes
-    bodyGroup.add(makeMesh(COMMON_GEOS.box(), darkArmorMat, 0.34, 0.72, 0.25, 0.45, 0, 0, 0.1, 0.62, 0.12)); // Weapon
+    bodyGroup.add(makeMesh(COMMON_GEOS.box(), accentMat, 0, 1.2, 0.16, 0, 0, 0, 0.18, 0.08, 0.1));
+    bodyGroup.add(makeMesh(COMMON_GEOS.box(), darkArmorMat, 0.34, 0.72, 0.25, 0.45, 0, 0, 0.1, 0.62, 0.12));
   }
 
   bodyGroup.scale.setScalar(baseScale);
@@ -1118,25 +1190,33 @@ export function createEnemyMesh(enemyDef = {}) {
     isBoss,
     baseY: isFlying ? 2.6 : 0,
     bodyGroup,
+    weaponGroup: null,
+    rotators: [],
     wings,
     hitMeshes,
     originalColors: hitMeshes.map((m) => m.color.getHex()),
   };
 
-  // 보스 모델 로딩이 끝나면 절차적 메시와 교체합니다.
-  if (isBoss && MODEL_SPECS[id]) {
-    assetLoader.onReady(id, () => {
+  // Seamless hot-swap callback once Blender enemy/boss model finishes loading in background
+  if (MODEL_SPECS[enemyModelKey]) {
+    assetLoader.onReady(enemyModelKey, () => {
       if (group.parent) {
         while (bodyGroup.children.length > 0) {
           bodyGroup.remove(bodyGroup.children[0]);
         }
-        const newInst = assetLoader.instantiate(id);
+        const newInst = assetLoader.instantiate(enemyModelKey, tintOpts);
         if (newInst) {
           bodyGroup.add(newInst.wrapper);
           hitMeshes.length = 0;
           if (newInst.hitMeshes?.length > 0) {
             hitMeshes.push(...newInst.hitMeshes);
           }
+          wings.length = 0;
+          if (newInst.wings?.length > 0) {
+            wings.push(...newInst.wings);
+          }
+          group.userData.weaponGroup = newInst.weaponGroup || null;
+          group.userData.rotators = newInst.rotators || [];
           group.userData.originalColors = hitMeshes.map((m) => m.color.getHex());
           group.userData.isBlenderModel = true;
         }
@@ -1148,14 +1228,14 @@ export function createEnemyMesh(enemyDef = {}) {
 }
 
 /**
- * Animates an enemy or allied troop unit mesh (walking cadence, wing flap, hit flash).
+ * Animates an enemy or allied troop unit mesh (walking cadence, wing flap, weapon swing, hit flash).
  * @param {THREE.Group} group
  * @param {Object} animState
  * @param {number} elapsedTime
  */
 export function animateUnitMesh(group, animState = {}, elapsedTime = 0) {
   if (!group || !group.userData) return;
-  const { isFlying, baseY, bodyGroup, wings, hitMeshes, originalColors } = group.userData;
+  const { isFlying, baseY, bodyGroup, wings, weaponGroup, rotators, hitMeshes, originalColors } = group.userData;
   const hitFlash = animState.hitFlash || 0;
 
   if (bodyGroup) {
@@ -1166,6 +1246,18 @@ export function animateUnitMesh(group, animState = {}, elapsedTime = 0) {
       const walkPhase = elapsedTime * 10.5;
       bodyGroup.position.y = Math.abs(Math.sin(walkPhase)) * 0.10;
       bodyGroup.rotation.z = Math.sin(walkPhase) * 0.04;
+    }
+  }
+
+  if (weaponGroup) {
+    weaponGroup.rotation.x = Math.sin(elapsedTime * 6.5) * 0.22;
+  }
+
+  if (rotators && rotators.length > 0) {
+    for (let i = 0; i < rotators.length; i++) {
+      const r = rotators[i];
+      if (r.speedY) r.mesh.rotation.y = elapsedTime * r.speedY;
+      if (r.speedZ) r.mesh.rotation.z = elapsedTime * r.speedZ;
     }
   }
 
@@ -1201,6 +1293,36 @@ export function createTroopMesh(unitType = 'swordsman') {
   const wings = [];
   const isValkyrie = unitType === 'valkyrie';
   const isPaladin = unitType.includes('paladin');
+  const troopModelKey = isValkyrie ? 'troop_valkyrie' : isPaladin ? 'troop_paladin' : 'troop_swordsman';
+
+  // Allied Selection Ring
+  const ring = new THREE.Mesh(COMMON_GEOS.ringFlat(), getBasicRingMat(0x38bdf8, 0.45));
+  ring.rotation.x = -Math.PI / 2;
+  ring.position.y = 0.07;
+  ring.scale.setScalar(0.62);
+  group.add(ring);
+
+  if (MODEL_SPECS[troopModelKey]) {
+    const blenderTroop = assetLoader.instantiate(troopModelKey);
+    if (blenderTroop) {
+      bodyGroup.add(blenderTroop.wrapper);
+      if (blenderTroop.wings?.length) wings.push(...blenderTroop.wings);
+      group.add(bodyGroup);
+      const hitMeshes = blenderTroop.hitMeshes || [];
+      group.userData = {
+        unitType,
+        isFlying: false,
+        baseY: 0,
+        bodyGroup,
+        weaponGroup: blenderTroop.weaponGroup || null,
+        wings,
+        hitMeshes,
+        originalColors: hitMeshes.map((m) => m.color.getHex()),
+        isBlenderModel: true,
+      };
+      return group;
+    }
+  }
 
   const armorMat = new THREE.MeshStandardMaterial({
     color: new THREE.Color(isPaladin || isValkyrie ? 0xfef08a : 0xe2e8f0),
@@ -1216,17 +1338,10 @@ export function createTroopMesh(unitType = 'swordsman') {
   });
   const goldMat = getStdMat(0xf59e0b, 0.25, 0.85, 0xd97706, 0.35);
 
-  // Allied Selection Ring
-  const ring = new THREE.Mesh(COMMON_GEOS.ringFlat(), getBasicRingMat(0x38bdf8, 0.45));
-  ring.rotation.x = -Math.PI / 2;
-  ring.position.y = 0.07;
-  ring.scale.setScalar(0.62);
-  group.add(ring);
-
   // Torso & Helmet
   bodyGroup.add(makeMesh(COMMON_GEOS.box(), tabardMat, 0, 0.58, 0, 0, 0, 0, 0.42, 0.58, 0.32));
   bodyGroup.add(makeMesh(COMMON_GEOS.sphereLow(), armorMat, 0, 1.04, 0, 0, 0, 0, 0.2, 0.22, 0.2));
-  bodyGroup.add(makeMesh(COMMON_GEOS.cone4(), goldMat, 0, 1.28, -0.04, -0.2, 0, 0, 0.08, 0.25, 0.14)); // Plume
+  bodyGroup.add(makeMesh(COMMON_GEOS.cone4(), goldMat, 0, 1.28, -0.04, -0.2, 0, 0, 0.08, 0.25, 0.14));
 
   // Kite Shield on left
   bodyGroup.add(makeMesh(COMMON_GEOS.box(), goldMat, -0.28, 0.62, 0.12, 0, 0.2, 0, 0.08, 0.48, 0.34));
@@ -1241,15 +1356,38 @@ export function createTroopMesh(unitType = 'swordsman') {
   }
 
   group.add(bodyGroup);
+  const hitMeshes = [armorMat, tabardMat];
   group.userData = {
     unitType,
     isFlying: false,
     baseY: 0,
     bodyGroup,
+    weaponGroup: null,
     wings,
-    hitMeshes: [armorMat, tabardMat],
-    originalColors: [armorMat.color.getHex(), tabardMat.color.getHex()],
+    hitMeshes,
+    originalColors: hitMeshes.map((m) => m.color.getHex()),
   };
+
+  if (MODEL_SPECS[troopModelKey]) {
+    assetLoader.onReady(troopModelKey, () => {
+      if (group.parent) {
+        while (bodyGroup.children.length > 0) {
+          bodyGroup.remove(bodyGroup.children[0]);
+        }
+        const newInst = assetLoader.instantiate(troopModelKey);
+        if (newInst) {
+          bodyGroup.add(newInst.wrapper);
+          group.userData.weaponGroup = newInst.weaponGroup || null;
+          wings.length = 0;
+          if (newInst.wings?.length) wings.push(...newInst.wings);
+          hitMeshes.length = 0;
+          if (newInst.hitMeshes?.length) hitMeshes.push(...newInst.hitMeshes);
+          group.userData.originalColors = hitMeshes.map((m) => m.color.getHex());
+          group.userData.isBlenderModel = true;
+        }
+      }
+    });
+  }
 
   return group;
 }
@@ -1267,35 +1405,62 @@ export function createPortalMesh(portalDef = {}) {
   const group = new THREE.Group();
   group.name = `Portal_${portalDef.id || 'rift'}`;
 
-  const obsidianMat = getStdMat(0x1e1b4b, 0.38, 0.55);
-  const riftGlow = getStdMat(0xe879f9, 0.15, 0.3, 0xa21caf, 1.35);
-  const crimsonGlow = getStdMat(0xf43f5e, 0.2, 0.3, 0xbe123c, 1.15);
-
-  // Smooth Runic Platform
-  group.add(makeMesh(COMMON_GEOS.cyl8(), obsidianMat, 0, 0.16, 0, 0, 0, 0, 2.35, 0.32, 2.35));
-
-  // Twin Sculpted Obsidian Arch Pillars
-  group.add(makeMesh(COMMON_GEOS.cone4(), obsidianMat, -1.45, 1.65, 0, 0, 0, -0.16, 0.48, 3.2, 0.48));
-  group.add(makeMesh(COMMON_GEOS.cone4(), obsidianMat, 1.45, 1.65, 0, 0, 0, 0.16, 0.48, 3.2, 0.48));
-
-  // Rotating Vortex Rings
-  const ringOuter = makeMesh(COMMON_GEOS.torusLow(), riftGlow, 0, 1.85, 0, 0, 0, 0, 1.25, 1.25, 1.25);
-  const ringInner = makeMesh(COMMON_GEOS.torusLow(), crimsonGlow, 0, 1.85, 0, 0.3, 0.3, 0, 0.82, 0.82, 0.82);
-  group.add(ringOuter, ringInner);
-
   // Glowing Portal Core Disc
   const vortexCore = new THREE.Mesh(COMMON_GEOS.discFlat(), getBasicRingMat(0xc026d3, 0.52));
   vortexCore.position.set(0, 1.85, 0);
   vortexCore.scale.setScalar(1.1);
-  group.add(vortexCore);
+
+  const rotators = [];
+  const blenderPortal = assetLoader.instantiate('prop_portal');
+  if (blenderPortal) {
+    group.add(blenderPortal.wrapper);
+    group.add(vortexCore);
+    if (blenderPortal.rotators?.length) rotators.push(...blenderPortal.rotators);
+    group.userData = {
+      portalId: portalDef.id,
+      rotators,
+      isBlenderModel: true,
+    };
+    return group;
+  }
+
+  const obsidianMat = getStdMat(0x1e1b4b, 0.38, 0.55);
+  const riftGlow = getStdMat(0xe879f9, 0.15, 0.3, 0xa21caf, 1.35);
+  const crimsonGlow = getStdMat(0xf43f5e, 0.2, 0.3, 0xbe123c, 1.15);
+
+  group.add(makeMesh(COMMON_GEOS.cyl8(), obsidianMat, 0, 0.16, 0, 0, 0, 0, 2.35, 0.32, 2.35));
+  group.add(makeMesh(COMMON_GEOS.cone4(), obsidianMat, -1.45, 1.65, 0, 0, 0, -0.16, 0.48, 3.2, 0.48));
+  group.add(makeMesh(COMMON_GEOS.cone4(), obsidianMat, 1.45, 1.65, 0, 0, 0, 0.16, 0.48, 3.2, 0.48));
+
+  const ringOuter = makeMesh(COMMON_GEOS.torusLow(), riftGlow, 0, 1.85, 0, 0, 0, 0, 1.25, 1.25, 1.25);
+  const ringInner = makeMesh(COMMON_GEOS.torusLow(), crimsonGlow, 0, 1.85, 0, 0.3, 0.3, 0, 0.82, 0.82, 0.82);
+  group.add(ringOuter, ringInner, vortexCore);
+
+  rotators.push(
+    { mesh: ringOuter, speedZ: 1.6 },
+    { mesh: ringInner, speedZ: -2.4, speedX: 1.1 }
+  );
 
   group.userData = {
     portalId: portalDef.id,
-    rotators: [
-      { mesh: ringOuter, speedZ: 1.6 },
-      { mesh: ringInner, speedZ: -2.4, speedX: 1.1 },
-    ],
+    rotators,
   };
+
+  assetLoader.onReady('prop_portal', () => {
+    if (group.parent) {
+      while (group.children.length > 0) {
+        group.remove(group.children[0]);
+      }
+      rotators.length = 0;
+      const newInst = assetLoader.instantiate('prop_portal');
+      if (newInst) {
+        group.add(newInst.wrapper);
+        group.add(vortexCore);
+        if (newInst.rotators?.length) rotators.push(...newInst.rotators);
+        group.userData.isBlenderModel = true;
+      }
+    }
+  });
 
   return group;
 }
