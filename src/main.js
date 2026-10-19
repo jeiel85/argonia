@@ -29,6 +29,7 @@ import {
   buildShareText,
   BattleClipRecorder,
 } from './share/viralExporter.js';
+import { svgIcon, entitySvg } from './ui/svgIcons.js';
 
 class ArgoniaApp {
   constructor() {
@@ -57,11 +58,11 @@ class ArgoniaApp {
       if (!btn) return;
       if (isRecording) {
         btn.classList.add('recording');
-        btn.textContent = `⏹ ${sec}s`;
+        btn.textContent = `STOP ${sec}s`;
       } else {
         btn.classList.remove('recording');
-        btn.textContent = '⏺ REC';
-        this.showToast('🎬 60fps WebM 전투 클립이 저장되었습니다!', 'info');
+        btn.textContent = 'REC';
+        this.showToast('60fps WebM 전투 클립이 저장되었습니다.', 'info');
       }
     });
 
@@ -215,7 +216,7 @@ class ArgoniaApp {
     document.getElementById('btn-refund-sanctum')?.addEventListener('click', () => {
       const refunded = saveSystem.refundSanctumUpgrades();
       soundEngine.playSfx('gold_collect');
-      this.showToast(`🔄 성소 특성이 초기화되어 ${refunded} 👑 별빛 왕관이 환급되었습니다!`, 'gold');
+      this.showToast(`성소 특성이 초기화되어 ${refunded} 별빛 왕관이 환급되었습니다.`, 'gold');
       this.renderHubAll();
     });
 
@@ -223,7 +224,7 @@ class ArgoniaApp {
     document.getElementById('btn-export-save')?.addEventListener('click', () => {
       const json = saveSystem.exportJson();
       navigator.clipboard?.writeText(json);
-      this.showToast('📤 세이브 JSON 데이터가 클립보드에 복사되었습니다!', 'info');
+      this.showToast('세이브 JSON 데이터가 클립보드에 복사되었습니다.', 'info');
     });
 
     document.getElementById('btn-import-save')?.addEventListener('click', () => {
@@ -231,10 +232,10 @@ class ArgoniaApp {
       if (!raw) return;
       try {
         saveSystem.importJson(raw);
-        this.showToast('📥 세이브 데이터를 성공적으로 복원했습니다!', 'gold');
+        this.showToast('세이브 데이터를 성공적으로 복원했습니다.', 'gold');
         this.renderHubAll();
       } catch {
-        this.showToast('⚠️ 올바른 JSON 형식이 아닙니다.', 'danger');
+        this.showToast('올바른 JSON 형식이 아닙니다.', 'danger');
       }
     });
 
@@ -285,7 +286,7 @@ class ArgoniaApp {
         this.clipRecorder.stop();
       } else {
         this.clipRecorder.start(this.canvas, 15000);
-        this.showToast('⏺ 60fps 전투 영상 녹화 시작 (최대 15초, 다시 누르면 저장)', 'info');
+        this.showToast('60fps 전투 영상 녹화 시작 (최대 15초, 다시 누르면 저장)', 'info');
       }
     });
 
@@ -298,7 +299,7 @@ class ArgoniaApp {
           isEndless: snap.isEndless,
           realmName: snap.realm.name,
           heroName: snap.hero?.name || '성군 아르투리아',
-          heroIcon: snap.hero?.icon || '👑',
+          heroIcon: '◆',
           wave: snap.wave,
           score: snap.score,
           enemiesSlain: snap.enemiesSlain,
@@ -311,7 +312,7 @@ class ArgoniaApp {
         },
         this.canvas
       );
-      this.showToast('📸 4K 왕국 연대기 포스터 PNG가 다운로드되었습니다!', 'gold');
+      this.showToast('4K 왕국 연대기 포스터 PNG가 다운로드되었습니다.', 'gold');
     });
 
     document.getElementById('btn-zen-mode')?.addEventListener('click', () => {
@@ -584,15 +585,15 @@ class ArgoniaApp {
         return `
           <div class="select-card ${isSelected ? 'selected' : ''}" data-realm-idx="${r.index}">
             <div class="select-card-top">
-              <span class="select-card-title">${r.icon} ${r.name}</span>
+              <span class="select-card-title">${entitySvg(r, 15, '#f3cc68')} ${r.name}</span>
               <span class="badge-pill ${isCleared ? 'gold-badge' : ''}">
-                ${isCleared ? '👑 정복 완료' : `${r.totalWaves} WAVES`}
+                ${isCleared ? `${svgIcon('crown', 12, '#fde047')} 정복 완료` : `${r.totalWaves} WAVES`}
               </span>
             </div>
             <div class="select-card-desc">${r.desc}</div>
             <div class="hero-skills-mini">
               <span class="hero-skill-tag">${r.difficultyLabel}</span>
-              <span class="hero-skill-tag">보상: ${r.rewardCrowns} 👑</span>
+              <span class="hero-skill-tag">보상: ${r.rewardCrowns} ${svgIcon('crown', 11, '#fde047')}</span>
               <span class="hero-skill-tag">환경: ${r.hazard.name}</span>
             </div>
           </div>
@@ -618,16 +619,16 @@ class ArgoniaApp {
         return `
           <div class="select-card ${isSelected ? 'selected' : ''}" data-hero-id="${h.id}">
             <div class="select-card-top">
-              <span class="select-card-title">${h.icon} ${h.name} <small style="color:#94a3b8">(${h.title})</small></span>
+              <span class="select-card-title">${entitySvg(h, 15, '#f3cc68')} ${h.name} <small style="color:#94a3b8">(${h.title})</small></span>
               <span class="badge-pill ${unlocked ? 'gold-badge' : ''}">
-                ${unlocked ? (isSelected ? '출정 선택됨' : '사용 가능') : `🔒 ${h.unlockCost} 👑 해금`}
+                ${unlocked ? (isSelected ? '출정 선택됨' : '사용 가능') : `${svgIcon('lock', 11)} ${h.unlockCost} ${svgIcon('crown', 11, '#fde047')} 해금`}
               </span>
             </div>
             <div class="select-card-desc">${h.passive.name}: ${h.passive.desc}</div>
             <div class="hero-skills-mini">
-              <span class="hero-skill-tag">[Q] ${h.skills.q.icon} ${h.skills.q.name}</span>
-              <span class="hero-skill-tag">[E] ${h.skills.e.icon} ${h.skills.e.name}</span>
-              <span class="hero-skill-tag">[R] ${h.skills.r.icon} ${h.skills.r.name}</span>
+              <span class="hero-skill-tag">[Q] ${h.skills.q.name}</span>
+              <span class="hero-skill-tag">[E] ${h.skills.e.name}</span>
+              <span class="hero-skill-tag">[R] ${h.skills.r.name}</span>
             </div>
           </div>
         `;
@@ -644,7 +645,7 @@ class ArgoniaApp {
               return;
             }
             soundEngine.playSfx('relic_pick');
-            this.showToast(`🎉 새로운 군주 영웅 해금 완료!`, 'gold');
+            this.showToast('새로운 군주 영웅이 해금되었습니다.', 'gold');
           } else {
             soundEngine.playSfx('ui_click');
           }
@@ -668,8 +669,8 @@ class ArgoniaApp {
         return `
           <div class="select-card ${active ? 'selected' : ''}" data-skull-id="${sk.id}">
             <div class="select-card-top">
-              <span class="select-card-title">${sk.icon} ${sk.name}</span>
-              <span class="badge-pill ${active ? 'gold-badge' : ''}">+${Math.round((sk.crownBonusMult || sk.crownBonus || 0.25) * 100)}% 👑</span>
+              <span class="select-card-title">${svgIcon('skull', 14, active ? '#f87171' : '#94a3b8')} ${sk.name}</span>
+              <span class="badge-pill ${active ? 'gold-badge' : ''}">+${Math.round((sk.crownBonusMult || sk.crownBonus || 0.25) * 100)}% ${svgIcon('crown', 11, '#fde047')}</span>
             </div>
             <div class="select-card-desc">${sk.desc}</div>
           </div>
@@ -709,7 +710,7 @@ class ArgoniaApp {
     if (!sub) return;
     const r = REALMS[this.selectedRealmIndex];
     const h = getHeroById(this.selectedHeroId);
-    const modeStr = this.isEndlessMode ? '♾️ 무한의 심연' : `${r.totalWaves}야 캠페인`;
+    const modeStr = this.isEndlessMode ? '무한의 심연' : `${r.totalWaves}야 캠페인`;
     sub.textContent = `${r.name} (${modeStr}) · ${h.name}`;
   }
 
@@ -726,7 +727,7 @@ class ArgoniaApp {
         const items = SANCTUM_UPGRADES.filter((u) => u.branch === br.id);
         return `
           <div class="sanctum-branch-col">
-            <h3 style="font-size:14px;color:#fde047;margin-bottom:4px;">${br.name}</h3>
+            <h3 style="font-size:14px;color:#fde047;margin-bottom:4px;">${entitySvg(br, 15, '#fde047')} ${br.name}</h3>
             ${items
               .map((upg) => {
                 const lv = saveSystem.data.sanctumLevels[upg.id] || 0;
@@ -737,7 +738,7 @@ class ArgoniaApp {
                   <div class="sanctum-node-card">
                     <div>
                       <div style="font-size:12px;font-weight:800;color:#f8fafc;">
-                        ${upg.icon} ${upg.name} <span style="color:#38bdf8;">Lv.${lv}/${upg.maxLevel}</span>
+                        ${entitySvg(upg, 13, '#f3cc68')} ${upg.name} <span style="color:#38bdf8;">Lv.${lv}/${upg.maxLevel}</span>
                       </div>
                       <div style="font-size:11px;color:#94a3b8;">${upg.descPerLevel}</div>
                     </div>
@@ -746,7 +747,7 @@ class ArgoniaApp {
                 } style="border-color:${canAfford ? '#f59e0b' : '#334155'};color:${
                   canAfford ? '#fde047' : '#64748b'
                 }">
-                      ${isMax ? 'MAX' : `${cost} 👑`}
+                      ${isMax ? 'MAX' : `${cost} ${svgIcon('crown', 11, canAfford ? '#fde047' : '#64748b')}`}
                     </button>
                   </div>
                 `;
@@ -780,14 +781,14 @@ class ArgoniaApp {
           .map(
             (ev) =>
               `<div style="font-size:11px;color:#e9d5ff;background:rgba(168,85,247,0.14);padding:5px 7px;border-radius:6px;margin-top:4px;">
-                <strong>★ 궁극진화: ${ev.icon} ${ev.name}</strong><br/>${ev.desc}
+                <strong>★ 궁극진화: ${entitySvg(ev, 12, '#e9d5ff')} ${ev.name}</strong><br/>${ev.desc}
               </div>`
           )
           .join('');
         return `
           <div class="codex-item-card">
             <div style="display:flex;justify-content:space-between;align-items:center;">
-              <strong style="font-size:14px;color:#fde047;">${b.icon} ${b.name}</strong>
+              <strong style="font-size:14px;color:#fde047;">${entitySvg(b, 15, '#fde047')} ${b.name}</strong>
               <span class="badge-pill">${b.category.toUpperCase()}</span>
             </div>
             <p style="font-size:11px;color:#cbd5e1;">${b.desc}</p>
@@ -801,8 +802,8 @@ class ArgoniaApp {
         return `
           <div class="codex-item-card" style="border-color:${e.isBoss ? '#f43f5e' : 'rgba(148,163,184,0.22)'}">
             <div style="display:flex;justify-content:space-between;align-items:center;">
-              <strong style="font-size:14px;color:${e.isBoss ? '#fda4af' : '#f8fafc'};">${e.icon} ${e.name}</strong>
-              <span class="badge-pill">${e.isBoss ? '💀 ACT BOSS' : e.isFlying ? '🪽 공중' : '⚔️ 지상'}</span>
+              <strong style="font-size:14px;color:${e.isBoss ? '#fda4af' : '#f8fafc'};">${entitySvg(e, 15, e.isBoss ? '#fda4af' : '#f3cc68')} ${e.name}</strong>
+              <span class="badge-pill">${e.isBoss ? `${svgIcon('boss', 11, '#fda4af')} ACT BOSS` : e.isFlying ? `${svgIcon('wing', 11, '#38bdf8')} 공중` : `${svgIcon('swords', 11, '#cbd5e1')} 지상`}</span>
             </div>
             <p style="font-size:11px;color:#cbd5e1;">${e.desc}</p>
             <div style="font-size:11px;color:#94a3b8;">
@@ -816,7 +817,7 @@ class ArgoniaApp {
         .map(
           (s) => `
           <div class="codex-item-card" style="border-color:#a855f7;">
-            <strong style="font-size:14px;color:#e9d5ff;">${s.icon} [세트 시너지] ${s.name}</strong>
+            <strong style="font-size:14px;color:#e9d5ff;">${entitySvg(s, 15, '#e9d5ff')} [세트 시너지] ${s.name}</strong>
             <p style="font-size:11px;color:#cbd5e1;">${s.description || ''}</p>
             ${(s.tiers || [])
               .map((t) => `<div style="font-size:11px;color:#fde047;">• (${t.count}세트) ${t.label}</div>`)
@@ -830,7 +831,7 @@ class ArgoniaApp {
         (r) => `
         <div class="codex-item-card">
           <div style="display:flex;justify-content:space-between;align-items:center;">
-            <strong style="font-size:13px;color:#fde047;">${r.icon} ${r.name}</strong>
+            <strong style="font-size:13px;color:#fde047;">${entitySvg(r, 14, '#fde047')} ${r.name}</strong>
             <span class="badge-pill">${r.rarity.toUpperCase()}</span>
           </div>
           <p style="font-size:11px;color:#cbd5e1;">${r.desc}</p>
@@ -842,21 +843,21 @@ class ArgoniaApp {
     } else {
       grid.innerHTML = `
         <div class="codex-item-card">
-          <strong style="color:#fde047;">☀️ 1. 주간 정비 & 경제 부흥</strong>
+          <strong style="color:#fde047;">${svgIcon('sun', 14, '#fde047')} 1. 주간 정비 &amp; 경제 부흥</strong>
           <p style="font-size:12px;color:#cbd5e1;line-height:1.5;">
-            낮 동안 금광(🪙), 풍차 농장(🌾), 아르곤 정제소(💎)를 먼저 건설하세요. 여명이 밝을 때마다 모든 경제 건물이 막대한 자원을 생산하며, 파괴된 성벽과 포탑도 여명에 100% 무료 재건됩니다!
+            낮 동안 금광, 풍차 농장, 아르곤 정제소를 먼저 건설하세요. 여명이 밝을 때마다 모든 경제 건물이 막대한 자원을 생산하며, 파괴된 성벽과 포탑도 여명에 100% 무료 재건됩니다.
           </p>
         </div>
         <div class="codex-item-card">
-          <strong style="color:#38bdf8;">🏰 2. 3단계 강화 & 20종 궁극 특화 진화</strong>
+          <strong style="color:#38bdf8;">${svgIcon('citadel', 14, '#38bdf8')} 2. 3단계 강화 &amp; 20종 궁극 특화 진화</strong>
           <p style="font-size:12px;color:#cbd5e1;line-height:1.5;">
-            모든 건물은 Lv.3 달성 후 두 가지 궁극 진화 분기 중 하나를 선택할 수 있습니다. (예: 궁수탑 → 보스 학살용 [거신병 발리스타] vs 군단 섬멸용 [개틀링 석궁]). 단축키 [B]를 누르면 스마트 건설 감독관이 최적의 건물을 자동 증축합니다!
+            모든 건물은 Lv.3 달성 후 두 가지 궁극 진화 분기 중 하나를 선택할 수 있습니다. (예: 궁수탑 → 보스 학살용 [거신병 발리스타] vs 군단 섬멸용 [개틀링 석궁]). 단축키 [B]를 누르면 스마트 건설 감독관이 최적의 건물을 자동 증축합니다.
           </p>
         </div>
         <div class="codex-item-card">
-          <strong style="color:#a855f7;">⚔️ 3. 군주 직접 전투 & 전군 집결 [T]</strong>
+          <strong style="color:#a855f7;">${svgIcon('swords', 14, '#a855f7')} 3. 군주 직접 전투 &amp; 전군 집결 [T]</strong>
           <p style="font-size:12px;color:#cbd5e1;line-height:1.5;">
-            WASD 또는 마우스 클릭으로 군주를 이동하며 Q, E, R 스킬과 Space 돌격 대시를 사용하세요. 위험한 차원문 앞에는 [T] 키를 눌러 병영의 성기사와 발키리 부대를 즉시 집결시킬 수 있습니다.
+            WASD 또는 마우스 좌클릭으로 군주를 이동하며 Q, E, R 스킬과 Space 돌격 대시를 사용하세요. 위험한 차원문 앞에는 [T] 키를 눌러 병영의 성기사와 발키리 부대를 즉시 집결시킬 수 있습니다.
           </p>
         </div>
       `;
@@ -876,11 +877,11 @@ class ArgoniaApp {
           <div class="ach-card ${done ? 'unlocked' : ''}">
             <div>
               <div style="font-size:13px;font-weight:800;color:${done ? '#fde047' : '#cbd5e1'}">
-                ${a.icon} ${a.name} ${done ? '✓' : ''}
+                ${svgIcon('star', 13, done ? '#fde047' : '#64748b')} ${a.name} ${done ? '✓' : ''}
               </div>
               <div style="font-size:11px;color:#94a3b8;">${a.desc}</div>
             </div>
-            <span class="badge-pill gold-badge">+${a.rewardCrowns || 40} 👑</span>
+            <span class="badge-pill gold-badge">+${a.rewardCrowns || 40} ${svgIcon('crown', 11, '#fde047')}</span>
           </div>
         `;
       }).join('');
@@ -911,13 +912,13 @@ class ArgoniaApp {
           <div class="ach-card">
             <div>
               <div style="font-size:12px;font-weight:800;color:${h.victory ? '#fde047' : '#f8fafc'}">
-                ${h.victory ? '👑 승리' : '⚔️ 분전'} · ${h.realmName} (제${h.wave}야)
+                ${h.victory ? `${svgIcon('crown', 12, '#fde047')} 승리` : `${svgIcon('swords', 12, '#cbd5e1')} 분전`} · ${h.realmName} (제${h.wave}야)
               </div>
               <div style="font-size:11px;color:#94a3b8;">
                 ${h.heroName} · 점수 ${h.score.toLocaleString()} · 처치 ${h.enemiesSlain} · 시드 ${h.seed}
               </div>
             </div>
-            <span class="badge-pill gold-badge">+${h.crownsEarned} 👑</span>
+            <span class="badge-pill gold-badge">+${h.crownsEarned} ${svgIcon('crown', 11, '#fde047')}</span>
           </div>
         `
           )
@@ -1082,7 +1083,7 @@ class ArgoniaApp {
     const relicGridEl = document.getElementById('hud-relic-grid');
     if (relicGridEl) {
       relicGridEl.innerHTML = snap.ownedRelics
-        .map((r) => `<div class="relic-mini-icon" title="${r.name}: ${r.desc}">${r.icon}</div>`)
+        .map((r) => `<div class="relic-mini-icon" title="${r.name}: ${r.desc}">${entitySvg(r, 15, '#f3cc68')}</div>`)
         .join('');
     }
   }
@@ -1337,7 +1338,7 @@ class ArgoniaApp {
 
     modal.classList.remove('hidden');
     if (rerollBtn) {
-      rerollBtn.textContent = `🎲 선택지 재추첨 (남은 횟수: ${rerollsLeft})`;
+      rerollBtn.innerHTML = `${svgIcon('reroll', 13)} 선택지 재추첨 (남은 횟수: ${rerollsLeft})`;
       rerollBtn.disabled = rerollsLeft <= 0;
     }
 
@@ -1347,11 +1348,11 @@ class ArgoniaApp {
         const synBadges = synIds
           .map((sid) => SYNERGY_SETS[sid])
           .filter(Boolean)
-          .map((s) => `<span class="synergy-chip">${s.icon} ${s.name}</span>`)
+          .map((s) => `<span class="synergy-chip">${entitySvg(s, 11, '#fde047')} ${s.name}</span>`)
           .join(' ');
         return `
           <div class="relic-choice-card" data-relic-id="${r.id}">
-            <div class="relic-big-icon">${r.icon}</div>
+            <div class="relic-big-icon">${entitySvg(r, 28, '#f3cc68')}</div>
             <span class="badge-pill gold-badge">${r.rarity.toUpperCase()}</span>
             <h3 style="font-size:16px;color:#fff;">${r.name}</h3>
             <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:center;">${synBadges}</div>
@@ -1386,12 +1387,12 @@ class ArgoniaApp {
     }
 
     headerEl.innerHTML = `
-      <div class="relic-crown-badge">${summary.victory ? '👑 REALM CONQUERED' : '⚔️ VALIANT LAST STAND'}</div>
+      <div class="relic-crown-badge">${summary.victory ? `${svgIcon('crown', 13, '#fde047')} REALM CONQUERED` : `${svgIcon('swords', 13, '#fda4af')} VALIANT LAST STAND`}</div>
       <h2 style="font-size:24px;color:${summary.victory ? '#fde047' : '#fda4af'};margin-bottom:4px;">
         ${summary.victory ? `${summary.realmName} 완벽 평정!` : `${summary.realmName} 제${summary.wave}야 방어전 종료`}
       </h2>
       <p style="font-size:13px;color:#cbd5e1;">
-        원정 보상으로 <strong style="color:#fde047;">+${summary.crownsEarned} 👑 별빛 왕관</strong>을 획득했습니다!
+        원정 보상으로 <strong style="color:#fde047;">+${summary.crownsEarned} ${svgIcon('crown', 13, '#fde047')} 별빛 왕관</strong>을 획득했습니다!
       </p>
     `;
 
@@ -1402,7 +1403,7 @@ class ArgoniaApp {
         <div class="stat-mini-box"><span>적군 처치</span><strong>${summary.enemiesSlain.toLocaleString()}</strong></div>
         <div class="stat-mini-box"><span>보스 토벌</span><strong>${summary.bossesDefeated}</strong></div>
         <div class="stat-mini-box"><span>채굴 금화</span><strong>${summary.goldMined.toLocaleString()}G</strong></div>
-        <div class="stat-mini-box"><span>획득 왕관</span><strong>+${summary.crownsEarned} 👑</strong></div>
+        <div class="stat-mini-box"><span>획득 왕관</span><strong>+${summary.crownsEarned} ${svgIcon('crown', 12, '#fde047')}</strong></div>
       </div>
     `;
 

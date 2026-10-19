@@ -197,7 +197,7 @@ export class GameEngine {
     this.updatePortalThreatIndicators();
 
     this.soundEngine?.setMusicMode('day', this.realmIndex);
-    this.notify(`${this.realm.icon} ${this.realm.name} 원정 개시! 낮 동안 기지를 건설하고 밤을 대비하세요.`, 'gold');
+    this.notify(`${this.realm.name} 원정 개시! 낮 동안 기지를 건설하고 밤을 대비하세요.`, 'gold');
 
     // Starter Relic if unlocked in Sanctum
     if ((this.sanctumStats.startingRelicChoice || 0) >= 1) {
@@ -631,8 +631,8 @@ export class GameEngine {
 
     this.soundEngine?.playSfx('troop_rally');
     this.vfxManager?.spawnShockwave(clampedX, clampedZ, 3.8, 0x3b82f6, 0.55);
-    this.vfxManager?.spawnFloatingText(clampedX, 2.4, clampedZ, '🚩 전군 집결!', '#60a5fa', true);
-    this.notify(`🚩 아군 병력(${count}기) 집결 명령 하달!`, 'info');
+    this.vfxManager?.spawnFloatingText(clampedX, 2.4, clampedZ, '전군 집결!', '#60a5fa', true);
+    this.notify(`아군 병력(${count}기) 집결 명령 하달!`, 'info');
   }
 
   updatePortalThreatIndicators() {
@@ -683,7 +683,7 @@ export class GameEngine {
       for (let i = 0; i < Math.min(2, defTowers.length); i++) {
         const pick = defTowers[i];
         pick.overchargeTimer = 10.0;
-        this.vfxManager?.spawnFloatingText(pick.x, 3.2, pick.z, '⚡ 아르곤 과충전!', '#38bdf8', false);
+        this.vfxManager?.spawnFloatingText(pick.x, 3.2, pick.z, '아르곤 과충전!', '#38bdf8', false);
       }
     }
 
@@ -733,8 +733,8 @@ export class GameEngine {
       this.soundEngine?.playSfx('boss_roar');
       this.sceneManager?.addScreenShake(1.1);
       this.vfxManager?.spawnShockwave(x, z, 8.5, 0xf43f5e, 0.9);
-      this.vfxManager?.spawnFloatingText(x, 4.5, z, `💀 ${spec.name}`, '#f43f5e', true);
-      this.notify(`⚠️ 보스 출현: ${spec.name}!`, 'danger');
+      this.vfxManager?.spawnFloatingText(x, 4.5, z, `★ ${spec.name}`, '#f43f5e', true);
+      this.notify(`보스 출현: ${spec.name}!`, 'danger');
     }
 
     this.enemies.push({
@@ -826,7 +826,7 @@ export class GameEngine {
 
       this.vfxManager?.spawnShockwave(centerX, centerZ, radius, skill.vfxColor, 0.5);
       this.vfxManager?.spawnBurst(centerX, 1.5, centerZ, skill.vfxColor, 18, 8.5, 1.15);
-      this.vfxManager?.spawnFloatingText(centerX, 3.2, centerZ, `${skill.icon} ${skill.name}!`, skill.vfxColor, true);
+      this.vfxManager?.spawnFloatingText(centerX, 3.2, centerZ, `${skill.name}!`, skill.vfxColor, true);
 
       for (const e of [...this.enemies]) {
         const dist = Math.hypot(e.x - centerX, e.z - centerZ);
@@ -861,7 +861,7 @@ export class GameEngine {
 
       this.vfxManager?.spawnGroundZone(zoneX, zoneZ, radius, skill.vfxColor, duration);
       this.vfxManager?.spawnShockwave(zoneX, zoneZ, radius, skill.vfxColor, 0.55);
-      this.vfxManager?.spawnFloatingText(zoneX, 3.4, zoneZ, `${skill.icon} ${skill.name}!`, skill.vfxColor, true);
+      this.vfxManager?.spawnFloatingText(zoneX, 3.4, zoneZ, `${skill.name}!`, skill.vfxColor, true);
 
       this.activeZones.push({
         id: skill.id,
@@ -891,7 +891,7 @@ export class GameEngine {
       const dmg = Math.round((skill.damage || 500) * dmgMult);
       this.vfxManager?.spawnSkyBeam(targetX, targetZ, radius * 0.55, skill.vfxColor, 0.95);
       this.vfxManager?.spawnBurst(targetX, 2.2, targetZ, skill.vfxColor, 28, 12.0, 1.4);
-      this.vfxManager?.spawnFloatingText(targetX, 4.5, targetZ, `👑 ${skill.name}!`, skill.vfxColor, true);
+      this.vfxManager?.spawnFloatingText(targetX, 4.5, targetZ, `★ ${skill.name}!`, skill.vfxColor, true);
 
       for (const e of [...this.enemies]) {
         if (Math.hypot(e.x - targetX, e.z - targetZ) <= radius) {
@@ -1796,7 +1796,7 @@ export class GameEngine {
         h.isDead = true;
         h.reviveTimer = Math.max(4.0, 9.0 - (this.sanctumStats.reviveGraceSpeed || 0));
         if (h.mesh) h.mesh.visible = false;
-        this.notify(`⚠️ 군주가 쓰러졌습니다! ${h.reviveTimer.toFixed(0)}초 후 성채에서 부활합니다.`, 'warn');
+        this.notify(`군주가 쓰러졌습니다! ${h.reviveTimer.toFixed(0)}초 후 성채에서 부활합니다.`, 'warn');
       }
     } else if (target.type === 'building') {
       const b = target.ref;
@@ -1826,7 +1826,7 @@ export class GameEngine {
         if (b.typeId === 'citadel') {
           this.triggerGameOver(false);
         } else {
-          this.notify(`💥 ${b.baseDef.name} 파괴됨! (여명 도래 시 자동 재건됩니다)`, 'warn');
+          this.notify(`${b.baseDef.name} 파괴됨! (여명 도래 시 자동 재건됩니다)`, 'warn');
         }
       }
     }
@@ -1851,7 +1851,7 @@ export class GameEngine {
       e.specialTimer = e.spec.abilityCooldown || 7.5;
       this.sceneManager?.addScreenShake(0.8);
       this.vfxManager?.spawnShockwave(e.x, e.z, 9.0, e.spec.accentColor || 0xf43f5e, 0.7);
-      this.vfxManager?.spawnFloatingText(e.x, 4.2, e.z, `⚡ ${e.spec.name} 특수기!`, '#f43f5e', true);
+      this.vfxManager?.spawnFloatingText(e.x, 4.2, e.z, `★ ${e.spec.name} 특수기!`, '#f43f5e', true);
 
       if (e.spec.bossAbility === 'blizzard_breath') {
         // Freeze up to 3 nearby towers for 3.2 seconds
@@ -1861,7 +1861,7 @@ export class GameEngine {
           .slice(0, 3);
         for (const t of nearTowers) {
           t.freezeTimer = 3.2;
-          this.vfxManager?.spawnFloatingText(t.x, 3.0, t.z, '❄️ 빙결됨!', '#38bdf8', false);
+          this.vfxManager?.spawnFloatingText(t.x, 3.0, t.z, '빙결됨!', '#38bdf8', false);
         }
       } else if (e.spec.bossAbility === 'royal_legion_arise' || e.spec.bossAbility === 'astral_annihilation') {
         const minionId = e.spec.id === 'boss_malakor' ? 'void_reaver' : 'skeleton_warrior';
@@ -2140,7 +2140,7 @@ export class GameEngine {
     this.soundEngine?.setMusicMode('day', this.realmIndex);
 
     this.notify(
-      `☀️ 여명이 밝았습니다! 수입: +${totalGoldEarned} 금화, +${totalArgonEarned} 아르곤 결정`,
+      `여명이 밝았습니다! 수입: +${totalGoldEarned} 금화, +${totalArgonEarned} 아르곤 결정`,
       'gold'
     );
 
@@ -2182,7 +2182,7 @@ export class GameEngine {
     this.recalculateModifiers();
     this.soundEngine?.playSfx('relic_pick');
     if (relic) {
-      this.notify(`📜 왕실 칙령·유물 획득: [${relic.icon} ${relic.name}]`, 'gold');
+      this.notify(`왕실 칙령·유물 획득: [${relic.name}]`, 'gold');
     }
     this.saveMidRunCheckpoint();
     this.emitState();
@@ -2196,7 +2196,7 @@ export class GameEngine {
     this.currentWaveDesc = generateWaveDescriptor(this.realmIndex, this.wave, true, this.skullMods);
     this.updatePortalThreatIndicators();
     this.soundEngine?.setMusicMode('day', this.realmIndex);
-    this.notify(`♾️ 무한의 심연(Endless Mode) 제${this.wave}야 돌입! 한계를 시험하세요!`, 'gold');
+    this.notify(`무한의 심연(Endless Mode) 제${this.wave}야 돌입! 한계를 시험하세요!`, 'gold');
     this.emitState();
   }
 
@@ -2219,7 +2219,7 @@ export class GameEngine {
       realmName: this.realm.name,
       heroId: this.hero?.id || 'arthuria',
       heroName: this.hero?.def?.name || '성군 아르투리아',
-      heroIcon: this.hero?.def?.icon || '👑',
+      heroIcon: '◆',
       wave: this.wave,
       totalWaves: this.realm.totalWaves,
       score: this.score + (victory ? 3500 : 0),
@@ -2308,7 +2308,7 @@ export class GameEngine {
     this.recalculateModifiers();
     this.currentWaveDesc = generateWaveDescriptor(this.realmIndex, this.wave, this.isEndless, this.skullMods);
     this.updatePortalThreatIndicators();
-    this.notify(`💾 저장된 원정(제${this.wave}야 정비 단계)을 성공적으로 불러왔습니다!`, 'gold');
+    this.notify(`저장된 원정(제${this.wave}야 정비 단계)을 성공적으로 불러왔습니다.`, 'gold');
     this.emitState();
     return true;
   }

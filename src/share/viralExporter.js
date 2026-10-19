@@ -45,7 +45,7 @@ function normalizeRunData(raw = {}) {
     maxWaves,
     realmName: raw.realmName || raw.realm?.name || 'Valerion — Sunlit Bastion (발레리온 성채)',
     heroName: raw.heroName || raw.hero?.name || 'Aurelius the Dawnblade (여명검 아우렐리우스)',
-    heroIcon: raw.heroIcon || raw.hero?.icon || '👑',
+    heroIcon: raw.heroIcon || raw.hero?.icon || '◆',
     score: Number(raw.score ?? raw.totalScore ?? 0),
     enemiesSlain: Number(raw.enemiesSlain ?? raw.kills ?? 0),
     goldMined: Number(raw.goldMined ?? raw.totalGold ?? raw.gold ?? 0),
@@ -173,18 +173,18 @@ export function generateChroniclePoster(runData = {}, sourceCanvas = null) {
   ctx.fillText('ARGONIA: CROWN OF THE SPIRE — ROYAL CHRONICLE (왕국 연대기 기록서)', W / 2, 108);
 
   // Outcome Badge Pill
-  let badgeText = `⚔️ VALIANT STAND — WAVE ${data.wave}`;
+  let badgeText = `VALIANT STAND — WAVE ${data.wave}`;
   let badgeBorder = '#f87171';
   let badgeFill = 'rgba(127, 29, 29, 0.55)';
   let badgeTextColor = '#fecaca';
 
   if (data.isEndless) {
-    badgeText = `♾️ ENDLESS ABYSS RECORD — WAVE ${data.wave}`;
+    badgeText = `ENDLESS ABYSS RECORD — WAVE ${data.wave}`;
     badgeBorder = '#c084fc';
     badgeFill = 'rgba(88, 28, 135, 0.58)';
     badgeTextColor = '#f3e8ff';
   } else if (data.victory) {
-    badgeText = '👑 VICTORY — REALM CONQUERED';
+    badgeText = 'VICTORY — REALM CONQUERED';
     badgeBorder = '#f5c542';
     badgeFill = 'rgba(120, 83, 14, 0.58)';
     badgeTextColor = '#fef08a';
@@ -221,38 +221,50 @@ export function generateChroniclePoster(runData = {}, sourceCanvas = null) {
   ctx.lineWidth = 1.5;
   ctx.stroke();
 
-  // Left: Hero Icon & Monarch Name + Realm
-  ctx.textAlign = 'left';
-  ctx.font = '56px "Segoe UI Emoji", "Apple Color Emoji", sans-serif';
-  ctx.fillText(data.heroIcon, infoX + 28, infoY + 75);
+  // Left: Crest Sigil & Monarch Name + Realm
+  ctx.save();
+  ctx.translate(infoX + 56, infoY + 56);
+  ctx.strokeStyle = '#f5c542';
+  ctx.fillStyle = 'rgba(245, 197, 66, 0.16)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(0, -28);
+  ctx.lineTo(26, 0);
+  ctx.lineTo(0, 28);
+  ctx.lineTo(-26, 0);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
 
+  ctx.textAlign = 'left';
   ctx.fillStyle = '#f8fafc';
   ctx.font = '800 30px "Segoe UI", "Malgun Gothic", sans-serif';
   ctx.fillText(data.heroName, infoX + 108, infoY + 48);
 
   ctx.fillStyle = '#94a3b8';
   ctx.font = '600 21px "Segoe UI", "Malgun Gothic", sans-serif';
-  ctx.fillText(`🏰 Realm: ${data.realmName}`, infoX + 108, infoY + 86);
+  ctx.fillText(`REALM: ${data.realmName}`, infoX + 108, infoY + 86);
 
   // Right: Seed Code, Mutator Skulls, Timestamp
   ctx.textAlign = 'right';
-  const skullLabel = data.mutatorSkulls > 0 ? `💀 x${data.mutatorSkulls} MUTATOR SKULLS` : '🛡️ STANDARD ROYAL DECREE (💀 x0)';
+  const skullLabel = data.mutatorSkulls > 0 ? `[HEAT x${data.mutatorSkulls}] MUTATOR SKULLS` : 'STANDARD ROYAL DECREE (HEAT x0)';
   ctx.fillStyle = data.mutatorSkulls > 0 ? '#fca5a5' : '#7dd3fc';
   ctx.font = '700 22px "Segoe UI", "Malgun Gothic", sans-serif';
   ctx.fillText(skullLabel, infoX + infoW - 32, infoY + 44);
 
   ctx.fillStyle = '#f5c542';
   ctx.font = '700 22px Consolas, "Courier New", monospace';
-  ctx.fillText(`SEED: ${data.seed}   |   🕒 ${data.timestamp}`, infoX + infoW - 32, infoY + 84);
+  ctx.fillText(`SEED: ${data.seed}   |   ${data.timestamp}`, infoX + infoW - 32, infoY + 84);
   ctx.restore();
 
   // 5. Core Combat Statistics Grid (5 Cards)
   const stats = [
-    { label: 'WAVE REACHED (도달 웨이브)', value: data.isEndless ? `W-${data.wave} (♾️)` : `${data.wave} / ${data.maxWaves}`, accent: '#38bdf8', icon: '🌊' },
-    { label: 'TOTAL SCORE (총점)', value: data.score.toLocaleString(), accent: '#f5c542', icon: '🏆' },
-    { label: 'ENEMIES SLAIN (처치한 적)', value: data.enemiesSlain.toLocaleString(), accent: '#f87171', icon: '⚔️' },
-    { label: 'GOLD MINED (채굴 골드)', value: `${data.goldMined.toLocaleString()} G`, accent: '#fbbf24', icon: '🪙' },
-    { label: 'BOSSES DEFEATED (보스 토벌)', value: data.bossesDefeated.toLocaleString(), accent: '#c084fc', icon: '🐉' }
+    { label: 'WAVE REACHED (도달 웨이브)', value: data.isEndless ? `W-${data.wave} (ENDLESS)` : `${data.wave} / ${data.maxWaves}`, accent: '#38bdf8', icon: 'WAVE' },
+    { label: 'TOTAL SCORE (총점)', value: data.score.toLocaleString(), accent: '#f5c542', icon: 'RANK' },
+    { label: 'ENEMIES SLAIN (처치한 적)', value: data.enemiesSlain.toLocaleString(), accent: '#f87171', icon: 'KILLS' },
+    { label: 'GOLD MINED (채굴 골드)', value: `${data.goldMined.toLocaleString()} G`, accent: '#fbbf24', icon: 'GOLD' },
+    { label: 'BOSSES DEFEATED (보스 토벌)', value: data.bossesDefeated.toLocaleString(), accent: '#c084fc', icon: 'BOSS' }
   ];
 
   const gridY = 352;
@@ -271,8 +283,9 @@ export function generateChroniclePoster(runData = {}, sourceCanvas = null) {
     ctx.stroke();
 
     ctx.textAlign = 'center';
-    ctx.font = '32px "Segoe UI Emoji", sans-serif';
-    ctx.fillText(st.icon, cx + cardW / 2, gridY + 46);
+    ctx.fillStyle = st.accent;
+    ctx.font = '800 16px Consolas, "Segoe UI", sans-serif';
+    ctx.fillText(`[ ${st.icon} ]`, cx + cardW / 2, gridY + 42);
 
     ctx.fillStyle = '#94a3b8';
     ctx.font = '700 15px "Segoe UI", "Malgun Gothic", sans-serif';
@@ -298,17 +311,17 @@ export function generateChroniclePoster(runData = {}, sourceCanvas = null) {
   ctx.textAlign = 'left';
   ctx.fillStyle = '#f5c542';
   ctx.font = '800 19px "Segoe UI", "Malgun Gothic", sans-serif';
-  ctx.fillText('✨ ACTIVE SYNERGY SETS (활성 유물 시너지 세트)', infoX + 26, synY + 36);
+  ctx.fillText('ACTIVE SYNERGY SETS (활성 유물 시너지 세트)', infoX + 26, synY + 36);
 
   const synergies = data.synergies.length > 0
     ? data.synergies.slice(0, 5)
-    : [{ name: 'Royal Vanguard (왕실 선봉대)', icon: '🛡️', count: 2, required: 2 }];
+    : [{ name: 'Royal Vanguard (왕실 선봉대)', count: 2, required: 2 }];
 
   let badgeCursorX = infoX + 26;
   synergies.forEach((syn) => {
     const label = typeof syn === 'string'
-      ? `⚡ ${syn}`
-      : `${syn.icon || '⚡'} ${syn.name || syn.id} ${syn.count ? `(${syn.count}/${syn.required || syn.count})` : ''}`.trim();
+      ? `◆ ${syn}`
+      : `◆ ${syn.name || syn.id} ${syn.count ? `(${syn.count}/${syn.required || syn.count})` : ''}`.trim();
 
     ctx.font = '700 20px "Segoe UI", "Malgun Gothic", sans-serif';
     const textWidth = ctx.measureText(label).width;
@@ -345,7 +358,7 @@ export function generateChroniclePoster(runData = {}, sourceCanvas = null) {
   ctx.textAlign = 'left';
   ctx.fillStyle = '#38bdf8';
   ctx.font = '800 19px "Segoe UI", "Malgun Gothic", sans-serif';
-  ctx.fillText('🏺 ROYAL RELIC VAULT — TOP 8 RELICS (보유 핵심 유물)', infoX + 26, relY + 36);
+  ctx.fillText('ROYAL RELIC VAULT — TOP 8 RELICS (보유 핵심 유물)', infoX + 26, relY + 36);
 
   const topRelics = data.relics.slice(0, 8);
   const cols = 4;
@@ -365,7 +378,6 @@ export function generateChroniclePoster(runData = {}, sourceCanvas = null) {
       const rx = infoX + 26 + col * (relicCardW + relicGapX);
       const ry = relY + 54 + row * (relicCardH + relicGapY);
 
-      const rIcon = typeof relic === 'string' ? '💎' : (relic.icon || '💎');
       const rName = typeof relic === 'string' ? relic : (relic.name || relic.title || 'Royal Relic');
       const rSub = typeof relic === 'object' && (relic.rarity || relic.set)
         ? String(relic.rarity || relic.set).toUpperCase()
@@ -378,17 +390,18 @@ export function generateChroniclePoster(runData = {}, sourceCanvas = null) {
       ctx.lineWidth = 1.5;
       ctx.stroke();
 
-      ctx.font = '34px "Segoe UI Emoji", sans-serif';
-      ctx.fillText(rIcon, rx + 18, ry + 56);
+      ctx.fillStyle = '#f5c542';
+      ctx.font = '800 26px "Segoe UI", sans-serif';
+      ctx.fillText('◆', rx + 22, ry + 54);
 
       ctx.fillStyle = '#f8fafc';
       ctx.font = '700 20px "Segoe UI", "Malgun Gothic", sans-serif';
       const clippedName = rName.length > 22 ? `${rName.slice(0, 21)}…` : rName;
-      ctx.fillText(clippedName, rx + 68, ry + 42);
+      ctx.fillText(clippedName, rx + 58, ry + 42);
 
       ctx.fillStyle = '#f5c542';
       ctx.font = '600 14px "Segoe UI", "Malgun Gothic", sans-serif';
-      ctx.fillText(rSub, rx + 68, ry + 68);
+      ctx.fillText(rSub, rx + 58, ry + 68);
     });
   }
   ctx.restore();
@@ -404,7 +417,7 @@ export function generateChroniclePoster(runData = {}, sourceCanvas = null) {
   ctx.textAlign = 'right';
   ctx.fillStyle = '#f5c542';
   ctx.font = '800 22px "Segoe UI", sans-serif';
-  ctx.fillText(`🌐 PLAY LIVE: ${DEMO_URL}`, infoX + infoW, footerY);
+  ctx.fillText(`PLAY LIVE: ${DEMO_URL}`, infoX + infoW, footerY);
   ctx.restore();
 
   const dataUrl = canvas.toDataURL('image/png');

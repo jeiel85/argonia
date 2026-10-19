@@ -1,15 +1,21 @@
 /**
  * ARGONIA: Crown of the Spire
- * 3D Asset Loader & Blender GLB Model Cache Manager
+ * 3D Asset Loader & Blender 5.2 GLB Model Cache Manager
  *
- * Preloads and manages high-fidelity stylized 3D assets generated in Blender 5.2 LTS
- * for the 4 Sovereign Champions and 5 Colossal Act Bosses.
+ * Preloads, caches, and instantiates all 27 hierarchical Blender 5.2 GLB models:
+ * - 4 Sovereign Champions
+ * - 5 Colossal Act Bosses
+ * - 10 Kingdom Buildings
+ * - 4 Enemy Archetypes (dynamically tinted across all 18 regular enemy species)
+ * - 3 Allied Garrison Troop Types
+ * - 1 Abyssal Rift Spawn Portal
  */
 
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 export const MODEL_SPECS = {
+  // 1. 4 Monarch Heroes
   hero_arthuria: {
     file: 'hero_arthuria.glb',
     scale: 0.62,
@@ -38,6 +44,8 @@ export const MODEL_SPECS = {
     rotY: Math.PI,
     auraColor: 0xc084fc,
   },
+
+  // 2. 5 Colossal Act Bosses
   boss_kragasha: {
     file: 'boss_kragasha.glb',
     scale: 0.95,
@@ -74,6 +82,123 @@ export const MODEL_SPECS = {
     rotY: Math.PI,
     menaceColor: 0xec4899,
   },
+
+  // 3. 10 Kingdom Buildings
+  bldg_citadel: {
+    file: 'bldg_citadel.glb',
+    scale: 1.0,
+    yOffset: 0,
+    rotY: 0,
+  },
+  bldg_gold_mine: {
+    file: 'bldg_gold_mine.glb',
+    scale: 1.0,
+    yOffset: 0,
+    rotY: Math.PI,
+  },
+  bldg_windmill: {
+    file: 'bldg_windmill.glb',
+    scale: 1.0,
+    yOffset: 0,
+    rotY: 0,
+  },
+  bldg_argon_refinery: {
+    file: 'bldg_argon_refinery.glb',
+    scale: 1.0,
+    yOffset: 0,
+    rotY: 0,
+  },
+  bldg_archer_tower: {
+    file: 'bldg_archer_tower.glb',
+    scale: 1.0,
+    yOffset: 0,
+    rotY: Math.PI,
+  },
+  bldg_arcane_obelisk: {
+    file: 'bldg_arcane_obelisk.glb',
+    scale: 1.0,
+    yOffset: 0,
+    rotY: 0,
+  },
+  bldg_flame_mortar: {
+    file: 'bldg_flame_mortar.glb',
+    scale: 1.0,
+    yOffset: 0,
+    rotY: Math.PI,
+  },
+  bldg_frost_spire: {
+    file: 'bldg_frost_spire.glb',
+    scale: 1.0,
+    yOffset: 0,
+    rotY: 0,
+  },
+  bldg_barracks: {
+    file: 'bldg_barracks.glb',
+    scale: 1.0,
+    yOffset: 0,
+    rotY: Math.PI,
+  },
+  bldg_stone_wall: {
+    file: 'bldg_stone_wall.glb',
+    scale: 1.0,
+    yOffset: 0,
+    rotY: 0,
+  },
+
+  // 4. 4 Enemy Archetype Models
+  enemy_infantry: {
+    file: 'enemy_infantry.glb',
+    scale: 1.0,
+    yOffset: 0,
+    rotY: Math.PI,
+  },
+  enemy_beast: {
+    file: 'enemy_beast.glb',
+    scale: 1.0,
+    yOffset: 0,
+    rotY: Math.PI,
+  },
+  enemy_golem: {
+    file: 'enemy_golem.glb',
+    scale: 1.0,
+    yOffset: 0,
+    rotY: Math.PI,
+  },
+  enemy_flier: {
+    file: 'enemy_flier.glb',
+    scale: 1.0,
+    yOffset: 0,
+    rotY: Math.PI,
+    isFlying: true,
+  },
+
+  // 5. 3 Allied Garrison Troop Models
+  troop_swordsman: {
+    file: 'troop_swordsman.glb',
+    scale: 1.0,
+    yOffset: 0,
+    rotY: Math.PI,
+  },
+  troop_paladin: {
+    file: 'troop_paladin.glb',
+    scale: 1.06,
+    yOffset: 0,
+    rotY: Math.PI,
+  },
+  troop_valkyrie: {
+    file: 'troop_valkyrie.glb',
+    scale: 1.08,
+    yOffset: 0,
+    rotY: Math.PI,
+  },
+
+  // 6. 1 Abyssal Rift Spawn Portal
+  prop_portal: {
+    file: 'prop_portal.glb',
+    scale: 1.0,
+    yOffset: 0,
+    rotY: 0,
+  },
 };
 
 class AssetLoader {
@@ -94,7 +219,7 @@ class AssetLoader {
   }
 
   /**
-   * Preloads all 9 Blender GLB models into memory asynchronously
+   * Preloads all 27 Blender GLB models into memory asynchronously
    */
   preloadAll() {
     const promises = [];
@@ -130,10 +255,10 @@ class AssetLoader {
             if (child.isMesh) {
               child.castShadow = true;
               child.receiveShadow = true;
-              if (child.material) {
-                // Enhance metallic and emissive properties of stylized Blender models
-                if (child.material.emissive && (child.material.emissive.r > 0 || child.material.emissive.g > 0 || child.material.emissive.b > 0)) {
-                  child.material.emissiveIntensity = 0.85;
+              const mats = Array.isArray(child.material) ? child.material : [child.material];
+              for (const mat of mats) {
+                if (mat && mat.emissive && (mat.emissive.r > 0 || mat.emissive.g > 0 || mat.emissive.b > 0)) {
+                  mat.emissiveIntensity = 0.85;
                 }
               }
             }
@@ -146,7 +271,11 @@ class AssetLoader {
           const cbs = this.listeners.get(id);
           if (cbs) {
             for (const cb of cbs) {
-              try { cb(scene); } catch (e) { console.error('Asset callback error:', e); }
+              try {
+                cb(scene);
+              } catch (e) {
+                console.error('Asset callback error:', e);
+              }
             }
             this.listeners.delete(id);
           }
@@ -185,7 +314,6 @@ class AssetLoader {
       this.listeners.set(id, new Set());
     }
     this.listeners.get(id).add(callback);
-    // Trigger load if not yet started
     const spec = MODEL_SPECS[id];
     if (spec) {
       this.loadModel(id, spec.file);
@@ -194,9 +322,9 @@ class AssetLoader {
 
   /**
    * Instantiates a cloned hierarchy of the Blender model with unique cloned materials
-   * for independent hit-flash / lighting effects.
+   * and automatically binds separated 'Anim_*' hierarchy nodes for animations.
    */
-  instantiate(id) {
+  instantiate(id, options = {}) {
     const template = this.cache.get(id);
     if (!template) return null;
 
@@ -204,17 +332,63 @@ class AssetLoader {
     const clone = template.clone(true);
     const hitMeshes = [];
     const wings = [];
+    const rotators = [];
+    const floaters = [];
+    let weaponGroup = null;
+    let windmillBlades = null;
+    let turretHead = null;
+    let leftWing = null;
+    let rightWing = null;
 
     clone.traverse((child) => {
+      const name = child.name || '';
+      if (name.startsWith('Anim_Weapon')) {
+        weaponGroup = child;
+      } else if (name.startsWith('Anim_Wing_L')) {
+        leftWing = child;
+      } else if (name.startsWith('Anim_Wing_R')) {
+        rightWing = child;
+      } else if (name.startsWith('Anim_Rotor')) {
+        rotators.push({ mesh: child, speedY: 1.8, speedZ: 1.4 });
+      } else if (name.startsWith('Anim_Floater')) {
+        floaters.push({ mesh: child, baseY: child.position.y, amp: 0.15, speed: 2.5 });
+      } else if (name.startsWith('Anim_Blades')) {
+        windmillBlades = child;
+      } else if (name.startsWith('Anim_Turret')) {
+        turretHead = child;
+      }
+
       if (child.isMesh) {
         child.castShadow = true;
         child.receiveShadow = true;
-        if (child.material) {
-          child.material = child.material.clone();
-          hitMeshes.push(child.material);
+
+        const cloneMat = (mat) => {
+          if (!mat) return mat;
+          const m = mat.clone();
+          const mName = m.name || '';
+          if (options.primaryColor !== undefined && mName.startsWith('PrimaryMat')) {
+            m.color.setHex(options.primaryColor);
+          } else if (options.accentColor !== undefined && mName.startsWith('AccentMat')) {
+            m.color.setHex(options.accentColor);
+            if (m.emissive) {
+              m.emissive.setHex(options.accentColor);
+            }
+          }
+          hitMeshes.push(m);
+          return m;
+        };
+
+        if (Array.isArray(child.material)) {
+          child.material = child.material.map(cloneMat);
+        } else if (child.material) {
+          child.material = cloneMat(child.material);
         }
       }
     });
+
+    if (leftWing && rightWing) {
+      wings.push({ left: leftWing, right: rightWing });
+    }
 
     const wrapper = new THREE.Group();
     wrapper.name = `BlenderInstance_${id}`;
@@ -228,6 +402,11 @@ class AssetLoader {
       innerScene: clone,
       hitMeshes,
       wings,
+      weaponGroup,
+      rotators,
+      floaters,
+      windmillBlades,
+      turretHead,
       spec,
     };
   }
