@@ -1781,6 +1781,24 @@ kbd {
   letter-spacing: 0.01em;
 }
 
+.title-repo-link {
+  margin-top: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+  text-decoration: none;
+  opacity: 0.8;
+  transition: color 0.2s, opacity 0.2s;
+}
+
+.title-repo-link:hover,
+.title-repo-link:focus-visible {
+  color: var(--brass-bright);
+  opacity: 1;
+}
+
 /* =========================================================================
    조작 안내 배너
    ========================================================================= */

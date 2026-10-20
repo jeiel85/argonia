@@ -442,6 +442,8 @@ class ArgoniaApp {
 
       const titleOverlay = document.getElementById('title-overlay');
       if (titleOverlay && !titleOverlay.classList.contains('hidden')) {
+        // 링크(예: GitHub 저장소)에 포커스가 있으면 Enter는 링크 열기 기본 동작에 맡깁니다.
+        if (code === 'Enter' && e.target.closest?.('a[href]')) return;
         if (code === 'Space' || code === 'Enter') {
           e.preventDefault();
           this.startGameFromTitle();
