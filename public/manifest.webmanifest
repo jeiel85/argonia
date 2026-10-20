@@ -1,0 +1,57 @@
+{
+  "id": "./",
+  "name": "ARGONIA: Crown of the Spire",
+  "short_name": "ARGONIA",
+  "description": "낮에는 왕국을 세우고 밤에는 군주로 직접 싸우는 3D 타워 디펜스 로그라이트. Three.js와 WebAudio로 만들었습니다.",
+  "lang": "ko",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["fullscreen", "standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#0d0c0a",
+  "theme_color": "#141210",
+  "categories": ["games", "strategy", "action"],
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "방어전 바로 시작",
+      "short_name": "방어전 시작",
+      "description": "타이틀 화면을 건너뛰고 즉시 방어전을 시작합니다",
+      "url": "./?autostart=1",
+      "icons": [
+        {
+          "src": "icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ]
+}

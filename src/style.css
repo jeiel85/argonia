@@ -1758,6 +1758,18 @@ kbd {
   color: var(--text-ivory);
 }
 
+.btn-pwa-install {
+  border-color: rgba(94, 194, 230, 0.42);
+  color: var(--argon-crystal);
+  background: rgba(94, 194, 230, 0.06);
+}
+
+.btn-pwa-install:hover {
+  background: rgba(94, 194, 230, 0.16);
+  border-color: var(--argon-crystal);
+  color: #fff;
+}
+
 .title-badge-strip {
   margin-top: 22px;
   display: flex;

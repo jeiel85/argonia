@@ -5,7 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>ARGONIA: Crown of the Spire</title>
   <meta name="description" content="낮에는 왕국을 세우고 밤에는 군주로 직접 싸우는 3D 타워 디펜스 로그라이트. Three.js와 WebAudio로 만들었습니다." />
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><polygon points='50,8 88,30 88,70 50,92 12,70 12,30' fill='%23141210' stroke='%23d4a853' stroke-width='6'/><polygon points='50,24 68,58 32,58' fill='%23d4a853'/></svg>" />
+  <meta name="theme-color" content="#141210" />
+  <meta name="application-name" content="ARGONIA" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="ARGONIA" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" type="image/svg+xml" href="./icons/icon.svg" />
+  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&display=swap" rel="stylesheet" />
@@ -70,6 +79,15 @@
             <span>성소와 도감</span>
           </button>
         </div>
+
+        <button id="btn-title-install-pwa" class="btn-title-sub btn-pwa-install hidden" title="아르고니아를 앱으로 설치하여 오프라인에서도 바로 플레이합니다">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          <span>앱으로 설치</span>
+        </button>
       </div>
 
       <p class="title-badge-strip">낮에는 왕국을 세우고, 밤에는 직접 싸웁니다</p>
@@ -360,6 +378,7 @@
             <span class="crown-label">별빛 왕관</span>
             <strong id="hub-crowns-val" class="tabular-nums">120</strong>
           </div>
+          <button id="btn-hub-install-pwa" class="btn-mini btn-pwa-install hidden" title="아르고니아를 앱으로 설치합니다">앱 설치</button>
           <button id="btn-close-hub-resume" class="hub-resume-btn hidden">전장으로 돌아가기 [ESC]</button>
         </div>
       </div>

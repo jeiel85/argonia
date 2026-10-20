@@ -29,6 +29,7 @@ import {
   buildShareText,
   BattleClipRecorder,
 } from './share/viralExporter.js';
+import { PwaManager } from './pwa/pwaManager.js';
 
 // 도감 카드와 유물 카드에 쓰는 한글 표기
 const CATEGORY_KO = { core: '본진', economy: '경제', defense: '방어', army: '병력', fortress: '성벽' };
@@ -90,6 +91,11 @@ class ArgoniaApp {
 
     this.bindEvents();
     this.renderHubAll();
+
+    this.pwaManager = new PwaManager({
+      onNotify: (msg, tone) => this.showToast(msg, tone),
+    });
+    this.pwaManager.init();
 
     // Load a live 3D background preview of the selected realm & hero right on startup!
     this.engine.startRun({
