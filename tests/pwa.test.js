@@ -21,6 +21,8 @@ test('PWA Manifest & Icons: manifest.webmanifest is valid and all required PNG/S
 
   const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
   assert.equal(manifest.short_name, 'ARGONIA');
+  // "./"는 manifest 위치가 아니라 출처(jeiel85.github.io) 기준으로 풀려 같은 출처의 다른 게임과 같은 앱이 된다(DECISIONS.md).
+  assert.equal(manifest.id, '/argonia/');
   assert.equal(manifest.display, 'standalone');
   assert.equal(manifest.start_url, './');
   assert.equal(manifest.scope, './');

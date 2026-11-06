@@ -3,7 +3,9 @@
  * Offline-ready caching for app shell, Vite hashed bundles, and 27 3D GLB models.
  */
 
-const CACHE_VERSION = 'argonia-pwa-v1';
+// manifest·아이콘처럼 주소가 그대로인 파일을 바꾸면 이 값을 올린다. 설치 때 채운 정적 캐시가 런타임 캐시보다
+// 먼저 맞춰지므로, 올리지 않으면 서비스 워커가 다시 설치되지 않아 옛 파일이 계속 나간다(v2: manifest id 수정).
+const CACHE_VERSION = 'argonia-pwa-v2';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
